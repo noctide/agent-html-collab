@@ -34,6 +34,14 @@ npx github:noctide/protobridge apply latest --root . --apply
 打开提示的 `http://127.0.0.1:<port>/studio` 即可改字/标注;点「发送反馈」落盘到 `feedback/`。
 > 没写 `proto.config.json` 时,`serve` 会自动按根下 HTML 数量推断模式;`?src=/project/xxx.html` 也可直接打开任意同根文件。
 
+## 手动启动(选目录,最省事)
+
+```bash
+npm i -g github:noctide/protobridge    # 装一次
+protobridge open                       # 弹文件夹选择框 → 起 studio → 自动开浏览器
+```
+`open` 也支持 `--root <目录>`(跳过选择框)、`--port`、`--no-open`(自动化不开浏览器)。
+
 ## 快速开始
 
 ```bash
