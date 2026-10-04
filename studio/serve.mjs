@@ -44,9 +44,14 @@ const LOCAL_CFG = join(PROJECT_ROOT, 'proto.config.json');
 const KERNEL_CFG = join(PKG_ROOT, 'studio/proto.config.json');
 /* 配置来源:显式 --config → 项目根 proto.config.json → 自动探测根下 HTML → 内核默认 */
 let AUTO_CFG = null;
-let CONFIG_PATH = ARGS.config
-  ? resolve(process.cwd(), ARGS.config)
-  : (existsSync(LOCAL_CFG) ? LOCAL_CFG : null);
+let CONFIG_PATH = null;
+if (ARGS.config) {
+  const c = resolve(process.cwd(), ARGS.config);
+  CONFIG_PATH = existsSync(c) ? c : resolve(PROJECT_ROOT, ARGS.config);   // 相对 cwd 找不到 → 相对 --root
+  if (!existsSync(CONFIG_PATH)) CONFIG_PATH = null;                        // 指定的配置不存在 → 走自动探测
+} else if (existsSync(LOCAL_CFG)) {
+  CONFIG_PATH = LOCAL_CFG;
+}
 if (!CONFIG_PATH) {
   AUTO_CFG = autoDetectConfig();
   if (!AUTO_CFG) CONFIG_PATH = KERNEL_CFG;   // 根下没有 HTML 时退回内置默认
@@ -114,8 +119,8 @@ function readTitle(abs) {
   try { const m = readFileSync(abs, 'utf8').slice(0, 4096).match(/<title[^>]*>([^<]*)<\/title>/i); return m ? m[1].trim() : ''; } catch { return ''; }
 }
 function pageIdOf(rel) {
-  const name = rel.replace(/^.*\//, '').replace(/\.html?$/i, '');
-  return ((name.match(/[a-z0-9]+/i) || [name])[0] || 'page').toLowerCase();
+  const slug = String(rel).replace(/\.html?$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'page';
 }
 function uniqueIds(list) {
   const seen = Object.create(null);

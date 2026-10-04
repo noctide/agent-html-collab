@@ -656,6 +656,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   function injectAll() {
     try { win = iframe.contentWindow; doc = iframe.contentDocument; } catch (e) { sameOrigin = false; win = null; doc = null; toast('无法访问方案页面(跨源?):只读浏览'); }
     if (!sameOrigin || !doc || !win) { applyZoom(); return; }
+    try { if (win.location && win.location.pathname) SRC = win.location.pathname; } catch (e) {}   /* 页面内跳转后同步当前页 */
     if (win.__PB_INJECTED) return;
     win.__PB_INJECTED = true;
     try { win.PROTOBRIDGE_CFG = CFG; } catch (e) {}

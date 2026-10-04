@@ -43,8 +43,8 @@ function readTitle(abs) {
   try { const m = readFileSync(abs, 'utf8').slice(0, 4096).match(/<title[^>]*>([^<]*)<\/title>/i); return m ? m[1].trim() : ''; } catch { return ''; }
 }
 function pageIdOf(rel) {
-  const name = rel.replace(/^.*\//, '').replace(/\.html?$/i, '');
-  return ((name.match(/[a-z0-9]+/i) || [name])[0] || 'page').toLowerCase();
+  const slug = String(rel).replace(/\.html?$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return slug || 'page';
 }
 function uniqueIds(list) {
   const seen = Object.create(null);
@@ -113,6 +113,6 @@ async function main() {
   writeFileSync(CFG_PATH, JSON.stringify(config, null, 2) + '\n');
   console.log('[init] 已生成 ' + relative(process.cwd(), CFG_PATH).split(sep).join('/'));
   console.log('[init] 模式 ' + config.source.mode + (config.pages.singlePerFile ? '(每文件整页)' : '') + ' · 页面 ' + config.pages.list.length + ' · 端口 ' + port);
-  console.log('[init] 下一步:  node studio/serve.mjs --root "' + ROOT + '" --config proto.config.json');
+  console.log('[init] 下一步:  node studio/serve.mjs --root "' + ROOT + '"   (根目录已有 proto.config.json,自动采用)');
 }
 main().catch(e => { console.error('[init] 失败:', e.message); process.exit(1); });
