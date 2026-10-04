@@ -58,7 +58,7 @@ if (cmd === 'install-plugin' || cmd === 'uninstall-plugin') {
     fs.mkdirSync(dirname(dst), { recursive: true });
     fs.cpSync(PLUGIN_SRC, dst, { recursive: true, force: true });
     console.log('[protobridge] 插件已安装到 ' + dst);
-    console.log('[protobridge] 重启 OpenCode 后生效(全局,所有项目)。在目标会话里发「启用协同」绑定。');
+    console.log('[protobridge] 重启 OpenCode 后生效(全局,所有项目)。在目标会话的 / 菜单选 /protobridge 绑定(或发「启用协同」)。');
   } else {
     if (!fs.existsSync(dst)) { console.log('[protobridge] 未安装: ' + dst); process.exit(0); }
     fs.rmSync(dst, { recursive: true, force: true });

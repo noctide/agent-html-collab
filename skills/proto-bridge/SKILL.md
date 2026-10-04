@@ -101,7 +101,7 @@ export function plans({ feedback, config, projectRoot }) {
 | 徽章跨页堆叠 | 确认 `pages.container/activeClass/idAttr` 配对(内核按活动容器限定) |
 | 回灌大量 skipped | 源码文本被重构/折行;看 `report-*.md` 的 `⚠️/❌` 人工核对,`from` 会被用于模糊匹配 |
 | 服务"落盘即退" | 环境里设了 `PROTOBRIDGE_WAKE=1`;要常驻就用 `--stay-alive` 或去掉该变量 |
-| 点发送没有自动收到 | 确认插件已装(`protobridge install-plugin`,或项目内 `.opencode/plugins/protobridge/`)且 OpenCode 已重启;确认 studio「协同通知」为开(反馈包 `notify` 不为 false);确认目标会话——在你想接收的对话里发 `启用协同` 绑定(插件记下该会话 id 并持久化)。查 `%TEMP%\protobridge-plugin.log`。插件只用 `node:` 内置模块 |
+| 点发送没有自动收到 | 确认插件已装(`protobridge install-plugin`,或项目内 `.opencode/plugins/protobridge/`)且 OpenCode 已重启;确认 studio「协同通知」为开(反馈包 `notify` 不为 false);确认目标会话——在目标对话里执行 `/protobridge`(或发 `启用协同`)绑定(插件记下该会话 id 并持久化)。查 `%TEMP%\protobridge-plugin.log`。插件只用 `node:` 内置模块 |
 | 反馈发到了别的窗口 | 插件按"显式绑定 > 最近用户输入 > 最近事件"选目标;在目标会话发一次触发词即可纠正。OpenCode 无"聚焦会话"API,页面无法自行识别会话 |
 | 点发送提示失败 | studio 已**自动复制反馈包到剪贴板并弹出错误原因**;把内容粘贴给 agent 即可(或点弹层里的「下载为文件」) |
 

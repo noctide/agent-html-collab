@@ -3,7 +3,7 @@
 //       agent 自动接手处理。运行时(studio/serve.mjs)完全不知道本插件存在(方案 A,零耦合)。
 //
 // 目标会话如何确定(优先级):
-//   1) 显式绑定:在目标会话里发送触发词「启用协同」→ 插件记下该会话 id 并持久化;
+//   1) 显式绑定:在目标会话执行命令 /protobridge(或发一句「启用协同」)→ 插件记下该会话 id 并持久化;
 //   2) 最近一次"用户输入"所在的会话(只在 prompt 钩子更新,后台事件不会抢占);
 //   3) 最近一次的会话事件(兜底)。
 // 说明:OpenCode 插件 API 没有"当前聚焦会话",页面(studio)也无法自己识别会话;
@@ -78,6 +78,16 @@ export default {
         if (isBindTrigger(event?.prompt?.text ?? event?.text)) bind(sid)
       })
     } catch { /* 钩子不可用时靠事件流 */ }
+    /* 1b) 注册命令 /protobridge:在目标会话选中即绑定(不提交消息) */
+    try {
+      await ctx.command.transform((editor: any) => {
+        editor.add({
+          name: "protobridge",
+          description: "绑定本会话为 ProtoBridge 反馈目标",
+          execute: async ({ sessionID }: any) => { bind(sessionID) },
+        })
+      })
+    } catch { /* 运行时无命令 API 时忽略,仍可用「启用协同」 */ }
 
     /* 2) 发现反馈目录:扫描项目内 proto.config.json 的 server.feedbackDir;跳过 examples/tests 夹具 */
     const dirs = new Set<string>()
