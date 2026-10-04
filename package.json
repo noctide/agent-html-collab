@@ -1,6 +1,6 @@
 {
   "name": "protobridge",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "description": "通用 HTML 原型人机协同插件:就地改字 / 标注提意见 / 反馈回灌任意编码 agent",
   "bin": {
@@ -15,7 +15,9 @@
     "examples",
     "AGENTS-SNIPPET.md",
     "SPEC.md",
-    "README.md"
+    "README.md",
+    "docs",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "serve": "node studio/serve.mjs",
@@ -23,7 +25,8 @@
     "init": "node studio/init.mjs",
     "verify": "node tests/verify-generic.mjs",
     "verify:single": "node tests/verify-single.mjs",
-    "verify:multi": "node tests/verify-multi.mjs"
+    "verify:multi": "node tests/verify-multi.mjs",
+    "test": "node --test tests/host-bridge.test.mjs"
   },
   "repository": {
     "type": "git",

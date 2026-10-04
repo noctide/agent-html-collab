@@ -144,7 +144,7 @@
   </div>
   <span class="sep"></span>
   <span class="count" id="count"></span>
-  <button id="notify" title="反馈落盘后是否自动通知 agent(发触发词绑定目标会话)">协同通知:开</button>
+  <button id="notify" title="是否通知本页面所属对话（需客户端接入）">协同通知:开</button>
   <button class="send" id="send">发送反馈 ↗</button>
   <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
 </div>
@@ -551,6 +551,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 })();
 </script>
 
+<script src="/tool-res/host-transport.js"></script>
 <script>
 (function () {
   'use strict';
@@ -928,22 +929,36 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
   }
+  var pendingBundle = null;
   $('#send').addEventListener('click', function () {
     var btn = $('#send'); var n = feedbackCount();
-    if (!n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
+    if (!pendingBundle && !n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
     var p = openPop(btn,
       '<div class="ph">发送反馈给 Agent</div>' +
       '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.e + '</b> 处<br>' +
-      '<span>' + (isNotifyOn() ? '发送后落盘到 feedback/,会自动唤醒绑定的会话' : '发送后落盘到 feedback/;协同通知已关,需手动让 agent「处理反馈」') + '</span></div>' +
+      '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.ProtoBridgeTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
       '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">确认发送</button></div>');
     p.querySelector('[data-x=c]').addEventListener('click', closePop);
     p.querySelector('[data-x=ok]').addEventListener('click', function () {
       closePop(); btn.disabled = true; btn.textContent = '发送中…';
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(collectBundle()) })
-        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
-        .then(function () { btn.textContent = '已发送 ✓'; toast('反馈已落盘,Agent 会自动接手'); })
+      if (!pendingBundle) {
+        pendingBundle = collectBundle();
+        pendingBundle.feedbackId = window.crypto.randomUUID();
+      }
+      window.ProtoBridgeTransport.submitFeedback(pendingBundle)
+        .then(function (result) {
+          if (!result || result.saved !== true) throw new Error('Host 未确认反馈保存成功');
+          if (result.delivery === 'failed') {
+            btn.textContent = '重试通知';
+            toast('反馈已保存，通知失败：' + (result.error || '请重试'));
+            return;
+          }
+          pendingBundle = null;
+          btn.textContent = '已保存 ✓';
+          toast(result.delivery === 'queued' ? '反馈已保存，已通知本页面所属对话' : '反馈已保存，请让 agent「处理反馈」');
+        })
         .catch(function (err) {
-          var bundle = collectBundle();
+          var bundle = pendingBundle || collectBundle();
           var text = JSON.stringify(bundle, null, 2);
           var why = (err && err.message) || '网络不可达(本地服务未启动?)';
           var copied = false;
@@ -972,7 +987,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
             downloadText('proto-feedback-' + new Date().toISOString().slice(0, 10) + '.json', text, 'application/json');
           });
         })
-        .finally(function () { setTimeout(function () { btn.disabled = false; btn.textContent = '发送反馈 ↗'; }, 3000); });
+        .finally(function () { setTimeout(function () { btn.disabled = false; btn.textContent = pendingBundle ? '重试上次反馈 ↗' : '发送反馈 ↗'; }, 3000); });
     });
   });
 

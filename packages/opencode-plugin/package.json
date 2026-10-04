@@ -1,16 +1,17 @@
 {
   "name": "protobridge-opencode-plugin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "ProtoBridge OpenCode 插件:反馈落盘后自动唤醒绑定/最近会话",
+  "description": "ProtoBridge 页面归属 Host 适配包（需客户端接入）",
   "main": "index.ts",
   "exports": {
     ".": "./index.ts"
   },
   "files": [
     "index.ts",
-    "README.md"
+    "README.md",
+    "host-bridge"
   ],
   "keywords": [
     "opencode",

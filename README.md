@@ -62,23 +62,23 @@ node studio/apply.mjs latest --root <你的项目根> --config proto.config.json
 node tests/verify-generic.mjs
 ```
 
-## OpenCode 自动唤醒(可选)
+## 内置浏览器：按页面归属通知对话
 
-**装一次、全局生效**(不依赖 `opencode` CLI):
-```bash
-protobridge install-plugin          # 复制到 ~/.config/opencode/plugins/protobridge
-# 或(有 opencode CLI 时):
-opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
-```
-重启 OpenCode 后:用户在 studio 点「发送反馈」→ 反馈包落盘 → 插件**自动**向"目标会话"投递一条消息,agent 无需你再说「处理」。
-插件源码在 `packages/opencode-plugin/`;也可只复制到单个项目的 `.opencode/plugins/protobridge/`。
+客户端只安装一次插件，不需要在每个 HTML 所在目录放插件包。页面打开时由 Host 取得所属对话并建立绑定；切换原型文件不改变目标，关闭页面后绑定失效。无全局目标、无最近对话兜底。
 
-- 插件只用 Node 内置模块,**不导入 `@opencode/plugin`**——该运行时的本地插件加载器不做 node_modules 解析,直接导出 `{ id, setup }` 即可。
-- **目标会话**(优先级):① 显式绑定——在目标对话的 `/` 菜单选 **`/protobridge`**(插件注册的命令,选中即绑定、不发消息,并插一条合成确认),或发一句 `启用协同` 兜底;绑定写入全局 `~/.config/opencode/protobridge-target.json`,跨项目位置生效。② 最近一次"用户输入"的会话(后台事件不会抢占);③ 最近事件兜底。换目标就在新对话里再操作一次。
-- **页面开关**:studio 顶栏「协同通知:开/关」。关掉时反馈仍落盘,但包内 `notify:false`,插件不自动唤醒,需手动让 agent「处理反馈」。
-- OpenCode 插件 API 没有"当前聚焦会话",浏览器页面也无法自己识别会话,所以"发给哪个对话"必须由对话侧用触发词声明;页面开关只控制是否自动通知。
-- 用**独占标记文件**原子去重,避免多实例重复唤醒;扫描会跳过 `examples/**`、`tests/**` 夹具,跑冒烟不会误唤醒。
-- 自检日志:`%TEMP%\protobridge-plugin.log`。
+**接入状态：** 已提供 Host 桥接契约和测试，尚未接入验证 DSH/Cordis 的真实浏览器接口。未接入的客户端只保存反馈，需手动让 agent 处理；不承诺自动唤醒。详见 [Host 接入说明](docs/host-integration.md)。
+
+`protobridge install-plugin` 仍可全局安装 OpenCode 适配包，但客户端必须实现页面适配契约；旧版 /protobridge 和“启用协同”全局绑定已移除。升级时请停用旧插件并重启客户端。
+
+## Releases
+
+下载见 [Releases](https://github.com/noctide/protobridge/releases)。每版提供 npm 安装包、独立 ZIP 和 SHA256 校验。草稿版本不对公众可见。
+
+- TGZ：`npm install -g ./protobridge-0.2.0.tgz`。
+- ZIP：解压后运行 `node package/bin/protobridge.mjs serve --root <项目目录>`，无运行时 npm 依赖。
+- 自动通知仍取决于客户端页面适配是否完成。
+
+发布工作流模板见 docs/release-workflow.yml。当前 GitHub 凭证缺少 workflow 权限，尚未启用 Actions；维护者将模板放入 .github/workflows/release.yml 后，推送与 package.json 一致的 v* 标签可创建草稿 Release。
 
 ## 目录
 
@@ -99,7 +99,7 @@ opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
 | `tests/verify-multi.mjs` | 多文件每文件整页冒烟 |
 | `AGENTS-SNIPPET.md` | 追加到项目 `AGENTS.md` 的约定段 |
 | `skills/proto-bridge/SKILL.md` | 开放 Agent Skills 格式的进阶操作手册 |
-| `packages/opencode-plugin/` | OpenCode 插件(全局装一次):反馈落盘后唤醒绑定/最近会话(适配层 ③) |
+| `packages/opencode-plugin/` | OpenCode 插件(全局装一次):页面归属 Host 适配入口（需客户端接入） |
 | `adapters/` | ZCode / OpenCode / Claude 薄条 |
 
 ## 默认值 / 无配置起步
@@ -113,3 +113,4 @@ opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
 
 `path` 语义固定:**相对页面根容器、同名标签序 `nth-of-type` 链**。任何 agent 读 JSON 即可定位元素,
 不需要理解 studio 内部。详见 `SPEC.md` §4 与 `AGENTS-SNIPPET.md`。
+
