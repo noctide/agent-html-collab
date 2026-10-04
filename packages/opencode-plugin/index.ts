@@ -3,7 +3,7 @@
 //       agent 自动接手处理。运行时(studio/serve.mjs)完全不知道本插件存在(方案 A,零耦合)。
 //
 // 目标会话如何确定(优先级):
-//   1) 显式绑定:在某个会话里发送触发词「启用协同」或「/protobridge bind」→ 该会话成为目标并持久化;
+//   1) 显式绑定:在目标会话里发送触发词「启用协同」→ 插件记下该会话 id 并持久化;
 //   2) 最近一次"用户输入"所在的会话(只在 prompt 钩子更新,后台事件不会抢占);
 //   3) 最近一次的会话事件(兜底)。
 // 说明:OpenCode 插件 API 没有"当前聚焦会话",页面(studio)也无法自己识别会话;
@@ -27,7 +27,7 @@ const DBG = path.join(os.tmpdir(), "protobridge-plugin.log")
 const log = (m: string) => { try { fs.appendFileSync(DBG, new Date().toISOString() + " " + m + "\n") } catch { /* ignore */ } }
 
 /* 触发词:命中即把当前会话绑定为反馈目标(去空白/大小写/尾部标点后比较) */
-const BIND_TRIGGERS = ["启用协同", "/protobridge bind", "protobridge bind"]
+const BIND_TRIGGERS = ["启用协同"]
 const normalize = (s: any) => String(s == null ? "" : s).trim().toLowerCase().replace(/[。.!！\s]+$/g, "")
 const isBindTrigger = (t: any) => BIND_TRIGGERS.includes(normalize(t))
 
