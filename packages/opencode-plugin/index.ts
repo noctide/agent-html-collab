@@ -10,8 +10,12 @@
 //       因此"发给哪个对话"必须由对话侧声明(发触发词),页面开关只控制"是否自动通知"。
 //       studio 反馈包可带 notify:false,表示本次不自动唤醒(需用户手动说「处理反馈」)。
 //
-// 加载:放在项目 .opencode/plugins/ 下自动加载;需重启服务或重载配置后生效。
-// 注意:本运行时的本地插件加载器不做 node_modules 解析,故这里直接导出 { id, setup },只用 node: 内置模块。
+// 安装(任选):
+//   全局(装一次,所有项目生效): protobridge install-plugin
+//     或 opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
+//   单项目: 把本目录复制到 <项目>/.opencode/plugins/protobridge/
+// 重启 OpenCode 后生效。
+// 注意:本文件只用 node: 内置模块,不导入 @opencode/plugin(自定义运行时的本地加载器不做 node_modules 解析)。
 import fs from "node:fs"
 import path from "node:path"
 import os from "node:os"

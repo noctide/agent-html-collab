@@ -1,0 +1,25 @@
+{
+  "name": "protobridge-opencode-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ProtoBridge OpenCode 插件:反馈落盘后自动唤醒绑定/最近会话",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "files": [
+    "index.ts",
+    "README.md"
+  ],
+  "keywords": [
+    "opencode",
+    "plugin",
+    "protobridge",
+    "prototype",
+    "feedback"
+  ],
+  "engines": {
+    "node": ">=18"
+  }
+}

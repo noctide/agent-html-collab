@@ -194,7 +194,7 @@ verify 断言扩展、常见故障。原则:skill 承载"agent 怎么操作",不
 | `adapters/zcode.md` | ZCode 斜杠命令:`/protobridge init` / `/protobridge feedback` |
 | `adapters/opencode.md` | OpenCode command 同内容 |
 | `adapters/claude.md` | Claude 系 skill 链接/复制说明 |
-| `.opencode/plugins/protobridge/` | OpenCode 插件:**反馈落盘 → 自动唤醒最近活跃会话**(解决"点发送不必再说处理") |
+| `packages/opencode-plugin/` | OpenCode 插件(全局装一次):**反馈落盘 → 自动唤醒绑定/最近会话**;`protobridge install-plugin` 安装 |
 
 内容都是一句话指向 AGENTS.md 的对应小节,不复制逻辑。
 

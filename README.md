@@ -56,7 +56,14 @@ node tests/verify-generic.mjs
 
 ## OpenCode 自动唤醒(可选)
 
-把 `.opencode/plugins/protobridge/` 放进项目,并让 OpenCode 重载/重启后:用户在 studio 点「发送反馈」→ 反馈包落盘 → 插件**自动**向"目标会话"投递一条消息,agent 无需你再说「处理」。
+**装一次、全局生效**(不依赖 `opencode` CLI):
+```bash
+protobridge install-plugin          # 复制到 ~/.config/opencode/plugins/protobridge
+# 或(有 opencode CLI 时):
+opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
+```
+重启 OpenCode 后:用户在 studio 点「发送反馈」→ 反馈包落盘 → 插件**自动**向"目标会话"投递一条消息,agent 无需你再说「处理」。
+插件源码在 `packages/opencode-plugin/`;也可只复制到单个项目的 `.opencode/plugins/protobridge/`。
 
 - 插件只用 Node 内置模块,**不导入 `@opencode/plugin`**——该运行时的本地插件加载器不做 node_modules 解析,直接导出 `{ id, setup }` 即可。
 - **目标会话**(优先级):① 显式绑定——在某个会话里发触发词 `启用协同` 或 `/protobridge bind`,该会话即成为目标并持久化;② 最近一次"用户输入"的会话(后台事件不会抢占);③ 最近事件兜底。新开的对话发一句触发词即可成为目标。
@@ -69,7 +76,7 @@ node tests/verify-generic.mjs
 
 | 路径 | 说明 |
 |---|---|
-| `bin/protobridge.mjs` | CLI 入口:`serve` / `apply` / `init`(供 `npx github:` 调用) |
+| `bin/protobridge.mjs` | CLI 入口:`serve` / `apply` / `init` / `install-plugin`(供 `npx github:` 调用) |
 | `studio/studio.html` | 内核 studio(配置驱动,内嵌 bridge) |
 | `studio/serve.mjs` | 通用服务:静态 + `/api/feedback` 落盘 + `/api/config` + 注入运行时 + 递归扫描/自动探测 |
 | `studio/apply.mjs` | 回灌契约 + CLI:备份 → 定位 → 文本兜底匹配 → 写回 → 报告 → 归包 |
@@ -84,7 +91,7 @@ node tests/verify-generic.mjs
 | `tests/verify-multi.mjs` | 多文件每文件整页冒烟 |
 | `AGENTS-SNIPPET.md` | 追加到项目 `AGENTS.md` 的约定段 |
 | `skills/proto-bridge/SKILL.md` | 开放 Agent Skills 格式的进阶操作手册 |
-| `.opencode/plugins/protobridge/` | OpenCode 插件:反馈落盘后唤醒绑定/最近会话(适配层 ③) |
+| `packages/opencode-plugin/` | OpenCode 插件(全局装一次):反馈落盘后唤醒绑定/最近会话(适配层 ③) |
 | `adapters/` | ZCode / OpenCode / Claude 薄条 |
 
 ## 默认值 / 无配置起步
