@@ -3,7 +3,9 @@
 //       agent 自动接手处理。运行时(studio/serve.mjs)完全不知道本插件存在(方案 A,零耦合)。
 //
 // 目标会话如何确定(优先级):
-//   1) 显式绑定:在目标会话执行命令 /protobridge(或发一句「启用协同」)→ 插件记下该会话 id 并持久化;
+//   1) 显式绑定:在目标会话执行命令 /protobridge(或发一句「启用协同」)→ 记下该会话 id 并写入全局
+//      文件 ~/.config/opencode/protobridge-target.json(所有项目位置的实例共用,跨项目也生效);
+//      /protobridge 命令绑定后会插一条合成确认消息(可见,不算用户发言、不触发钩子);
 //   2) 最近一次"用户输入"所在的会话(只在 prompt 钩子更新,后台事件不会抢占);
 //   3) 最近一次的会话事件(兜底)。
 // 说明:OpenCode 插件 API 没有"当前聚焦会话",页面(studio)也无法自己识别会话;
@@ -26,6 +28,16 @@ const POLL_MS = 800
 const DBG = path.join(os.tmpdir(), "protobridge-plugin.log")
 const log = (m: string) => { try { fs.appendFileSync(DBG, new Date().toISOString() + " " + m + "\n") } catch { /* ignore */ } }
 
+/* 绑定的目标会话存入全局文件(所有项目位置的插件实例共用),解决跨项目位置绑定不生效 */
+const TARGET_FILE = path.join(os.homedir(), ".config", "opencode", "protobridge-target.json")
+function readTarget(): string | undefined {
+  try { const j = JSON.parse(fs.readFileSync(TARGET_FILE, "utf8")); return typeof j?.sessionID === "string" ? j.sessionID : undefined } catch { return undefined }
+}
+function writeTarget(sessionID: string) {
+  try { fs.mkdirSync(path.dirname(TARGET_FILE), { recursive: true }); fs.writeFileSync(TARGET_FILE, JSON.stringify({ sessionID, at: Date.now() }, null, 2)) } catch { /* ignore */ }
+}
+function clearTarget() { try { fs.rmSync(TARGET_FILE, { force: true }) } catch { /* ignore */ } }
+
 /* 触发词:命中即把当前会话绑定为反馈目标(去空白/大小写/尾部标点后比较) */
 const BIND_TRIGGERS = ["启用协同"]
 const normalize = (s: any) => String(s == null ? "" : s).trim().toLowerCase().replace(/[。.!！\s]+$/g, "")
@@ -37,17 +49,16 @@ export default {
     const root: string = ctx.location?.directory || process.cwd()
     const isSessionID = (v: any) => typeof v === "string" && v.startsWith("ses")
 
-    /* 1) 维护"目标会话"信号:显式绑定 + 最近用户输入 + 最近事件(兜底) */
-    let bound: { sessionID: string; at: number } | undefined = (await ctx.storage.get("bound")) as any
+    /* 1) 维护"目标会话"信号:显式绑定(全局文件) + 最近用户输入 + 最近事件(兜底) */
     const lastPrompt: Record<string, number> = ((await ctx.storage.get("lastPrompt")) as any) || {}
     const lastEvent: Record<string, number> = {}
 
     const bind = (sid: any) => {
       if (!isSessionID(sid)) return
-      bound = { sessionID: sid, at: Date.now() }
-      void ctx.storage.set("bound", bound)
+      writeTarget(sid)
       log("bound session " + sid)
     }
+    const boundTarget = () => { const t = readTarget(); return isSessionID(t) ? t : undefined }
     const notePrompt = (sid: any) => {
       if (!isSessionID(sid)) return
       lastPrompt[sid] = Date.now()
@@ -59,7 +70,7 @@ export default {
       for (const k of Object.keys(m)) if (m[k] > ts) { ts = m[k]; best = k }
       return best
     }
-    const pickTarget = () => (bound && isSessionID(bound.sessionID) ? bound.sessionID : newest(lastPrompt) || newest(lastEvent))
+    const pickTarget = () => boundTarget() || newest(lastPrompt) || newest(lastEvent)
 
     const controller = new AbortController()
     void (async () => {
@@ -78,16 +89,20 @@ export default {
         if (isBindTrigger(event?.prompt?.text ?? event?.text)) bind(sid)
       })
     } catch { /* 钩子不可用时靠事件流 */ }
-    /* 1b) 注册命令 /protobridge:在目标会话选中即绑定(不提交消息) */
+    /* 1b) 注册命令 /protobridge:选中即绑定(不提交消息),并回一条合成确认 */
     try {
       await ctx.command.transform((editor: any) => {
         editor.add({
           name: "protobridge",
           description: "绑定本会话为 ProtoBridge 反馈目标",
-          execute: async ({ sessionID }: any) => { bind(sessionID) },
+          execute: async ({ sessionID }: any) => {
+            bind(sessionID)
+            try { await ctx.session.synthetic({ sessionID, text: "✅ ProtoBridge:已绑定本会话,反馈会送到这里(换会话就再执行一次 /protobridge)" }) } catch { /* 不支持合成消息时忽略 */ }
+          },
         })
       })
-    } catch { /* 运行时无命令 API 时忽略,仍可用「启用协同」 */ }
+      log("registered command /protobridge")
+    } catch (e: any) { log("command register failed: " + String(e?.message || e)) }
 
     /* 2) 发现反馈目录:扫描项目内 proto.config.json 的 server.feedbackDir;跳过 examples/tests 夹具 */
     const dirs = new Set<string>()
@@ -139,9 +154,8 @@ export default {
         await deliver(target, file)
       } catch (e: any) {
         // 绑定会话可能已关闭:清掉绑定,退回最近用户输入/事件
-        if (bound && target === bound.sessionID) {
-          bound = undefined
-          try { await ctx.storage.remove("bound") } catch { /* ignore */ }
+        if (boundTarget() === target) {
+          clearTarget()
           const alt = pickTarget()
           if (alt && alt !== target) { try { await deliver(alt, file); return } catch { /* fallthrough */ } }
         }

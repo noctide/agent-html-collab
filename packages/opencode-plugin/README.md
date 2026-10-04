@@ -21,7 +21,7 @@ opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
 
 ## 用法
 
-- 绑定目标会话:在目标对话的 `/` 菜单里选 **`/protobridge`**(选中即绑定,**不提交消息**);或发一句 **`启用协同`** 兜底。插件记下该会话 id 并持久化;换目标就在新对话里再操作一次。
+- 绑定目标会话:在目标对话的 `/` 菜单里选 **`/protobridge`**(选中即绑定,**不提交消息**,会插一条合成确认);或发一句 **`启用协同`** 兜底。绑定写入全局 `~/.config/opencode/protobridge-target.json`,**跨项目位置生效**;换目标就在新对话里再操作一次。
 - 目标优先级:显式绑定 > 最近一次"用户输入"的会话 > 最近事件。
 - 反馈包带 `notify:false` 时(studio「协同通知」关)不自动唤醒。
 - 自检日志:`%TEMP%\protobridge-plugin.log`(Windows)/ `$TMPDIR/protobridge-plugin.log`。
