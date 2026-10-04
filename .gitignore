@@ -1,0 +1,7 @@
+node_modules/
+feedback/
+backup/
+examples/*/feedback/
+examples/*/backup/
+examples/*/*.verifybak
+*.log

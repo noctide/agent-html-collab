@@ -1,0 +1,70 @@
+/* 标注模式样式（anno.js 配套） */
+.pb-anno-on [data-anno] { outline: 1.5px dashed rgba(39, 104, 95, .55); outline-offset: 2px; }
+
+.pb-badge {
+  position: absolute; z-index: 9000; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 9px; background: #27685f; color: #fff; font-size: 10px; font-weight: 700;
+  font-family: Consolas, monospace; display: flex; align-items: center; justify-content: center;
+  cursor: pointer; box-shadow: 0 1px 4px rgba(32, 33, 31, .3); border: 1.5px solid #fff;
+  user-select: none; line-height: 1;
+}
+.pb-badge:hover { background: #1f554e; transform: scale(1.08); }
+.pb-badge.filled { background: #95603a; }
+.pb-badge.filled::after { content: "●"; font-size: 7px; margin-left: 3px; }
+
+.pb-anno-fab {
+  position: fixed; right: 18px; bottom: 18px; z-index: 9500;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+  font-family: var(--font, sans-serif);
+}
+.pb-fab-main {
+  height: 40px; padding: 0 16px; border-radius: 6px; border: none; cursor: pointer;
+  background: #20211f; color: #f7f6f3; font-size: 13px; font-weight: 600;
+  box-shadow: 0 4px 14px rgba(32, 33, 31, .25); display: flex; align-items: center; gap: 7px;
+}
+.pb-fab-main:hover { background: #2c2d2a; }
+.pb-fab-main.on { background: #27685f; color: #fff; }
+.pb-anno-tools { display: none; flex-direction: column; gap: 6px; align-items: flex-end; }
+.pb-anno-fab.open .pb-anno-tools { display: flex; }
+.pb-tool-btn {
+  height: 30px; padding: 0 12px; border-radius: 6px; border: 1px solid #d6d4ce;
+  background: #f7f6f3; color: #20211f; font-size: 12px; cursor: pointer; box-shadow: 0 1px 3px rgba(32,33,31,.08);
+}
+.pb-tool-btn:hover { background: #e2e0da; }
+.pb-tool-btn.count { cursor: default; color: #686a64; }
+
+/* 意见编辑弹层 */
+.pb-pop {
+  position: absolute; z-index: 9600; width: 320px; background: #f7f6f3; border-radius: 6px;
+  border: 1px solid #d6d4ce; box-shadow: 0 12px 32px rgba(32, 33, 31, .16);
+  font-family: var(--font, sans-serif); font-size: 13px; color: #20211f; overflow: hidden;
+}
+.pb-pop-head {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: #efede8; border-bottom: 1px solid #d6d4ce;
+}
+.pb-pop-head b { font-size: 13px; display: flex; gap: 8px; align-items: center; color: #20211f; }
+.pb-pop-head .pb-id { background: #27685f; color: #fff; border-radius: 6px; padding: 2px 8px; font-size: 11px; font-family: Consolas, monospace; }
+.pb-pop-src { font-size: 11px; color: #686a64; padding: 6px 14px 0; font-family: Consolas, monospace; }
+.pb-pop-body { padding: 10px 14px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pb-pop label { font-size: 12px; color: #686a64; display: block; margin-bottom: 3px; }
+.pb-pop select, .pb-pop input, .pb-pop textarea {
+  width: 100%; border: 1px solid #d6d4ce; border-radius: 6px; padding: 6px 9px;
+  font-size: 12.5px; font-family: var(--font, sans-serif); background: #fff; color: #20211f;
+}
+.pb-pop textarea { min-height: 64px; resize: vertical; }
+.pb-pop textarea:focus, .pb-pop select:focus, .pb-pop input:focus { outline: none; border-color: #27685f; box-shadow: 0 0 0 3px rgba(39,104,95,.15); }
+.pb-pop-foot { display: flex; gap: 8px; justify-content: flex-end; padding-top: 2px; }
+.pb-btn { height: 28px; padding: 0 12px; border-radius: 6px; border: 1px solid #d6d4ce; background: #fff; color: #20211f; font-size: 12px; cursor: pointer; }
+.pb-btn.primary { background: #27685f; border-color: #27685f; color: #fff; font-weight: 600; }
+.pb-btn.danger { color: #a33a2e; }
+.pb-2col { display: flex; gap: 8px; } .pb-2col > div { flex: 1; }
+
+/* 导出预览弹层 */
+.pb-export pre {
+  max-height: 300px; overflow: auto; background: #efede8; border: 1px solid #d6d4ce; color: #20211f;
+  border-radius: 6px; padding: 10px; font-size: 11px; font-family: Consolas, monospace; white-space: pre-wrap;
+}
+.pb-export-tabs { display: flex; gap: 6px; margin-bottom: 8px; }
+.pb-export-tabs .pb-btn.on { background: #27685f; color: #fff; border-color: #27685f; }
+.pb-empty { color: #686a64; font-size: 12px; padding: 8px 0; }

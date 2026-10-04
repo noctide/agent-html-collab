@@ -1,0 +1,40 @@
+{
+  "title": "原型协同",
+  "source": {
+    "mode": "single",
+    "file": "proto.html",
+    "dir": "pages/",
+    "urls": [],
+    "index": ""
+  },
+  "pages": {
+    "container": ".pg-sec",
+    "activeClass": "act",
+    "idAttr": "data-page",
+    "switch": "auto",
+    "rootId": "pg-{id}",
+    "overview": null,
+    "single": false,
+    "singlePerFile": false,
+    "defaultId": "",
+    "list": []
+  },
+  "viewport": {
+    "desktop": 1440,
+    "narrow": [
+      { "match": ".is-mobile", "width": 390 }
+    ]
+  },
+  "ui": {
+    "whitelist": [".pb-badge", ".pb-pop", ".pb-anno-fab", ".pbx-echip"]
+  },
+  "tools": {
+    "anno": false,
+    "annoMap": ""
+  },
+  "server": {
+    "port": 8123,
+    "feedbackDir": "feedback/",
+    "wakeOnFeedback": false
+  }
+}

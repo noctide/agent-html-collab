@@ -1,0 +1,20 @@
+{
+  "title": "ProtoBridge Demo",
+  "source": { "mode": "single", "file": "proto.html" },
+  "pages": {
+    "container": ".pg-sec",
+    "activeClass": "act",
+    "idAttr": "data-page",
+    "switch": "auto",
+    "list": [
+      { "id": "p01", "title": "P01 · 首页" },
+      { "id": "p02", "title": "P02 · 详情" },
+      { "id": "p03", "title": "P03 · 设置" }
+    ]
+  },
+  "viewport": { "desktop": 1200, "narrow": [{ "match": ".is-mobile", "width": 390 }] },
+  "ui": { "whitelist": [".pb-badge", ".pb-pop", ".pb-anno-fab", ".pbx-echip"] },
+  "tools": { "anno": true, "annoMap": "" },
+  "server": { "port": 8131, "feedbackDir": "feedback/", "wakeOnFeedback": false },
+  "apply": { "adapter": "apply.mjs", "backupDir": "backup/" }
+}

@@ -1,0 +1,17 @@
+{
+  "title": "单文档示例",
+  "source": { "mode": "single", "file": "proto.html" },
+  "pages": {
+    "container": "body",
+    "activeClass": "act",
+    "idAttr": "data-page",
+    "single": true,
+    "defaultId": "page",
+    "switch": "auto",
+    "list": [{ "id": "page", "title": "整页文档" }]
+  },
+  "viewport": { "desktop": 900, "narrow": [{ "match": ".is-mobile", "width": 390 }] },
+  "ui": { "whitelist": [".pb-badge", ".pb-pop", ".pb-anno-fab", ".pbx-echip"] },
+  "tools": { "anno": false },
+  "server": { "port": 8133, "feedbackDir": "feedback/", "wakeOnFeedback": false }
+}

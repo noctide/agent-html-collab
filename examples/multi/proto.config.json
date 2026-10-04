@@ -1,0 +1,16 @@
+{
+  "title": "多文件示例",
+  "source": { "mode": "pages", "dir": ".", "index": "" },
+  "pages": {
+    "container": "body",
+    "singlePerFile": true,
+    "switch": "auto",
+    "list": [
+      { "id": "a", "title": "A · 第一页", "file": "a.html" },
+      { "id": "b", "title": "B · 第二页", "file": "b.html" }
+    ]
+  },
+  "viewport": { "desktop": 900, "narrow": [{ "match": ".is-mobile", "width": 390 }] },
+  "tools": { "anno": false },
+  "server": { "port": 8135, "feedbackDir": "feedback/", "wakeOnFeedback": false }
+}

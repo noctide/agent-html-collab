@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ProtoBridge Demo · 通用原型</title>
+<style>
+  :root { --blue: #2f5fe8; --ink: #1a2233; --line: #e4e8ef; --bg: #f7f9fc; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 15px/1.6 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; color: var(--ink); }
+
+  .pg-sec { display: none; min-height: 130vh; padding: 40px; background: var(--bg); }
+  .pg-sec.act { display: block; }
+  .pg-sec.is-mobile { max-width: 390px; margin: 0 auto; }
+  .card { max-width: 760px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 28px 32px; }
+  h1 { font-size: 26px; margin: 0 0 8px; }
+  h2 { font-size: 22px; margin: 0 0 8px; }
+  h3 { font-size: 18px; margin: 0 0 8px; }
+  p { color: #48506a; margin: 6px 0; }
+  nav button { font: inherit; border: 1px solid var(--line); background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; margin-right: 6px; }
+  nav button:hover { border-color: var(--blue); color: var(--blue); }
+  [data-anno] { border-radius: 8px; }
+  .filler { height: 70vh; }
+</style>
+</head>
+<body>
+
+<section class="pg-sec act" data-page="p01">
+  <div class="card">
+    <div data-anno="p01-01" data-anno-label="操作区">
+      <nav style="display: flex; justify-content: space-between">
+        <button data-go="p02">进入详情 →</button>
+        <button data-go="p03">进入设置 →</button>
+      </nav>
+    </div>
+    <h1 id="demo-title">演示首页</h1>
+    <p id="demo-sub">这是用于验证 ProtoBridge 通用闭环的示例原型。</p>
+    <div class="filler" aria-hidden="true"></div>
+  </div>
+</section>
+
+<section class="pg-sec" data-page="p02">
+  <div class="card">
+    <h2 id="demo-detail">详情页</h2>
+    <p id="demo-detail-sub">第二页内容,用于验证切页与反馈回灌。</p>
+    <div data-anno="p02-01" data-anno-label="返回区">
+      <nav><button data-go="p01">← 返回首页</button></nav>
+    </div>
+    <div class="filler" aria-hidden="true"></div>
+  </div>
+</section>
+
+<section class="pg-sec" data-page="p03">
+  <div class="card">
+    <h3 id="demo-settings">设置页</h3>
+    <p id="demo-settings-sub">第三页内容,用于验证多页切换。</p>
+    <div data-anno="p03-01" data-anno-label="设置项">
+      <nav><button data-go="p01">← 返回首页</button></nav>
+    </div>
+    <div class="filler" aria-hidden="true"></div>
+  </div>
+</section>
+
+<script>
+  /* 轻量导航:交给 studio 统一处理(auto 切换器) */
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest && e.target.closest('[data-go]');
+    if (!b) return;
+    try { parent.postMessage({ type: 'proto-nav', page: b.getAttribute('data-go') }, '*'); } catch (err) {}
+  });
+</script>
+</body>
+</html>
