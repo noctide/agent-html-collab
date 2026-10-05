@@ -49,7 +49,7 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
       if (req.headers['sec-fetch-site'] === 'cross-site' || req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) return { rejection: 403 };
       return req.headers['x-test-auth'] ? {} : { rejection: 401 };
     } },
-    sessionController: { prompt: async request => { queued.push(request); return { accepted: true }; } },
+    sessionController: { prompt: async (request, signal) => { signal.throwIfAborted(); queued.push(request); return { accepted: true }; } },
     webServer: { register: route => { routes.push(route); return () => {}; } },
     effect: factory => { const dispose = factory(); disposers.push(dispose); return dispose; },
   });

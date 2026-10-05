@@ -950,14 +950,13 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
           if (!result || result.saved !== true) throw new Error('Host 未确认反馈保存成功');
           if (result.delivery === 'failed') {
             btn.textContent = '重试通知';
-            toast('反馈已保存，通知失败：' + (result.error || '请重试'));
-            return;
+            throw new Error('反馈已保存，通知失败：' + (result.error || '请重试'));
           }
           pendingBundle = null;
           btn.textContent = '已保存 ✓';
           toast(result.delivery === 'queued' ? '反馈已保存，已通知本页面所属对话' : '反馈已保存，请让 agent「处理反馈」');
         })
-        .catch(function (err) {
+        .catch(async function (err) {
           var bundle = pendingBundle || collectBundle();
           var text = JSON.stringify(bundle, null, 2);
           var why = (err && err.message) || '网络不可达(本地服务未启动?)';
@@ -969,7 +968,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
             copied = document.execCommand('copy');
             document.body.removeChild(ta);
           } catch (e) { copied = false; }
-          if (!copied && navigator.clipboard) { try { navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; } }
+          if (!copied && navigator.clipboard) { try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; } }
           btn.textContent = '发送失败';
           var q = openPop(null,
             '<div class="ph"><span>发送失败,请手动交给 Agent</span><button class="x" data-x="close">✕</button></div>' +

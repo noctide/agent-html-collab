@@ -59,6 +59,20 @@ try {
   assert.equal(queued.length, 1);
   assert.equal(queued[0].sessionId, 'session-ui-test');
   assert.deepEqual(errors, []);
+  const studioFrame = page.frames().find(value => value.url() === 'about:srcdoc');
+  await studioFrame.evaluate(() => {
+    window.PROTOBRIDGE_HOST.submitFeedback = async () => ({ saved: true, delivery: 'failed', error: 'test notification failure' });
+    document.execCommand = () => false;
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async text => { window.testCopiedFeedback = text; } } });
+  });
+  await frame.locator('#title').click();
+  await frame.locator('#title').fill('Manual fallback test');
+  await frame.locator('p').click();
+  await studio.locator('#send').click();
+  await studio.locator('[data-x=ok]').click();
+  await studio.locator('[data-f=bundle]').waitFor();
+  assert.ok(await studioFrame.evaluate(() => window.testCopiedFeedback.includes('Manual fallback test')));
+  assert.ok((await studio.locator('.sum').innerText()).includes('复制到剪贴板'));
   await page.screenshot({ path: process.env.PROTOBRIDGE_SCREENSHOT, fullPage: true });
   console.log('PASS: bound Studio loads, text edit saves and feedback queues to its owner; no page errors');
 } finally {

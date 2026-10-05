@@ -51,7 +51,7 @@ export function apply(ctx) {
       enqueue: async ({ sessionId, feedbackId, text }) => {
         if (closed || ctx.agents.get(sessionId) !== agent) throw new Error('页面所属会话已失效');
         const result = await ctx.sessionController.prompt({ sessionId, requestId: 'protobridge-' + feedbackId,
-          content: [{ type: 'text', text }], mode: 'followup' });
+          content: [{ type: 'text', text }], mode: 'followup' }, new AbortController().signal);
         if (result?.accepted !== true) throw new Error('客户端未接受反馈通知');
       },
     });
