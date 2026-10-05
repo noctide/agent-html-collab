@@ -13,7 +13,8 @@ const agent = { session: { header: { cwd: root } } };
 apply({ agents: { get: () => agent }, connection: { admit: () => ({}) }, sessionController: { prompt: async request => { queued.push(request); return { accepted: true }; } },
   webServer: { register: route => { routes.push(route); return () => {}; } }, effect: factory => { const dispose = factory(); cleanup.push(dispose); return dispose; } });
 const server = http.createServer((req, res) => {
-  const route = routes.find(r => r.kind === 'exact' ? req.url === r.path : req.url.startsWith(r.path));
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  const route = routes.find(r => r.kind === 'exact' ? pathname === r.path : pathname === r.path || pathname.startsWith(r.path + '/'));
   if (route) route.handler(req, res); else { res.writeHead(404); res.end(); }
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));

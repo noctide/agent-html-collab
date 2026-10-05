@@ -88,7 +88,7 @@ export function apply(ctx) {
     } catch (error) { send(res, 400, { error: error.message }); }
   } }), 'protobridge: open bound page');
 
-  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/protobridge/pages/', handler: async (req, res) => {
+  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/protobridge/pages', handler: async (req, res) => {
     try {
       if (!admit(req, res)) return;
       const url = new URL(req.url, 'http://localhost');
