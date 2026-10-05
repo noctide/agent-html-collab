@@ -28,7 +28,18 @@ try {
   page.on('console', message => { if (message.type() === 'error') console.log('CONSOLE', message.text()); });
   page.on('pageerror', e => errors.push(e.message));
   await page.goto(base + opened.url);
-  const frame = page.frameLocator('#proto');
+  const html = await fetch(base + opened.url).then(r => r.text());
+  await page.evaluate(({ html, url }) => {
+    document.body.innerHTML = '';
+    const outer = document.createElement('iframe');
+    outer.id = 'studio-host';
+    outer.style.cssText = 'width:100%;height:950px;border:0';
+    outer.sandbox = 'allow-scripts allow-same-origin allow-downloads';
+    outer.srcdoc = html.replace('<head>', '<head><base href="' + url + '">');
+    document.body.appendChild(outer);
+  }, { html, url: base + opened.url });
+  const studio = page.frameLocator('#studio-host');
+  const frame = studio.frameLocator('#proto');
   try { await frame.locator('#title').waitFor({ timeout: 10000 }); }
   catch (error) {
     console.log('ERRORS', errors);
@@ -37,13 +48,13 @@ try {
     await page.screenshot({ path: process.env.PROTOBRIDGE_SCREENSHOT, fullPage: true });
     throw error;
   }
-  await page.locator('#bar [data-x=m-edit]').click();
+  await studio.locator('#bar [data-x=m-edit]').click();
   await frame.locator('#title').click();
   await frame.locator('#title').fill('Changed by UI test');
   await frame.locator('p').click();
-  await page.locator('#send').click();
-  await page.locator('[data-x=ok]').click();
-  await page.waitForFunction(() => document.querySelector('#send').textContent.includes('已保存'));
+  await studio.locator('#send').click();
+  await studio.locator('[data-x=ok]').click();
+  await studio.locator('#send').filter({ hasText: '已保存' }).waitFor();
   assert.equal(queued.length, 1);
   assert.equal(queued[0].sessionId, 'session-ui-test');
   assert.deepEqual(errors, []);

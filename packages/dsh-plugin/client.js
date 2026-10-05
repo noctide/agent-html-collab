@@ -21,10 +21,17 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         let disposed = false, opened = null;
         setError(null); setPage(null);
-        request('/protobridge/open', { sessionId: ownerSessionId, pageId: tab.id }).then(value => {
+        request('/protobridge/open', { sessionId: ownerSessionId, pageId: tab.id }).then(async value => {
           opened = value;
           if (disposed) request(value.url.replace(/\/studio$/, '/close'), {}).catch(() => {});
-          else setPage(value);
+          else {
+            const response = await fetch(value.url);
+            if (!response.ok) throw new Error('原型页面加载失败（' + response.status + '）');
+            const html = await response.text();
+            if (!html.includes('window.PROTOBRIDGE_HOST=') || !html.includes('window.PROTO_CONFIG')) throw new Error('原型服务未返回完整页面，请重试');
+            const base = new URL(value.url, window.location.href).href.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+            if (!disposed) setPage({ ...value, html: html.replace('<head>', '<head><base href="' + base + '">') });
+          }
         }).catch(e => { if (!disposed) setError(e.message); });
         return () => {
           disposed = true;
@@ -36,8 +43,15 @@ window.__ModuleLoader__.load({
           h('div', { style: { display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 500 } }, icon(), t('title')),
           h('p', { style: { fontSize: 13, lineHeight: 1.6, margin: '12px 0' } }, error || t('opening')),
           error && h(Action, { onClick: () => setAttempt(x => x + 1) }, t('retry'))));
-      return h('iframe', { src: page.url, title: t('title'), style: { width: '100%', height: '100%', flex: 1, border: 0 },
-        sandbox: 'allow-scripts allow-same-origin allow-downloads' });
+      return h('iframe', { srcDoc: page.html, title: t('title'), style: { display: 'block', width: '100%', height: '100%', minHeight: 0, flex: '1 1 0', border: 0 },
+        sandbox: 'allow-scripts allow-same-origin allow-downloads',
+        onError: () => setError('原型页面未能载入，请重试'),
+        onLoad: event => {
+          try {
+            const doc = event.currentTarget.contentDocument;
+            if (doc && !doc.querySelector('#proto')) setError('原型页面未完成加载，请重试');
+          } catch { setError('无法读取原型页面，请重试'); }
+        } });
     }
     function PersistentLauncher({ open, t }) {
       const [error, setError] = React.useState(null);
