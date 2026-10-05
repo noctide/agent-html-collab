@@ -17,7 +17,10 @@
     "SPEC.md",
     "README.md",
     "docs",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    ".zcode-plugin",
+    ".mcp.json",
+    "marketplace.json"
   ],
   "scripts": {
     "serve": "node studio/serve.mjs",
@@ -26,11 +29,28 @@
     "verify": "node tests/verify-generic.mjs",
     "verify:single": "node tests/verify-single.mjs",
     "verify:multi": "node tests/verify-multi.mjs",
-    "test": "node --test tests/host-bridge.test.mjs"
+    "test": "node --test tests/host-bridge.test.mjs tests/dsh-plugin.test.mjs tests/zcode-plugin.test.mjs"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/noctide/protobridge.git"
+  },
+  "exports": {
+    ".": "./packages/dsh-plugin/index.mjs",
+    "./client": "./packages/dsh-plugin/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./packages/dsh-plugin/cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-sidebar-right"
+      ]
+    }
   },
   "keywords": [
     "html-prototype",

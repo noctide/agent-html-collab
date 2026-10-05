@@ -66,7 +66,7 @@ node tests/verify-generic.mjs
 
 客户端只安装一次插件，不需要在每个 HTML 所在目录放插件包。页面打开时由 Host 取得所属对话并建立绑定；切换原型文件不改变目标，关闭页面后绑定失效。无全局目标、无最近对话兜底。
 
-**接入状态：** 已提供 Host 桥接契约和测试，尚未接入验证 DSH/Cordis 的真实浏览器接口。未接入的客户端只保存反馈，需手动让 agent 处理；不承诺自动唤醒。详见 [Host 接入说明](docs/host-integration.md)。
+**接入状态：** 已按本机 DSH 0.2.0-rc.2 和 ZCode 3.14.4 的接口实现适配，Host/HTTP 和 stdio MCP 测试通过，真实 GUI 安装联动尚待验证。DSH 页面按所属对话投递；ZCode 通过当前会话的等待工具返回反馈，需保持 wait_feedback 运行。见 [客户端接入](docs/client-adapters.md)。
 
 `protobridge install-plugin` 仍可全局安装 OpenCode 适配包，但客户端必须实现页面适配契约；旧版 /protobridge 和“启用协同”全局绑定已移除。升级时请停用旧插件并重启客户端。
 

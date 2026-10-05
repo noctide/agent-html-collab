@@ -39,6 +39,8 @@ function parseArgs(argv) {
   return a;
 }
 const ARGS = parseArgs(process.argv.slice(2));
+const BASE_PATH = typeof ARGS.basePath === 'string' ? ARGS.basePath.replace(/\/$/, '') : '';
+if (BASE_PATH && !/^\/[a-zA-Z0-9/_-]+$/.test(BASE_PATH)) throw new Error('Invalid base path');
 
 const PROJECT_ROOT = resolve(ARGS.root || process.cwd());
 const LOCAL_CFG = join(PROJECT_ROOT, 'proto.config.json');
@@ -183,6 +185,9 @@ CFG.pages.list = PAGES;
    ============================================================ */
 function buildInjectedConfig() {
   return Object.assign({}, CFG, {
+    source: Object.assign({}, CFG.source, {
+      entry: BASE_PATH && CFG.source.entry?.startsWith('/project/') ? BASE_PATH + CFG.source.entry : CFG.source.entry,
+    }),
     _meta: {
       injectedBy: 'protobridge/serve.mjs',
       configPath: CONFIG_PATH || null,
@@ -234,6 +239,10 @@ function annoMapSrc() {
    ============================================================ */
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://127.0.0.1');
+  if (BASE_PATH) {
+    if (!u.pathname.startsWith(BASE_PATH + '/')) { res.writeHead(404); return res.end('not found'); }
+    u.pathname = u.pathname.slice(BASE_PATH.length);
+  }
   const send = (code, type, body, extra) => {
     res.writeHead(code, Object.assign({ 'Content-Type': type, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' }, extra || {}));
     res.end(body);
@@ -297,6 +306,7 @@ const server = http.createServer((req, res) => {
     // 内核 studio
     if (p === '/studio' || p === '/studio/') {
       let html = readFileSync(join(KERNEL, 'studio.html'), 'utf8');
+      if (BASE_PATH) html = html.replace(/\/(api|tool-res|project)\//g, BASE_PATH + '/$1/');
       const inject = '<script>window.PROTO_CONFIG = ' + JSON.stringify(buildInjectedConfig()).replace(/</g, '\\u003c') + ';<\/script>';
       html = html.includes('<!-- PROTOBRIDGE_CONFIG -->')
         ? html.replace('<!-- PROTOBRIDGE_CONFIG -->', inject)
@@ -305,7 +315,7 @@ const server = http.createServer((req, res) => {
     }
     // 运行时注入资源
     if (p.startsWith('/tool-res/')) {
-      if (p === '/tool-res/host-transport.js') return send(200, MIME['.js'], readFileSync(join(KERNEL, 'host-transport.js')));
+      if (p === '/tool-res/host-transport.js') return send(200, MIME['.js'], readFileSync(join(KERNEL, 'host-transport.js'), 'utf8').replace('/api/feedback', BASE_PATH + '/api/feedback'));
       if (p === '/tool-res/anno.js') return send(200, MIME['.js'], readFileSync(join(KERNEL, 'anno/anno.js')));
       if (p === '/tool-res/anno.css') return send(200, MIME['.css'], readFileSync(join(KERNEL, 'anno/anno.css')));
       if (p === '/tool-res/annotation-map.js') return send(200, MIME['.js'], annoMapSrc());

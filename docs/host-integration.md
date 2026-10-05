@@ -4,8 +4,8 @@
 
 ## 当前状态
 
-仓库提供页面绑定核心、浏览器提交接口和 Host 接入契约。仓库没有 DSH/Cordis 的浏览器源码，不能验证 `SessionBinding`、`retainedBy.mainView` 或 `agent.followup()`；这些不被当作已实现的 API。
-自动唤醒必须由客户端实现下面的适配。未接入时仍可保存反馈，但不会自动唤醒。
+仓库提供通用核心与 DSH、ZCode 适配。DSH 已按本机安装代码接入页面 scoped Slot 和 sessionController.prompt（内部 followup）；ZCode 采用会话隔离的 stdio MCP 等待工具。真实客户端 GUI 尚待安装联动验证。见 [客户端接入](client-adapters.md)。
+以下是其他客户端实现适配时的通用契约。
 
 ## 客户端接入
 

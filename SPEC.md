@@ -1,4 +1,4 @@
-> v0.2 变更：会话通知采用页面归属绑定，旧版全局目标/最近会话方案已移除。客户端接口尚待接入验证，当前契约见 [docs/host-integration.md](docs/host-integration.md)。下文旧自动监听描述仅为历史设计。
+> v0.2 变更：会话通知采用页面归属绑定，旧版全局目标/最近会话方案已移除。DSH Host 与 ZCode 等待工具已实现，真实 GUI 安装联动尚待验证，详见 [docs/client-adapters.md](docs/client-adapters.md)。下文旧自动监听描述仅为历史设计。
 
 # ProtoBridge 通用协同插件 · 规格说明
 

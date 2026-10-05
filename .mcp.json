@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "protobridge": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/packages/zcode-plugin/server.mjs"],
+      "isolation": "session",
+      "timeoutMs": 660000
+    }
+  }
+}
