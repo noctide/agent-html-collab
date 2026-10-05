@@ -56,11 +56,19 @@
   #bar #notify.off { color: #a9a79f; }
   #bar > * { flex-shrink: 0; }
 
-  /* 单行响应式:逐级收进「更多」,绝不换行 */
+  /* 窄侧栏使用两行工具栏，保留页面选择和缩放入口。 */
   @media (max-width: 1180px) { #bar .brand { max-width: 170px; } }
   @media (max-width: 980px) { #bar .count { display: none; } }
-  @media (max-width: 840px) { #bar .zoom, #notify { display: none; } }
-  @media (max-width: 700px) { #bar .brand { max-width: 108px; } #bar select { max-width: 128px; } }
+  @media (max-width: 840px) {
+    #bar { flex-wrap: wrap; height: auto; gap: 4px; padding: 8px 10px; }
+    #bar .brand { max-width: 150px; }
+    #bar .sep, #bar .spacer, #notify { display: none; }
+    #bar .zoom { display: flex; margin-left: auto; }
+    #bar #page-sel { max-width: 170px; }
+    #bar .seg button { padding: 6px 9px; }
+  }
+  #current-path { flex: none; display: block; width: 100%; min-height: 32px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 12px; border: 0; border-bottom: 1px solid var(--pb-line); background: var(--pb-panel); color: var(--pb-gray); font: 12px Consolas, monospace; cursor: pointer; }
+  #current-path:focus-visible { outline: 2px solid var(--pb-teal); outline-offset: -2px; }
 
   #stage { flex: 1; position: relative; overflow: auto; background: var(--pb-paper); }
   #stage::-webkit-scrollbar { width: 11px; height: 11px; }
@@ -149,10 +157,10 @@
   <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
 </div>
 
+<button id="current-path" type="button" title="点击复制当前编辑页面的路径"></button>
 <div id="stage">
   <div id="fit"><iframe id="proto" title="方案预览"></iframe></div>
 </div>
-<button id="current-path" type="button" title="点击复制当前编辑页面的路径" style="position:fixed;left:12px;bottom:12px;z-index:89;max-width:calc(100% - 230px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border:1px solid var(--pb-line);border-radius:6px;background:var(--pb-panel);color:var(--pb-gray);font:12px Consolas,monospace;cursor:pointer"></button>
 
 <div id="mmap">
   <div class="mh"><span>导航 · 小地图</span><button id="mmap-fold" title="折叠/展开">▾</button></div>
@@ -1093,7 +1101,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 小地图 ---------- */
   var mmapScale = 0.1, mmStyled = false;
-  function prefixSel(sel) { sel = sel.trim(); if (/^(html|body|:root)$/i.test(sel)) return CONTAINER; if (/^body\./i.test(sel)) return CONTAINER + sel.replace(/^body/i, ''); return CONTAINER + ' ' + sel; }
+  function prefixSel(sel) { var scope = '#mmap-thumb .pbx-mm-clone'; sel = sel.trim(); if (/^(html|body|:root)$/i.test(sel)) return scope; if (/^body\./i.test(sel)) return scope + sel.replace(/^body/i, ''); return scope + ' ' + sel; }
   function importProtoStyles() {
     if (mmStyled) return; mmStyled = true;
     function walk(rules, media, out) {
@@ -1106,7 +1114,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       return out;
     }
     var css = '';
-    doc.querySelectorAll('style').forEach(function (st) { if (st.dataset.page) { css += st.textContent + '\n'; return; } try { css = walk(st.sheet.cssRules, null, css); } catch (e) {} });
+    [].slice.call(doc.styleSheets).forEach(function (sheet) { try { css = walk(sheet.cssRules, null, css); } catch (e) {} });
     $('#mm-styles').textContent = css;
   }
   function buildMinimap() {
@@ -1116,10 +1124,12 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     importProtoStyles();
     var pageH = Math.max(doc.documentElement.scrollHeight, act.scrollHeight);
     mmapScale = 178 / contentW;
-    var th = Math.max(110, Math.min(window.innerHeight * 0.5, pageH * mmapScale));
+    var th = Math.max(48, Math.min(window.innerHeight * 0.3, pageH * mmapScale));
     body.style.height = th + 'px';
     var clone = act.cloneNode(true);
     clone.className = act.className + ' pbx-mm-clone';
+    var rootStyles = win.getComputedStyle(doc.documentElement);
+    for (var si = 0; si < rootStyles.length; si++) { var key = rootStyles[si]; if (key.indexOf('--') === 0) clone.style.setProperty(key, rootStyles.getPropertyValue(key)); }
     clone.querySelectorAll(WLJOIN() + ',#pb-badge-layer,#pbx-chip-layer').forEach(function (n) { n.remove(); });
     clone.style.width = contentW + 'px';
     thumb.innerHTML = ''; thumb.style.width = contentW + 'px'; thumb.style.height = pageH + 'px';

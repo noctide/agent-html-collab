@@ -54,6 +54,14 @@ try {
   assert.ok((await studio.locator('#current-path').innerText()).includes(root));
   assert.ok((await studio.locator('#current-path').innerText()).includes('proto.html'));
   assert.equal(await studio.locator('#current-path').innerText(), '当前页面：' + join(root, 'proto.html'));
+  await page.locator('#studio-host').evaluate(element => { element.style.width = '620px'; });
+  await studio.locator('#zoom-sel').waitFor({ state: 'visible' });
+  await studio.locator('#zoom-sel').selectOption('1');
+  const narrowFrame = page.frames().find(value => value.url() === 'about:srcdoc');
+  assert.equal(await narrowFrame.evaluate(() => document.querySelector('#proto').style.transform), 'scale(1)');
+  assert.equal(await narrowFrame.evaluate(() => getComputedStyle(document.querySelector('#current-path')).position), 'static');
+  await page.locator('#studio-host').evaluate(element => { element.style.width = '100%'; });
+  await studio.locator('#zoom-sel').selectOption('fit');
   await frame.locator('#title').click();
   await frame.locator('#title').fill('Changed by UI test');
   await frame.locator('p').click();
