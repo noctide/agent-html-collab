@@ -44,7 +44,7 @@ function help() {
     (1 个 → single;多个 → pages,每文件整页)。
   · install-plugin 默认装到 ~/.config/opencode/plugins/protobridge,
     并在全局 opencode.json 的 plugins 里登记 ./plugins/protobridge(双保险);需重启 OpenCode。
-  · 绑定目标会话:在目标对话执行 /protobridge 命令(选中即绑定,不发消息),或发一句「启用协同」。`);
+  · 页面所属对话由客户端 Host 自动绑定；需客户端实现页面适配接口，详见 docs/host-integration.md。`);
 }
 
 /* ---- 打开浏览器(跨平台) ---- */
@@ -138,7 +138,7 @@ function runPluginInstall(uninstall) {
     console.log('[protobridge] 插件已安装到 ' + dst);
     if (isDefault) editGlobalPlugins((o) => { const l = Array.isArray(o.plugins) ? o.plugins : (o.plugins = []); if (!l.includes(PLUGIN_REL)) l.push(PLUGIN_REL); });
     else console.log('[protobridge] 自定义 --to:请自行在全局 opencode.json 的 plugins 里加入该目录');
-    console.log('[protobridge] 重启 OpenCode 后生效(全局,所有项目)。在目标会话的 / 菜单选 /protobridge 绑定(或发「启用协同」)。');
+    console.log('[protobridge] 重启客户端后生效。自动通知需客户端页面适配，详见 docs/host-integration.md；未接入时仅保存反馈。');
   } else {
     if (fs.existsSync(dst)) { fs.rmSync(dst, { recursive: true, force: true }); console.log('[protobridge] 插件已卸载: ' + dst); }
     else console.log('[protobridge] 未安装: ' + dst);

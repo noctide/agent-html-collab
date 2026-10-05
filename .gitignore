@@ -5,3 +5,5 @@ examples/*/feedback/
 examples/*/backup/
 examples/*/*.verifybak
 *.log
+*.tgz
+dist/

@@ -1,29 +1,9 @@
-# protobridge-opencode-plugin
+# ProtoBridge OpenCode Host 适配包
 
-ProtoBridge 的 OpenCode 适配层:用户在 studio 点「发送反馈」→ 反馈包落盘 → 插件自动向**目标会话**投递一条消息,agent 接手处理。
+全局安装一次：`protobridge install-plugin`；升级用 `--force` 并重启客户端。HTML 项目不需要复制插件。
 
-## 安装(三选一)
+此版本移除全局目标文件、最近会话兜底、/protobridge 手动绑定和文件扫描自动通知。
 
-**1. 用 ProtoBridge CLI(推荐,无需 OpenCode CLI)**
-```bash
-protobridge install-plugin          # 复制到 ~/.config/opencode/plugins/protobridge
-```
+客户端必须提供 `ctx.protobridge.registerPageBridge`、`saveFeedback`、`enqueue`。这些是本项目的接入契约，不是已核实的上游 OpenCode API。未接入时仅保存反馈，不自动通知。
 
-**2. 用 OpenCode CLI**
-```bash
-opencode plugin add 'github:noctide/protobridge::path:packages/opencode-plugin'
-```
-
-**3. 手动(单项目)**
-把本目录复制到 `<项目>/.opencode/plugins/protobridge/`。
-
-安装后**重启 OpenCode**(或重载配置)生效。
-
-## 用法
-
-- 绑定目标会话:在目标对话的 `/` 菜单里选 **`/protobridge`**(选中即绑定,**不提交消息**,会插一条合成确认);或发一句 **`启用协同`** 兜底。绑定写入全局 `~/.config/opencode/protobridge-target.json`,**跨项目位置生效**;换目标就在新对话里再操作一次。
-- 目标优先级:显式绑定 > 最近一次"用户输入"的会话 > 最近事件。
-- 反馈包带 `notify:false` 时(studio「协同通知」关)不自动唤醒。
-- 自检日志:`%TEMP%\protobridge-plugin.log`(Windows)/ `$TMPDIR/protobridge-plugin.log`。
-
-详见内核 `AGENTS-SNIPPET.md` 与 `skills/proto-bridge/SKILL.md`。
+完整生命周期及 RPC 接入见 [Host 接入说明](../../docs/host-integration.md)。

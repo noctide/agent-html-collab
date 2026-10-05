@@ -1,3 +1,5 @@
+> v0.2 变更：会话通知采用页面归属绑定，旧版全局目标/最近会话方案已移除。DSH Host 与 ZCode 等待工具已实现，真实 GUI 安装联动尚待验证，详见 [docs/client-adapters.md](docs/client-adapters.md)。下文旧自动监听描述仅为历史设计。
+
 # ProtoBridge 通用协同插件 · 规格说明
 
 > 目标:把「高保真原型 → 用户就地改字/标注提意见 → 反馈回灌 agent 改源码」的人机协同闭环,

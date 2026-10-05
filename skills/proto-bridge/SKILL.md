@@ -8,6 +8,14 @@ description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 
 本 skill 讲**怎么操作**,不内嵌大段代码;所有实现都在内核仓库,按路径引用。
 基础约定(必读、进用户项目)见 `AGENTS-SNIPPET.md`。
 
+## 客户端启动与等待（优先使用）
+
+- DSH：安装本仓库的 DSH bundle 后，在所属对话点击“打开原型协同”。Host 自动取得页面所属会话和项目。不要用全局绑定或最近会话。
+- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中；随后调用 `wait_feedback`，bindingId 使用 open_studio 返回值，并保持工具等待。
+- ZCode 用户点击发送后，反馈通过等待工具的返回值进入当前对话。按反馈文件处理、备份、核对；要继续收集反馈，再调用 wait_feedback。
+- 超时返回 timedOut 时可继续调用 wait_feedback。对话结束、等待工具取消或超时时，不承诺能从空闲状态主动唤醒；页面会保留反馈并提示重新等待后重试通知。不要把 MCP 服务放到后台后声称已自动通知。
+- 结束协作时调用 close_studio。只在没有这些客户端接口时使用下文手动 CLI。
+
 ## 0. 内核结构
 
 ```
@@ -101,7 +109,7 @@ export function plans({ feedback, config, projectRoot }) {
 | 徽章跨页堆叠 | 确认 `pages.container/activeClass/idAttr` 配对(内核按活动容器限定) |
 | 回灌大量 skipped | 源码文本被重构/折行;看 `report-*.md` 的 `⚠️/❌` 人工核对,`from` 会被用于模糊匹配 |
 | 服务"落盘即退" | 环境里设了 `PROTOBRIDGE_WAKE=1`;要常驻就用 `--stay-alive` 或去掉该变量 |
-| 点发送没有自动收到 | 确认插件已装(`protobridge install-plugin`,或项目内 `.opencode/plugins/protobridge/`)且 OpenCode 已重启;确认 studio「协同通知」为开(反馈包 `notify` 不为 false);确认目标会话——在目标对话里执行 `/protobridge`(或发 `启用协同`)绑定(插件记下该会话 id 并持久化)。查 `%TEMP%\protobridge-plugin.log`。插件只用 `node:` 内置模块 |
+| 点发送没有自动收到 | DSH 请从所属对话的按钮打开页面；ZCode 必须保持 wait_feedback 工具运行。旧全局绑定已移除。见 docs/client-adapters.md |
 | 反馈发到了别的窗口 | 插件按"显式绑定 > 最近用户输入 > 最近事件"选目标;在目标会话发一次触发词即可纠正。OpenCode 无"聚焦会话"API,页面无法自行识别会话 |
 | 点发送提示失败 | studio 已**自动复制反馈包到剪贴板并弹出错误原因**;把内容粘贴给 agent 即可(或点弹层里的「下载为文件」) |
 

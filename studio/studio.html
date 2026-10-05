@@ -56,11 +56,19 @@
   #bar #notify.off { color: #a9a79f; }
   #bar > * { flex-shrink: 0; }
 
-  /* 单行响应式:逐级收进「更多」,绝不换行 */
+  /* 窄侧栏使用两行工具栏，保留页面选择和缩放入口。 */
   @media (max-width: 1180px) { #bar .brand { max-width: 170px; } }
   @media (max-width: 980px) { #bar .count { display: none; } }
-  @media (max-width: 840px) { #bar .zoom, #notify { display: none; } }
-  @media (max-width: 700px) { #bar .brand { max-width: 108px; } #bar select { max-width: 128px; } }
+  @media (max-width: 840px) {
+    #bar { flex-wrap: wrap; height: auto; gap: 4px; padding: 8px 10px; }
+    #bar .brand { max-width: 150px; }
+    #bar .sep, #bar .spacer, #notify { display: none; }
+    #bar .zoom { display: flex; margin-left: auto; }
+    #bar #page-sel { max-width: 170px; }
+    #bar .seg button { padding: 6px 9px; }
+  }
+  #current-path { flex: none; display: block; width: 100%; min-height: 32px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 12px; border: 0; border-bottom: 1px solid var(--pb-line); background: var(--pb-panel); color: var(--pb-gray); font: 12px Consolas, monospace; cursor: pointer; }
+  #current-path:focus-visible { outline: 2px solid var(--pb-teal); outline-offset: -2px; }
 
   #stage { flex: 1; position: relative; overflow: auto; background: var(--pb-paper); }
   #stage::-webkit-scrollbar { width: 11px; height: 11px; }
@@ -144,11 +152,12 @@
   </div>
   <span class="sep"></span>
   <span class="count" id="count"></span>
-  <button id="notify" title="反馈落盘后是否自动通知 agent(发触发词绑定目标会话)">协同通知:开</button>
+  <button id="notify" title="是否通知本页面所属对话（需客户端接入）">协同通知:开</button>
   <button class="send" id="send">发送反馈 ↗</button>
   <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
 </div>
 
+<button id="current-path" type="button" title="点击复制当前编辑页面的路径"></button>
 <div id="stage">
   <div id="fit"><iframe id="proto" title="方案预览"></iframe></div>
 </div>
@@ -551,6 +560,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 })();
 </script>
 
+<script src="/tool-res/host-transport.js"></script>
 <script>
 (function () {
   'use strict';
@@ -585,6 +595,28 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   var ST = CFG.storage;
 
   var SRC = CFG.source.entry || '';
+  function currentFilePath() {
+    var path = SRC;
+    try { path = decodeURIComponent(path); } catch (e) {}
+    var projectPrefix = '/' + 'project/';
+    var marker = path.indexOf(projectPrefix);
+    if (marker >= 0 && CFG._meta && CFG._meta.projectRoot) {
+      var root = CFG._meta.projectRoot;
+      var relative = path.slice(marker + projectPrefix.length).split('?')[0];
+      return root.replace(/[\\/]+$/, '') + (root.indexOf('\\') >= 0 ? '\\' + relative.replace(/\//g, '\\') : '/' + relative);
+    }
+    return path;
+  }
+  function updateCurrentPath() {
+    var label = document.getElementById('current-path');
+    label.textContent = '当前页面：' + currentFilePath();
+    label.title = currentFilePath() + '（点击复制）';
+  }
+  updateCurrentPath();
+  document.getElementById('current-path').addEventListener('click', async function () {
+    try { await navigator.clipboard.writeText(currentFilePath()); toast('当前页面路径已复制'); }
+    catch (e) { toast('复制失败，请从页面路径提示中复制'); }
+  });
   var iframe = document.getElementById('proto');
   var fit = document.getElementById('fit');
   var stage = document.getElementById('stage');
@@ -602,10 +634,10 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   document.getElementById('proj-entry').addEventListener('click', function () {
     var p = openPop(document.getElementById('proj-entry'),
       '<div class="ph"><span>' + esc(CFG.title) + '</span></div>' +
-      '<div class="pmeta"><span class="k">源文件</span><code class="path">' + esc(SRC || '(未指定)') + '</code></div>' +
+      '<div class="pmeta"><span class="k">源文件</span><code class="path">' + esc(currentFilePath() || '(未指定)') + '</code></div>' +
       '<div class="foot"><button data-x="copy">复制路径</button></div>');
     p.querySelector('[data-x=copy]').addEventListener('click', function () {
-      navigator.clipboard.writeText(SRC).then(function () { toast('已复制路径:' + SRC); }, function () { toast('复制失败'); });
+      navigator.clipboard.writeText(currentFilePath()).then(function () { toast('已复制路径:' + currentFilePath()); }, function () { toast('复制失败'); });
     });
   });
 
@@ -657,6 +689,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     try { win = iframe.contentWindow; doc = iframe.contentDocument; } catch (e) { sameOrigin = false; win = null; doc = null; toast('无法访问方案页面(跨源?):只读浏览'); }
     if (!sameOrigin || !doc || !win) { applyZoom(); return; }
     try { if (win.location && win.location.pathname) SRC = win.location.pathname; } catch (e) {}   /* 页面内跳转后同步当前页 */
+    updateCurrentPath();
     if (win.__PB_INJECTED) return;
     win.__PB_INJECTED = true;
     try { win.PROTOBRIDGE_CFG = CFG; } catch (e) {}
@@ -928,22 +961,35 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
   }
+  var pendingBundle = null;
   $('#send').addEventListener('click', function () {
     var btn = $('#send'); var n = feedbackCount();
-    if (!n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
+    if (!pendingBundle && !n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
     var p = openPop(btn,
       '<div class="ph">发送反馈给 Agent</div>' +
       '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.e + '</b> 处<br>' +
-      '<span>' + (isNotifyOn() ? '发送后落盘到 feedback/,会自动唤醒绑定的会话' : '发送后落盘到 feedback/;协同通知已关,需手动让 agent「处理反馈」') + '</span></div>' +
+      '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.ProtoBridgeTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
       '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">确认发送</button></div>');
     p.querySelector('[data-x=c]').addEventListener('click', closePop);
     p.querySelector('[data-x=ok]').addEventListener('click', function () {
       closePop(); btn.disabled = true; btn.textContent = '发送中…';
-      fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(collectBundle()) })
-        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.error || ('HTTP ' + r.status)); return j; }); })
-        .then(function () { btn.textContent = '已发送 ✓'; toast('反馈已落盘,Agent 会自动接手'); })
-        .catch(function (err) {
-          var bundle = collectBundle();
+      if (!pendingBundle) {
+        pendingBundle = collectBundle();
+        pendingBundle.feedbackId = window.crypto.randomUUID();
+      }
+      window.ProtoBridgeTransport.submitFeedback(pendingBundle)
+        .then(function (result) {
+          if (!result || result.saved !== true) throw new Error('Host 未确认反馈保存成功');
+          if (result.delivery === 'failed') {
+            btn.textContent = '重试通知';
+            throw new Error('反馈已保存，通知失败：' + (result.error || '请重试'));
+          }
+          pendingBundle = null;
+          btn.textContent = '已保存 ✓';
+          toast(result.delivery === 'queued' ? '反馈已保存，已通知本页面所属对话' : '反馈已保存，请让 agent「处理反馈」');
+        })
+        .catch(async function (err) {
+          var bundle = pendingBundle || collectBundle();
           var text = JSON.stringify(bundle, null, 2);
           var why = (err && err.message) || '网络不可达(本地服务未启动?)';
           var copied = false;
@@ -954,7 +1000,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
             copied = document.execCommand('copy');
             document.body.removeChild(ta);
           } catch (e) { copied = false; }
-          if (!copied && navigator.clipboard) { try { navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; } }
+          if (!copied && navigator.clipboard) { try { await navigator.clipboard.writeText(text); copied = true; } catch (e) { copied = false; } }
           btn.textContent = '发送失败';
           var q = openPop(null,
             '<div class="ph"><span>发送失败,请手动交给 Agent</span><button class="x" data-x="close">✕</button></div>' +
@@ -972,7 +1018,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
             downloadText('proto-feedback-' + new Date().toISOString().slice(0, 10) + '.json', text, 'application/json');
           });
         })
-        .finally(function () { setTimeout(function () { btn.disabled = false; btn.textContent = '发送反馈 ↗'; }, 3000); });
+        .finally(function () { setTimeout(function () { btn.disabled = false; btn.textContent = pendingBundle ? '重试上次反馈 ↗' : '发送反馈 ↗'; }, 3000); });
     });
   });
 
@@ -1055,7 +1101,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 小地图 ---------- */
   var mmapScale = 0.1, mmStyled = false;
-  function prefixSel(sel) { sel = sel.trim(); if (/^(html|body|:root)$/i.test(sel)) return CONTAINER; if (/^body\./i.test(sel)) return CONTAINER + sel.replace(/^body/i, ''); return CONTAINER + ' ' + sel; }
+  function prefixSel(sel) { var scope = '#mmap-thumb .pbx-mm-clone'; sel = sel.trim(); if (/^(html|body|:root)$/i.test(sel)) return scope; if (/^body\./i.test(sel)) return scope + sel.replace(/^body/i, ''); return scope + ' ' + sel; }
   function importProtoStyles() {
     if (mmStyled) return; mmStyled = true;
     function walk(rules, media, out) {
@@ -1068,21 +1114,22 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       return out;
     }
     var css = '';
-    doc.querySelectorAll('style').forEach(function (st) { if (st.dataset.page) { css += st.textContent + '\n'; return; } try { css = walk(st.sheet.cssRules, null, css); } catch (e) {} });
+    [].slice.call(doc.styleSheets).forEach(function (sheet) { try { css = walk(sheet.cssRules, null, css); } catch (e) {} });
     $('#mm-styles').textContent = css;
   }
   function buildMinimap() {
-    if (WHOLE) { var mm = document.getElementById('mmap'); if (mm) mm.style.display = 'none'; return; }
     var thumb = $('#mmap-thumb'), body = $('#mmap-body');
     if (!sameOrigin || !doc) return;
     var act = activeRoot(); if (!act) return;
     importProtoStyles();
     var pageH = Math.max(doc.documentElement.scrollHeight, act.scrollHeight);
     mmapScale = 178 / contentW;
-    var th = Math.max(110, Math.min(window.innerHeight * 0.5, pageH * mmapScale));
+    var th = Math.max(48, Math.min(window.innerHeight * 0.3, pageH * mmapScale));
     body.style.height = th + 'px';
     var clone = act.cloneNode(true);
     clone.className = act.className + ' pbx-mm-clone';
+    var rootStyles = win.getComputedStyle(doc.documentElement);
+    for (var si = 0; si < rootStyles.length; si++) { var key = rootStyles[si]; if (key.indexOf('--') === 0) clone.style.setProperty(key, rootStyles.getPropertyValue(key)); }
     clone.querySelectorAll(WLJOIN() + ',#pb-badge-layer,#pbx-chip-layer').forEach(function (n) { n.remove(); });
     clone.style.width = contentW + 'px';
     thumb.innerHTML = ''; thumb.style.width = contentW + 'px'; thumb.style.height = pageH + 'px';

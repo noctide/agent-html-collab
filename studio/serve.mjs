@@ -12,6 +12,7 @@
 //   - 唤醒解耦:默认落盘后继续运行并打印提示;仅当环境变量 PROTOBRIDGE_WAKE=1
 //     或 config.server.wakeOnFeedback=true 时才"落盘即退出"(兼容 ZCode 旧行为)。
 import http from 'node:http';
+import { randomUUID } from 'node:crypto';
 import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync, readdirSync } from 'node:fs';
 import { join, dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -38,6 +39,8 @@ function parseArgs(argv) {
   return a;
 }
 const ARGS = parseArgs(process.argv.slice(2));
+const BASE_PATH = typeof ARGS.basePath === 'string' ? ARGS.basePath.replace(/\/$/, '') : '';
+if (BASE_PATH && !/^\/[a-zA-Z0-9/_-]+$/.test(BASE_PATH)) throw new Error('Invalid base path');
 
 const PROJECT_ROOT = resolve(ARGS.root || process.cwd());
 const LOCAL_CFG = join(PROJECT_ROOT, 'proto.config.json');
@@ -182,6 +185,9 @@ CFG.pages.list = PAGES;
    ============================================================ */
 function buildInjectedConfig() {
   return Object.assign({}, CFG, {
+    source: Object.assign({}, CFG.source, {
+      entry: BASE_PATH && CFG.source.entry?.startsWith('/project/') ? BASE_PATH + CFG.source.entry : CFG.source.entry,
+    }),
     _meta: {
       injectedBy: 'protobridge/serve.mjs',
       configPath: CONFIG_PATH || null,
@@ -233,6 +239,10 @@ function annoMapSrc() {
    ============================================================ */
 const server = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://127.0.0.1');
+  if (BASE_PATH) {
+    if (!u.pathname.startsWith(BASE_PATH + '/')) { res.writeHead(404); return res.end('not found'); }
+    u.pathname = u.pathname.slice(BASE_PATH.length);
+  }
   const send = (code, type, body, extra) => {
     res.writeHead(code, Object.assign({ 'Content-Type': type, 'Cache-Control': 'no-store', 'Access-Control-Allow-Origin': '*' }, extra || {}));
     res.end(body);
@@ -263,12 +273,18 @@ const server = http.createServer((req, res) => {
         j.v = j.v || 2;
         j.app = j.app || CFG.title;
         mkdirSync(FEEDBACK_DIR, { recursive: true });   // 目录可能被外部清理,写入前确保存在
-        const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14);
+        // Local HTTP mode has no trusted page owner and never routes to a chat.
+        delete j.sessionId;
+        delete j.sessionID;
+        delete j.projectRoot;
+        delete j.bindingId;
+        j.routing = { mode: 'manual' };
+        const stamp = new Date().toISOString().replace(/[-:T]/g, '').slice(0, 14) + '-' + randomUUID();
         const file = join(FEEDBACK_DIR, 'feedback-' + stamp + '.json');
         writeFileSync(file, JSON.stringify(j, null, 2));
         const notify = j.notify !== false;
         console.log('[feedback] 已保存 ' + file + '  意见 ' + (j.comments || []).length + ' 条 / 改动 ' + (j.edits || []).length + ' 处' + (notify ? '' : '  (协同通知关闭)'));
-        send(200, MIME['.json'], JSON.stringify({ ok: true, file }));
+        send(200, MIME['.json'], JSON.stringify({ ok: true, saved: true, file, delivery: 'manual' }));
         const wake = process.env.PROTOBRIDGE_WAKE === '1' && !CFG.server.stayAlive;
         if (wake || CFG.server.wakeOnFeedback) {
           setTimeout(() => { console.log('[feedback] 按约定退出,唤醒 Agent 处理'); process.exit(0); }, 1200);
@@ -290,6 +306,7 @@ const server = http.createServer((req, res) => {
     // 内核 studio
     if (p === '/studio' || p === '/studio/') {
       let html = readFileSync(join(KERNEL, 'studio.html'), 'utf8');
+      if (BASE_PATH) html = html.replace(/\/(api|tool-res|project)\//g, BASE_PATH + '/$1/');
       const inject = '<script>window.PROTO_CONFIG = ' + JSON.stringify(buildInjectedConfig()).replace(/</g, '\\u003c') + ';<\/script>';
       html = html.includes('<!-- PROTOBRIDGE_CONFIG -->')
         ? html.replace('<!-- PROTOBRIDGE_CONFIG -->', inject)
@@ -298,6 +315,7 @@ const server = http.createServer((req, res) => {
     }
     // 运行时注入资源
     if (p.startsWith('/tool-res/')) {
+      if (p === '/tool-res/host-transport.js') return send(200, MIME['.js'], readFileSync(join(KERNEL, 'host-transport.js'), 'utf8').replace('/api/feedback', BASE_PATH + '/api/feedback'));
       if (p === '/tool-res/anno.js') return send(200, MIME['.js'], readFileSync(join(KERNEL, 'anno/anno.js')));
       if (p === '/tool-res/anno.css') return send(200, MIME['.css'], readFileSync(join(KERNEL, 'anno/anno.css')));
       if (p === '/tool-res/annotation-map.js') return send(200, MIME['.js'], annoMapSrc());
@@ -322,7 +340,7 @@ const server = http.createServer((req, res) => {
 
 server.on('error', (e) => { console.error('[serve] 启动失败:', e.message); process.exit(1); });
 server.listen(CFG.server.port, '127.0.0.1', () => {
-  console.log('[serve] protobridge  http://127.0.0.1:' + CFG.server.port + '/studio');
+  console.log('[serve] protobridge  http://127.0.0.1:' + server.address().port + '/studio');
   console.log('[serve] 项目根   ' + PROJECT_ROOT);
   console.log('[serve] 配置     ' + CONFIG_LABEL + '   模式 ' + CFG.source.mode + (CFG.pages.singlePerFile ? '(每文件整页)' : '') + '   入口 ' + CFG.source.entry);
   console.log('[serve] 反馈目录 ' + FEEDBACK_DIR + (process.env.PROTOBRIDGE_WAKE === '1' ? '   [PROTOBRIDGE_WAKE=1 落盘即退出]' : '   [落盘后常驻]'));
