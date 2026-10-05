@@ -17,7 +17,7 @@ function client() {
     const next = ++id; pending.set(next, { resolve, reject });
     child.stdin.write(JSON.stringify({ jsonrpc: '2.0', id: next, method, params }) + '\n');
   });
-  return { child, call, tool: (name, args) => call('tools/call', { name, arguments: args }).then(result => {
+  return { child, call, cancelLast: () => child.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/cancelled', params: { requestId: id } }) + '\n'), tool: (name, args) => call('tools/call', { name, arguments: args }).then(result => {
     if (result.isError) throw new Error(result.content[0].text);
     return JSON.parse(result.content[0].text);
   }), close: () => { child.stdin.end(); return new Promise(r => child.once('exit', r)); } };
@@ -45,6 +45,9 @@ test('ZCode isolated MCP pages return feedback only to their pending tool calls'
     const feedback = await wait;
     assert.equal(feedback.file, delivered.file);
     assert.ok(feedback.text.includes(delivered.file));
+    const cancelled = a.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 5 });
+    a.cancelLast();
+    await assert.rejects(cancelled, /取消/);
     assert.equal((await b.tool('wait_feedback', { bindingId: pageB.bindingId, timeoutSeconds: 1 })).timedOut, true);
     await a.tool('close_studio', { bindingId: pageA.bindingId });
     assert.equal((await fetch(pageA.url)).status, 410);
