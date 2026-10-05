@@ -21,9 +21,6 @@ export function apply(ctx) {
     }
     return JSON.parse(text);
   };
-  const checkOrigin = (req) => {
-    if (!req.headers.origin || new URL(req.headers.origin).host !== req.headers.host) throw new Error('请求必须来自客户端页面');
-  };
   const admit = (req, res) => {
     const admission = ctx.connection.admit(req);
     if ('rejection' in admission) { send(res, admission.rejection, { error: '客户端认证失败' }); return false; }
@@ -83,7 +80,8 @@ export function apply(ctx) {
     try {
       if (!admit(req, res)) return;
       if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
-      checkOrigin(req);
+      // connection.admit applies the client's Host/Origin fence and cookie auth.
+      // Same-origin desktop requests may legitimately omit Origin.
       const { sessionId, pageId } = await readBody(req);
       if (typeof sessionId !== 'string' || typeof pageId !== 'string' || !pageId) throw new Error('页面归属不完整');
       send(res, 200, await open(sessionId, pageId));
@@ -99,7 +97,6 @@ export function apply(ctx) {
       if (!page || !page.port || ctx.agents.get(page.sessionId) !== page.agent) return send(res, 410, { error: '页面绑定已失效' });
       const tail = url.pathname.slice(page.base.length);
       if (req.method === 'POST') {
-        checkOrigin(req);
         if (tail === '/close') { stop(id); return send(res, 200, { closed: true }); }
         if (tail !== '/feedback') return send(res, 404, { error: 'Not found' });
         return send(res, 200, await page.bridge.pageApi.submitFeedback(await readBody(req)));

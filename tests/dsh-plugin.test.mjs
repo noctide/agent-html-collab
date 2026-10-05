@@ -25,11 +25,13 @@ test('DSH launcher registers a persistent entry even without a composer or sessi
     sidebarRight: { openTab: () => { throw new Error('sidebarRight: no session surface is mounted'); } },
     slots: { inject: (name, factory) => factory(), register: (options, component) => { entries.push({ options, component }); return () => {}; } },
   });
-  const entry = entries.find(value => value.options.name === 'shell.overlay');
+  const entry = entries.find(value => value.options.name === 'conversation.header.leading');
   assert.ok(entry, 'new-conversation hero must have an entry outside the composer dock');
   const view = entry.component({ ...entry.options.inject(), t: key => key });
-  const button = view.children.find(value => value?.type === 'button');
-  assert.equal(button.children[0], 'open');
+  assert.equal(view.props.style.position, 'relative');
+  assert.ok(!entries.some(value => value.options.name === 'shell.overlay'));
+  const button = view.children.find(value => typeof value?.type === 'function');
+  assert.equal(button.children[1], 'title');
   button.props.onClick();
   assert.equal(status, 'select');
 });
@@ -43,7 +45,10 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
   const routes = [], disposers = [], queued = [];
   apply({
     agents: { get: id => agents.get(id) },
-    connection: { admit: req => req.headers['x-test-auth'] ? {} : { rejection: 401 } },
+    connection: { admit: req => {
+      if (req.headers['sec-fetch-site'] === 'cross-site' || req.headers.origin && new URL(req.headers.origin).host !== req.headers.host) return { rejection: 403 };
+      return req.headers['x-test-auth'] ? {} : { rejection: 401 };
+    } },
     sessionController: { prompt: async request => { queued.push(request); return { accepted: true }; } },
     webServer: { register: route => { routes.push(route); return () => {}; } },
     effect: factory => { const dispose = factory(); disposers.push(dispose); return dispose; },
@@ -54,9 +59,10 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
   const base = 'http://127.0.0.1:' + server.address().port;
-  const post = (path, body, auth = true) => fetch(base + path, { method: 'POST', headers: { origin: base, 'content-type': 'application/json', ...(auth ? { 'x-test-auth': '1' } : {}) }, body: JSON.stringify(body) });
+  const post = (path, body, auth = true) => fetch(base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...(auth ? { 'x-test-auth': '1' } : {}) }, body: JSON.stringify(body) });
   try {
     assert.equal((await post('/protobridge/open', { sessionId: 'session-a', pageId: 'page-a' }, false)).status, 401);
+    assert.equal((await fetch(base + '/protobridge/open', { method: 'POST', headers: { origin: 'https://other.example', 'x-test-auth': '1' }, body: '{}' })).status, 403);
     const a = await post('/protobridge/open', { sessionId: 'session-a', pageId: 'page-a' }).then(r => r.json());
     const b = await post('/protobridge/open', { sessionId: 'session-b', pageId: 'page-b' }).then(r => r.json());
     assert.ok(a.bindingId, JSON.stringify(a)); assert.ok(b.bindingId, JSON.stringify(b));
