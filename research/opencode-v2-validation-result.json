@@ -1,0 +1,19 @@
+{
+  "root": "C:\\Users\\admin\\AppData\\Local\\Temp\\agent-html-collab-opencode-v2-T29yB6",
+  "opencode": "2.0.22",
+  "passed": [
+    "isolated install and V2 plugin load",
+    "command captures session",
+    "Studio and prototype served",
+    "feedback saved",
+    "feedback delivered to original session",
+    "local model received feedback path and answered",
+    "retry reuses feedback file",
+    "forged session ignored",
+    "other session untouched",
+    "close invalidates page",
+    "browser text edit and send reach original session without page errors",
+    "automatic discovery excludes nested repositories and Studio runtime"
+  ],
+  "limitation": "Local deterministic model fixture, not user model credentials or desktop GUI."
+}

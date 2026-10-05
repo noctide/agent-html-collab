@@ -1,4 +1,4 @@
-// verify-generic.mjs — ProtoBridge 通用冒烟(用 examples/demo,不依赖任何具体业务项目)
+// verify-generic.mjs — Agent HTML Collab 通用冒烟(用 examples/demo,不依赖任何具体业务项目)
 // 覆盖闭环:装载 → 编辑 → 切页 → 标注 → 右键协作菜单/还原 → 平移 → 双击菜单+撤销
 //           → 弹层关闭 → 缩放+小地图 → 滚轮转发/原生滚动 → 发送反馈 → 落盘 → 回灌
 // 用法: node tests/verify-generic.mjs
@@ -9,7 +9,7 @@ import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const ROOT = resolve(HERE, '..');                 // protobridge/
+const ROOT = resolve(HERE, '..');                 // agent-html-collab/
 const FIX = join(ROOT, 'examples', 'demo');
 const PORT = 8131;
 const BASE = 'http://127.0.0.1:' + PORT;
@@ -117,16 +117,16 @@ try {
 
   /* ---------- 装载 ---------- */
   t(await page.evaluate(() => !!document.querySelector('#bar .seg')), '装载:顶栏渲染');
-  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'ProtoBridge Demo', '装载:config.title 生效');
+  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 3, '装载:页面清单来自 config(3 页)');
   t((await frame.$eval('.pg-sec.act', s => s.dataset.page)) === 'p01', '装载:默认活动页 p01');
 
   /* ---------- 协同通知开关 ---------- */
   t((await page.$('#notify')) !== null, '通知:开关按钮就位');
   await page.click('#notify'); await sleep(80);
-  t(await page.evaluate(() => localStorage.getItem('proto.notify') === '"0"' && document.getElementById('notify').textContent.indexOf('关') >= 0), '通知:关闭(写入 localStorage + 按钮文案)');
+  t(await page.evaluate(() => localStorage.getItem('proto.notify') === '"0"' && document.getElementById('notify').getAttribute('aria-checked') === 'false' && document.getElementById('notify').classList.contains('off') && document.getElementById('notify').textContent === ''), '通知:关闭并保存状态，开关不显示重复文案');
   await page.click('#notify'); await sleep(80);
-  t(await page.evaluate(() => document.getElementById('notify').textContent.indexOf('开') >= 0), '通知:再点恢复开');
+  t(await page.evaluate(() => document.getElementById('notify').getAttribute('aria-checked') === 'true' && !document.getElementById('notify').classList.contains('off')), '通知:再点恢复开');
 
   /* ---------- 编辑 ---------- */
   await setMode('edit');
@@ -286,7 +286,7 @@ try {
   restore();
 }
 
-console.log('\n===== ProtoBridge 通用冒烟(examples/demo)=====\n' + results.join('\n'));
+console.log('\n===== Agent HTML Collab 通用冒烟(examples/demo)=====\n' + results.join('\n'));
 const fails = results.filter(r => r.startsWith('FAIL')).length;
 console.log(fails ? '\n⚠️ ' + fails + ' 项失败\n' : '\n✅ ' + results.length + ' 项全部通过\n');
 if (fails) console.log('server log:\n' + serverLog.split('\n').filter(l => l.includes('[serve]') || l.includes('[feedback]')).join('\n'));

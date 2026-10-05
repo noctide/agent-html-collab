@@ -1,0 +1,18 @@
+{
+  "ref": "662c30bea4e833acaacbfb745a65eb09c23d55f8",
+  "scope": "Actual branch modules transpiled in VM; host/session/dialog ports and shared constants are fixtures. No Electron, SDK handshake, real session or GUI validation.",
+  "passed": [
+    "gesture sends to bound action",
+    "no gesture uses edited confirmation",
+    "cancel sends nothing",
+    "binding replacement during confirmation rejects",
+    "closed page rejects before delivery",
+    "missing session rejects",
+    "empty message rejects",
+    "ACK undefined",
+    "ACK sent",
+    "ACK blocked",
+    "ACK confirmationRequired",
+    "attachment upload failure prevents message send"
+  ]
+}

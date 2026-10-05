@@ -1,7 +1,7 @@
 // Host must inject window.PROTOBRIDGE_HOST before this script executes.
 (function () {
   var host = window.PROTOBRIDGE_HOST;
-  window.ProtoBridgeTransport = {
+  window.AgentHtmlCollabTransport = {
     isBound: function () { return !!(host && host.version === 1 && typeof host.submitFeedback === 'function'); },
     submitFeedback: function (bundle) {
       if (this.isBound()) return Promise.resolve().then(function () { return host.submitFeedback(bundle); });

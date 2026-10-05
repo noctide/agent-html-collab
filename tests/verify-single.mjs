@@ -66,10 +66,10 @@ try {
   const frame = page.frames().find(f => f !== page.mainFrame());
 
   t(await page.evaluate(() => !!document.querySelector('#bar .seg')), '装载:顶栏渲染');
-  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === '单文档示例', '装载:config.title 生效');
+  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 1, '装载:单文档页清单 1 项');
   t(await page.$eval('#page-sel', s => s.value) === 'page', '装载:当前页 = defaultId');
-  t(await page.evaluate(() => getComputedStyle(document.getElementById('mmap')).display) === 'none', '装载:单文档隐藏小地图');
+  t(await page.evaluate(() => getComputedStyle(document.getElementById('mmap')).display !== 'none' && document.querySelector('#mmap-thumb #s-title')?.textContent === document.querySelector('#proto').contentDocument.querySelector('#s-title').textContent), '装载:单文档小地图显示整页内容');
 
   async function setMode(m) {
     const on = await page.$eval('#bar [data-x=m-' + m + ']', el => el.classList.contains('on'));
@@ -137,7 +137,7 @@ try {
   restore();
 }
 
-console.log('\n===== ProtoBridge 单文档冒烟(examples/single)=====\n' + results.join('\n'));
+console.log('\n===== Agent HTML Collab 单文档冒烟(examples/single)=====\n' + results.join('\n'));
 const fails = results.filter(r => r.startsWith('FAIL')).length;
 console.log(fails ? '\n⚠️ ' + fails + ' 项失败\n' : '\n✅ ' + results.length + ' 项全部通过\n');
 if (fails) console.log('server log:\n' + serverLog.split('\n').filter(l => l.includes('[serve]') || l.includes('[feedback]')).join('\n'));

@@ -1,18 +1,18 @@
-# 原型协同(ProtoBridge)约定 — 追加到你的 AGENTS.md
+# 原型协同(Agent HTML Collab)约定 — 追加到你的 AGENTS.md
 
 > 把本节复制进你的项目仓库 `AGENTS.md`(或 `CLAUDE.md` / `.clinerules` 等 agent 必读文件)。
 > 任何编码 agent(OpenCode / ZCode / Cline 跑 DeepSeek / Claude 等)读到本节即可完成闭环。
 
 ## 1. 这是什么
 
-本项目的高保真 HTML 原型接入 **ProtoBridge** 协同工具。用户在浏览器里对原型**就地改字 / 标注提意见**,
+本项目的高保真 HTML 原型接入 **Agent HTML Collab** 协同工具。用户在浏览器里对原型**就地改字 / 标注提意见**,
 反馈以 JSON 落盘到 `feedback/`;agent 读取反馈 → 定位源码 → 回灌修改。工具与 agent 无关,约定在仓库里,**换模型/换 harness 行为一致**。
 
 ## 2. 怎么起
 
 ```bash
-# 在项目根目录(有 proto.config.json 的那层)执行;<protobridge> 指内核目录
-node <protobridge>/studio/serve.mjs --root . --config proto.config.json [--port 8123]
+# 在项目根目录(有 proto.config.json 的那层)执行;<agent-html-collab> 指内核目录
+node <agent-html-collab>/studio/serve.mjs --root . --config proto.config.json [--port 8123]
 ```
 
 - studio 地址:`http://127.0.0.1:<port>/studio`
@@ -42,7 +42,7 @@ node <protobridge>/studio/serve.mjs --root . --config proto.config.json [--port 
 ## 4. 处理流程(用户说「处理反馈」时执行)
 
 1. **扫盘**:读 `feedback/*.json`(忽略 `feedback/done/`);
-2. **回灌**:`node <protobridge>/studio/apply.mjs latest --root . --config proto.config.json`(先出报告)确认后加 `--apply`
+2. **回灌**:`node <agent-html-collab>/studio/apply.mjs latest --root . --config proto.config.json`(先出报告)确认后加 `--apply`
    —— 内核会**先备份到 `backup/`**、定位源码、文本兜底匹配、写回、生成 `report-*.md`、把包移入 `feedback/done/`;
    comments 类需 agent 逐条人工处理;
 3. **提示核对**:处理完请用户刷新 studio 核对。
@@ -56,10 +56,10 @@ node <protobridge>/studio/serve.mjs --root . --config proto.config.json [--port 
 ## 6. 冒烟验证
 
 ```bash
-node <protobridge>/tests/verify-generic.mjs   # 用 examples/demo 跑通:装载→编辑→标注→反馈→回灌
+node <agent-html-collab>/tests/verify-generic.mjs   # 用 examples/demo 跑通:装载→编辑→标注→反馈→回灌
 ```
 
 ## 7. 进阶
 
 新建项目的 config 写法、回灌适配器接口、single/pages/urls 三模式差异与坑、常见故障,
-见内核 skill:`<protobridge>/skills/proto-bridge/SKILL.md`。
+见内核 skill:`<agent-html-collab>/skills/agent-html-collab/SKILL.md`。

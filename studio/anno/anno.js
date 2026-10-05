@@ -1,5 +1,5 @@
 /* ============================================================
-   ProtoBridge · 区域标注模块(可选,config.tools.anno=true 时才注入)
+   Agent HTML Collab · 区域标注模块(可选,config.tools.anno=true 时才注入)
    - 编号:HTML 里手写的 data-anno="P01-03"(稳定编号,不自动生成)
    - 意见:点击编号徽章填写,存 localStorage(key: proto.anno.comments)
    - 导出:JSON / Markdown / CSV,含编号 → 源码映射(window.PROTO_ANNO_MAP)

@@ -16,8 +16,8 @@ test('Studio inline scripts parse and the installed plugin includes its runtime'
   for (const match of html.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)) {
     if (!match[1].includes('text/plain')) new vm.Script(match[2]);
   }
-  const root = mkdtempSync(join(tmpdir(), 'protobridge-install-test-'));
-  const result = spawnSync(process.execPath, [fileURLToPath(new URL('../bin/protobridge.mjs', import.meta.url)), 'install-plugin', '--to', join(root, 'plugin')], { encoding: 'utf8' });
+  const root = mkdtempSync(join(tmpdir(), 'agent-html-collab-install-test-'));
+  const result = spawnSync(process.execPath, [fileURLToPath(new URL('../bin/agent-html-collab.mjs', import.meta.url)), 'install-plugin', '--to', join(root, 'plugin')], { encoding: 'utf8' });
   assert.equal(result.status, 0, result.stderr);
   const runtime = await import(pathToFileURL(join(root, 'plugin', 'host-bridge', 'index.mjs')));
   assert.equal(typeof runtime.createPageBridge, 'function');
@@ -74,12 +74,12 @@ test('browser transport uses captured Host; bound errors never fall back to HTTP
   let calls = 0;
   const window = { PROTOBRIDGE_HOST: { version: 1, submitFeedback: async () => { throw new Error('closed'); } } };
   vm.runInNewContext(source, { window, fetch: () => { calls++; } });
-  await assert.rejects(window.ProtoBridgeTransport.submitFeedback(feedback()), /closed/);
+  await assert.rejects(window.AgentHtmlCollabTransport.submitFeedback(feedback()), /closed/);
   assert.equal(calls, 0);
 });
 
 test('HTTP fallback serves transport, reports manual delivery and saves distinct files', async () => {
-  const root = mkdtempSync(join(tmpdir(), 'protobridge-test-'));
+  const root = mkdtempSync(join(tmpdir(), 'agent-html-collab-test-'));
   const child = spawn(process.execPath, [fileURLToPath(new URL('../studio/serve.mjs', import.meta.url)), '--root', root, '--port', '0', '--stay-alive']);
   let log = '';
   try {

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { mkdtemp, writeFile, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,18 +24,18 @@ function client() {
 }
 
 test('ZCode isolated MCP pages return feedback only to their pending tool calls', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'protobridge-zcode-'));
+  const root = await mkdtemp(join(tmpdir(), 'agent-html-collab-zcode-'));
   await writeFile(join(root, 'proto.html'), '<html><body><p>Original</p></body></html>');
   const a = client(), b = client();
   try {
-    assert.equal((await a.call('initialize', { protocolVersion: '2024-11-05' })).serverInfo.name, 'protobridge');
+    assert.equal((await a.call('initialize', { protocolVersion: '2024-11-05' })).serverInfo.name, 'agent-html-collab');
     assert.equal((await a.call('tools/list', {})).tools.length, 3);
     const pageA = await a.tool('open_studio', { projectRoot: root });
     const pageB = await b.tool('open_studio', { projectRoot: root });
     assert.notEqual(pageA.bindingId, pageB.bindingId);
     await assert.rejects(b.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 1 }), /Unknown/);
     const baseA = new URL(pageA.url).origin;
-    const send = () => fetch(pageA.url.replace(/\/studio$/, '/feedback'), { method: 'POST', headers: { origin: baseA, 'content-type': 'application/json' }, body: JSON.stringify({ feedbackId: 'feedback_zcode_0001', notify: true, comments: [], edits: [] }) }).then(r => r.json());
+    const send = (feedbackId = 'feedback_zcode_0001') => fetch(pageA.url.replace(/\/studio$/, '/feedback'), { method: 'POST', headers: { origin: baseA, 'content-type': 'application/json' }, body: JSON.stringify({ feedbackId, notify: true, comments: [], edits: [] }) }).then(r => r.json());
     assert.equal((await send()).delivery, 'failed');
     const wait = a.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 5 });
     // Ping is processed after the preceding wait request, proving it is registered.
@@ -45,6 +45,18 @@ test('ZCode isolated MCP pages return feedback only to their pending tool calls'
     const feedback = await wait;
     assert.equal(feedback.file, delivered.file);
     assert.ok(feedback.text.includes(delivered.file));
+    const timeout = await a.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 1 });
+    assert.equal(timeout.timedOut, true);
+    const afterTimeout = await send('feedback_zcode_0002');
+    assert.equal(afterTimeout.saved, true);
+    assert.equal(afterTimeout.delivery, 'failed');
+    assert.equal(JSON.parse(await readFile(afterTimeout.file, 'utf8')).feedbackId, 'feedback_zcode_0002');
+    const resumed = a.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 5 });
+    await a.call('ping', {});
+    const retried = await send('feedback_zcode_0002');
+    assert.equal(retried.delivery, 'queued');
+    assert.equal(retried.file, afterTimeout.file);
+    assert.equal((await resumed).file, afterTimeout.file);
     const cancelled = a.tool('wait_feedback', { bindingId: pageA.bindingId, timeoutSeconds: 5 });
     a.cancelLast();
     await assert.rejects(cancelled, /取消/);

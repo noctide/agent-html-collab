@@ -21,20 +21,20 @@ jobs:
       - name: Build standalone ZIP
         run: |
           mkdir -p release
-          tar -xzf protobridge-*.tgz -C release
+          tar -xzf agent-html-collab-*.tgz -C release
           cd release
-          zip -qr ../protobridge-${{ github.ref_name }}.zip package
+          zip -qr ../agent-html-collab-${{ github.ref_name }}.zip package
       - name: Checksums
-        run: sha256sum protobridge-*.tgz protobridge-*.zip > SHA256SUMS.txt
+        run: sha256sum agent-html-collab-*.tgz agent-html-collab-*.zip > SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: protobridge-package
+          name: agent-html-collab-package
           path: |
-            protobridge-*.tgz
-            protobridge-*.zip
+            agent-html-collab-*.tgz
+            agent-html-collab-*.zip
             SHA256SUMS.txt
       - name: Create draft Release
         if: startsWith(github.ref, 'refs/tags/')
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" protobridge-*.tgz protobridge-*.zip SHA256SUMS.txt --verify-tag --draft --title "ProtoBridge $GITHUB_REF_NAME" --notes-file CHANGELOG.md
+        run: gh release create "$GITHUB_REF_NAME" agent-html-collab-*.tgz agent-html-collab-*.zip SHA256SUMS.txt --verify-tag --draft --title "Agent HTML Collab $GITHUB_REF_NAME" --notes-file CHANGELOG.md

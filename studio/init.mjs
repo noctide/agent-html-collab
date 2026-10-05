@@ -1,3 +1,5 @@
+import { findHtml, readTitle, pageIdOf, uniqueIds } from './project-files.mjs';
+import { parseArgs } from './cli-args.mjs';
 // init.mjs — 扫描目录并生成 proto.config.json(免手写配置)
 //
 // 用法:
@@ -7,50 +9,14 @@
 //   - 根下只有 1 个 HTML → single 模式(整页一页);
 //   - 根下多个 HTML       → pages 模式 + pages.singlePerFile(每文件整页);
 //   - 已存在 proto.config.json 时不覆盖,除非 --force。
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { join, resolve, relative, sep } from 'node:path';
 import net from 'node:net';
 
-function parseArgs(argv) {
-  const a = { _: [] };
-  for (let i = 0; i < argv.length; i++) {
-    const t = argv[i];
-    if (t.startsWith('--')) {
-      const [k, v] = t.slice(2).split('=');
-      a[k.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = v != null ? v : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true);
-    } else a._.push(t);
-  }
-  return a;
-}
 const ARGS = parseArgs(process.argv.slice(2));
 const ROOT = resolve(ARGS.root || process.cwd());
 const CFG_PATH = join(ROOT, 'proto.config.json');
 
-const SKIP_DIRS = new Set(['node_modules', '.git', 'feedback', 'backup', '.opencode', 'dist', 'build']);
-function findHtml(rootDir, sub) {
-  const base = sub ? join(rootDir, sub) : rootDir;
-  let out = [], entries = [];
-  try { entries = readdirSync(base, { withFileTypes: true }); } catch { return out; }
-  for (const e of entries) {
-    if (e.name.startsWith('.') || SKIP_DIRS.has(e.name)) continue;
-    const rel = (sub ? sub + '/' : '') + e.name;
-    if (e.isDirectory()) out = out.concat(findHtml(rootDir, rel));
-    else if (/\.html?$/i.test(e.name)) out.push(rel.split(sep).join('/'));
-  }
-  return out.sort();
-}
-function readTitle(abs) {
-  try { const m = readFileSync(abs, 'utf8').slice(0, 4096).match(/<title[^>]*>([^<]*)<\/title>/i); return m ? m[1].trim() : ''; } catch { return ''; }
-}
-function pageIdOf(rel) {
-  const slug = String(rel).replace(/\.html?$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return slug || 'page';
-}
-function uniqueIds(list) {
-  const seen = Object.create(null);
-  list.forEach(p => { let id = p.id, n = 2; while (seen[id]) id = p.id + '-' + (n++); seen[id] = true; p.id = id; });
-  return list;
-}
 /* 探测是否用了内核容器约定(.pg-sec + data-page) */
 function usesContainer(abs) {
   try { const t = readFileSync(abs, 'utf8'); return t.includes('pg-sec') && t.includes('data-page'); } catch { return false; }

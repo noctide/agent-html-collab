@@ -1,3 +1,12 @@
+# v0.3.0
+
+- 项目更名为 agent-html-collab，界面名称为 Agent HTML Collab。
+- OpenCode V2 提供 /agent-html-collab 与 /agent-html-collab-close，安装时迁移旧 ProtoBridge 插件登记。
+- 统一扫描和 CLI 参数解析，自动扫描排除子仓库与工具运行页面。
+- 修复外部反馈包在报告目录不存在时无法生成报告的问题。
+- 共用 Host 移回通用包；通知开关移除重复文案。
+- 保留 proto.config.json、PROTOBRIDGE_HOST/PROTOBRIDGE_WAKE 及旧浏览器存储键作为兼容格式。
+
 # v0.2.0（待真实客户端 GUI 验证）
 
 - 移除全局目标和最近会话兜底，按页面实例捕获所属对话。

@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { apply } from '../packages/dsh-plugin/index.mjs';
 const { chromium } = await import(pathToFileURL(process.env.PROTOBRIDGE_PLAYWRIGHT_MODULE));
-const root = await mkdtemp(join(tmpdir(), 'protobridge-host-ui-'));
+const root = await mkdtemp(join(tmpdir(), 'agent-html-collab-host-ui-'));
 await writeFile(join(root, 'proto.html'), '<html><body><h1 id="title">Original title</h1><p>Example</p></body></html>');
 const routes = [], cleanup = [], queued = [];
 const agent = { session: { header: { cwd: root } } };
@@ -19,7 +19,7 @@ const server = http.createServer((req, res) => {
 });
 await new Promise(r => server.listen(0, '127.0.0.1', r));
 const base = 'http://127.0.0.1:' + server.address().port;
-const opened = await fetch(base + '/protobridge/open', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: 'session-ui-test', pageId: 'page-ui-test' }) }).then(r => r.json());
+const opened = await fetch(base + '/agent-html-collab/open', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: JSON.stringify({ sessionId: 'session-ui-test', pageId: 'page-ui-test' }) }).then(r => r.json());
 let browser;
 try {
   browser = await chromium.launch({ executablePath: process.env.PROTOBRIDGE_BROWSER, headless: true });

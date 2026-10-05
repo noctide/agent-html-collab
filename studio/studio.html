@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ProtoBridge 协同工具</title>
+<title>Agent HTML Collab 协同工具</title>
 <!-- ============================================================
-     ProtoBridge 内核 studio(agent 无关,纯 Web)
+     Agent HTML Collab 内核 studio(agent 无关,纯 Web)
      - 方案 HTML 装进 iframe(同源注入桥接脚本)
      - 配置驱动:window.PROTO_CONFIG(serve.mjs 注入)或 ?config= 指定
      - 无配置时使用内置默认值,行为零破坏
@@ -53,7 +53,10 @@
   #bar .send { background: var(--pb-teal-bg); border-color: transparent; color: var(--pb-teal); font-weight: 600; }
   #bar .send:hover { background: var(--pb-teal); color: #fff; }
   #bar .send:disabled { opacity: .55; cursor: default; }
-  #bar #notify.off { color: #a9a79f; }
+  #bar #notify { width: 34px; height: 20px; padding: 0; border: 0; border-radius: 10px; background: var(--pb-teal); position: relative; }
+  #bar #notify::after { content: ''; position: absolute; width: 14px; height: 14px; top: 3px; left: 17px; border-radius: 50%; background: #fff; }
+  #bar #notify.off { background: #a9a79f; }
+  #bar #notify.off::after { left: 3px; }
   #bar > * { flex-shrink: 0; }
 
   /* 窄侧栏使用两行工具栏，保留页面选择和缩放入口。 */
@@ -127,8 +130,8 @@
 
 <div id="bar">
   <button class="brand" id="proj-entry" title="项目 / 源文件">
-    <span class="logo" id="brand-logo">P</span>
-    <span id="brand-title">ProtoBridge</span>
+    <span class="logo" id="brand-logo">A</span>
+    <span id="brand-title">Agent HTML Collab · 人机协同</span>
     <span class="caret">▾</span>
   </button>
   <span class="sep"></span>
@@ -152,7 +155,7 @@
   </div>
   <span class="sep"></span>
   <span class="count" id="count"></span>
-  <button id="notify" title="是否通知本页面所属对话（需客户端接入）">协同通知:开</button>
+  <button id="notify" role="switch" aria-label="通知所属会话" aria-checked="true" title="通知所属会话：开"></button>
   <button class="send" id="send">发送反馈 ↗</button>
   <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
 </div>
@@ -568,7 +571,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 配置合并(内核默认值 → 注入配置 → URL 覆盖) ---------- */
   var DEFAULTS = {
-    title: 'ProtoBridge',
+    title: 'Agent HTML Collab',
     source: { mode: 'single', file: 'proto.html', dir: 'pages/', urls: [], entry: '', index: '' },
     pages: { container: '.pg-sec', activeClass: 'act', idAttr: 'data-page', switch: 'auto', rootId: 'pg-{id}', list: [], overview: null, single: false, singlePerFile: false, defaultId: '' },
     viewport: { desktop: 1440, narrow: [{ match: '.is-mobile', width: 390 }] },
@@ -626,9 +629,9 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   var scale = 1, fitMode = true, contentW = CFG.viewport.desktop || 1440;
 
   /* ---------- 顶栏品牌 ---------- */
-  document.title = CFG.title + ' · Studio';
-  document.getElementById('brand-title').textContent = CFG.title;
-  document.getElementById('brand-logo').textContent = (CFG.title || 'P').trim().charAt(0).toUpperCase();
+  document.title = 'Agent HTML Collab · ' + CFG.title;
+  document.getElementById('brand-title').textContent = 'Agent HTML Collab · 人机协同';
+  document.getElementById('brand-logo').textContent = 'A';
 
   /* ---------- 项目入口:下拉展示源文件路径 ---------- */
   document.getElementById('proj-entry').addEventListener('click', function () {
@@ -941,7 +944,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 协同通知开关 ---------- */
   function isNotifyOn() { return lsGet(ST.notify, '1') !== '0'; }
-  function paintNotify() { var b = $('#notify'); if (b) { b.textContent = '协同通知:' + (isNotifyOn() ? '开' : '关'); b.classList.toggle('off', !isNotifyOn()); } }
+  function paintNotify() { var b = $('#notify'); if (b) { var on = isNotifyOn(); b.setAttribute('aria-checked', String(on)); b.title = '通知所属会话：' + (on ? '开' : '关'); b.classList.toggle('off', !on); } }
   function toggleNotify() {
     var on = !isNotifyOn(); lsSet(ST.notify, on ? '1' : '0'); paintNotify();
     toast(on ? '协同通知已开:反馈落盘后自动唤醒绑定的会话' : '协同通知已关:反馈只落盘,需手动让 agent「处理反馈」');
@@ -968,7 +971,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var p = openPop(btn,
       '<div class="ph">发送反馈给 Agent</div>' +
       '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.e + '</b> 处<br>' +
-      '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.ProtoBridgeTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
+      '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.AgentHtmlCollabTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
       '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">确认发送</button></div>');
     p.querySelector('[data-x=c]').addEventListener('click', closePop);
     p.querySelector('[data-x=ok]').addEventListener('click', function () {
@@ -977,7 +980,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
         pendingBundle = collectBundle();
         pendingBundle.feedbackId = window.crypto.randomUUID();
       }
-      window.ProtoBridgeTransport.submitFeedback(pendingBundle)
+      window.AgentHtmlCollabTransport.submitFeedback(pendingBundle)
         .then(function (result) {
           if (!result || result.saved !== true) throw new Error('Host 未确认反馈保存成功');
           if (result.delivery === 'failed') {
@@ -1044,7 +1047,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
         '<button class="mi" data-act="zoom-out">缩小 −</button>';
     }
     if (barHidden('#notify')) {
-      extra += '<button class="mi" data-act="notify-toggle">协同通知:' + (isNotifyOn() ? '开' : '关') + '</button>';
+      extra += '<button class="mi" data-act="notify-toggle" role="switch" aria-label="通知所属会话" aria-checked="' + isNotifyOn() + '" title="通知所属会话">' + (isNotifyOn() ? '开' : '关') + '</button>';
     }
     var p = openPop($('#more'),
       '<div class="ph">操作</div>' +

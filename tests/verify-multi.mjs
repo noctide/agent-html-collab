@@ -71,7 +71,7 @@ try {
   const reframe = () => page.frames().find(f => f !== page.mainFrame());
 
   t(await page.evaluate(() => !!document.querySelector('#bar .seg')), '装载:顶栏渲染');
-  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === '多文件示例', '装载:config.title 生效');
+  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 2, '装载:页清单 2 项');
   t(await page.$eval('#page-sel', s => s.value) === 'a', '装载:当前页 = a');
   t((await reframe().$eval('#a-title', n => n.textContent.trim())).includes('文件 A'), '装载:默认载入 a.html');
@@ -148,7 +148,7 @@ try {
   restore();
 }
 
-console.log('\n===== ProtoBridge 多文件冒烟(examples/multi)=====\n' + results.join('\n'));
+console.log('\n===== Agent HTML Collab 多文件冒烟(examples/multi)=====\n' + results.join('\n'));
 const fails = results.filter(r => r.startsWith('FAIL')).length;
 console.log(fails ? '\n⚠️ ' + fails + ' 项失败\n' : '\n✅ ' + results.length + ' 项全部通过\n');
 if (fails) console.log('server log:\n' + serverLog.split('\n').filter(l => l.includes('[serve]') || l.includes('[feedback]')).join('\n'));

@@ -1,15 +1,15 @@
 window.__ModuleLoader__.load({
-  id: 'protobridge',
+  id: 'agent-html-collab',
   factory(require) {
     const React = require('react');
     const h = React.createElement;
-    const ID = 'protobridge';
+    const ID = 'agent-html-collab';
     const buttonStyle = { display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 32, padding: '6px 10px', border: '1px solid var(--dsw-alias-border-l1, #e4e7eb)', borderRadius: 'var(--dsw-radius-md, 8px)', background: 'var(--dsw-specific-menu, #fff)', color: 'var(--dsw-alias-label-secondary, #454b54)', font: 'inherit', fontSize: 13, cursor: 'pointer', WebkitAppRegion: 'no-drag' };
     const icon = () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, 'aria-hidden': true }, h('rect', { x: 3, y: 4, width: 18, height: 16, rx: 3 }), h('path', { d: 'M3 9h18M9 9v11' }));
     function Action({ onClick, children }) { return h('button', { type: 'button', style: buttonStyle, onClick, onMouseEnter: e => { e.currentTarget.style.background = 'var(--dsw-alias-bg-l2, #f2f4f7)'; }, onMouseLeave: e => { e.currentTarget.style.background = buttonStyle.background; } }, children); }
     const copy = {
       zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开原型协同。', description: '编辑原型并将反馈发送给所属对话' },
-      en: { title: 'ProtoBridge', open: 'Open ProtoBridge', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open ProtoBridge.', description: 'Edit prototypes and send feedback to this conversation' },
+      en: { title: 'Agent HTML Collab', open: 'Open Agent HTML Collab', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open Agent HTML Collab.', description: 'Edit prototypes and send feedback to this conversation' },
     };
     const request = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || String(r.status)); return j; }));
@@ -21,7 +21,7 @@ window.__ModuleLoader__.load({
       React.useEffect(() => {
         let disposed = false, opened = null;
         setError(null); setPage(null);
-        request('/protobridge/open', { sessionId: ownerSessionId, pageId: tab.id }).then(async value => {
+        request('/agent-html-collab/open', { sessionId: ownerSessionId, pageId: tab.id }).then(async value => {
           opened = value;
           if (value.runtimeRevision !== 'notify-signal-v1') throw new Error('客户端主进程仍在运行旧版插件，请从“应用”菜单完整退出 DeepSeek Harness 后重新打开。仅关闭窗口或刷新页面不会更新 Host。');
           if (disposed) request(value.url.replace(/\/studio$/, '/close'), {}).catch(() => {});
@@ -66,18 +66,18 @@ window.__ModuleLoader__.load({
     return {
       inject: ['slots', 'locale', 'sidebarRight', 'sidebarRightTabs'],
       apply(ctx) {
-        ctx.effect(() => ctx.locale.register(ID, copy), 'protobridge: locale');
+        ctx.effect(() => ctx.locale.register(ID, copy), 'agent-html-collab: locale');
         const t = ctx.locale.bind(ID);
-        ctx.effect(() => ctx.sidebarRightTabs.register({ id: ID, kind: ID, multiple: true, title: () => t('title'), keepMounted: true }), 'protobridge: tab type');
+        ctx.effect(() => ctx.sidebarRightTabs.register({ id: ID, kind: ID, multiple: true, title: () => t('title'), keepMounted: true }), 'agent-html-collab: tab type');
         ctx.effect(() => ctx.slots.inject('sidebar.right.pane.tab', () => ctx.slots.register({
           name: 'sidebar.right.pane.tab', key: ID, locale: ID,
           inject: sessionId => ({ ownerSessionId: sessionId }),
-        }, Body)), 'protobridge: bound pane');
+        }, Body)), 'agent-html-collab: bound pane');
         // DSH rc.2 declares this persistent navigation seat with no built-in occupant.
         ctx.effect(() => ctx.slots.inject('conversation.header.leading', () => ctx.slots.register({
-          name: 'conversation.header.leading', id: 'protobridge-launcher', locale: ID,
+          name: 'conversation.header.leading', id: 'agent-html-collab-launcher', locale: ID,
           inject: () => ({ open: () => ctx.sidebarRight.openTab(ID) }),
-        }, PersistentLauncher)), 'protobridge: persistent launch');
+        }, PersistentLauncher)), 'agent-html-collab: persistent launch');
       },
     };
   },

@@ -7,7 +7,7 @@ import { createPageBridge } from '../host-bridge/index.mjs';
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 export const inject = ['webServer', 'agents', 'sessionController', 'connection'];
 
-export function apply(ctx) {
+export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fetch } = {}) {
   const pages = new Map();
   const send = (res, status, value) => {
     res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
@@ -50,14 +50,14 @@ export function apply(ctx) {
       },
       enqueue: async ({ sessionId, feedbackId, text }) => {
         if (closed || ctx.agents.get(sessionId) !== agent) throw new Error('页面所属会话已失效');
-        const result = await ctx.sessionController.prompt({ sessionId, requestId: 'protobridge-' + feedbackId,
+        const result = await ctx.sessionController.prompt({ sessionId, requestId: 'agent-html-collab-' + feedbackId,
           content: [{ type: 'text', text }], mode: 'followup' }, new AbortController().signal);
         if (result?.accepted !== true) throw new Error('客户端未接受反馈通知');
       },
     });
     const id = bridge.binding.bindingId;
-    const base = '/protobridge/pages/' + id;
-    const child = spawn(process.execPath, [join(ROOT, 'studio/serve.mjs'), '--root', projectRoot, '--port', '0', '--stay-alive', '--base-path', base], {
+    const base = '/agent-html-collab/pages/' + id;
+    const child = spawn(nodeExecutable, [join(ROOT, 'studio/serve.mjs'), '--root', projectRoot, '--port', '0', '--stay-alive', '--base-path', base], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', PROTOBRIDGE_WAKE: '0' }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true,
     });
     const page = { bridge, child, base, port: null, sessionId, agent };
@@ -76,7 +76,7 @@ export function apply(ctx) {
     } catch (error) { stop(id); throw error; }
   };
 
-  ctx.effect(() => ctx.webServer.register({ kind: 'exact', path: '/protobridge/open', handler: async (req, res) => {
+  ctx.effect(() => ctx.webServer.register({ kind: 'exact', path: '/agent-html-collab/open', handler: async (req, res) => {
     try {
       if (!admit(req, res)) return;
       if (req.method !== 'POST') return send(res, 405, { error: 'POST required' });
@@ -86,9 +86,9 @@ export function apply(ctx) {
       if (typeof sessionId !== 'string' || typeof pageId !== 'string' || !pageId) throw new Error('页面归属不完整');
       send(res, 200, await open(sessionId, pageId));
     } catch (error) { send(res, 400, { error: error.message }); }
-  } }), 'protobridge: open bound page');
+  } }), 'agent-html-collab: open bound page');
 
-  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/protobridge/pages', handler: async (req, res) => {
+  ctx.effect(() => ctx.webServer.register({ kind: 'prefix', path: '/agent-html-collab/pages', handler: async (req, res) => {
     try {
       if (!admit(req, res)) return;
       const url = new URL(req.url, 'http://localhost');
@@ -102,7 +102,7 @@ export function apply(ctx) {
         return send(res, 200, await page.bridge.pageApi.submitFeedback(await readBody(req)));
       }
       if (req.method !== 'GET') return send(res, 405, { error: 'GET required' });
-      const upstream = await fetch('http://127.0.0.1:' + page.port + url.pathname + url.search);
+      const upstream = await fetchLocal('http://127.0.0.1:' + page.port + url.pathname + url.search);
       const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
       res.writeHead(upstream.status, { 'content-type': contentType, 'cache-control': 'no-store', 'referrer-policy': 'same-origin' });
       if (tail === '/studio' && upstream.ok) {
@@ -111,7 +111,7 @@ export function apply(ctx) {
         res.end(html.replace('<head>', '<head>' + api));
       } else res.end(Buffer.from(await upstream.arrayBuffer()));
     } catch (error) { send(res, 400, { error: error.message }); }
-  } }), 'protobridge: bound page routes');
+  } }), 'agent-html-collab: bound page routes');
 
-  ctx.effect(() => () => { for (const id of [...pages.keys()]) stop(id); }, 'protobridge: page cleanup');
+  ctx.effect(() => () => { for (const id of [...pages.keys()]) stop(id); }, 'agent-html-collab: page cleanup');
 }

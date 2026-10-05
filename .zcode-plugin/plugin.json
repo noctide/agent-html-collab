@@ -1,6 +1,6 @@
 {
-  "name": "protobridge",
-  "version": "0.2.0",
+  "name": "agent-html-collab",
+  "version": "0.3.0",
   "description": "在内置浏览器编辑 HTML 原型，通过当前会话的等待工具接收反馈",
   "skills": "skills",
   "mcpServers": ".mcp.json"

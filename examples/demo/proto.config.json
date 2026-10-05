@@ -1,5 +1,5 @@
 {
-  "title": "ProtoBridge Demo",
+  "title": "Agent HTML Collab Demo",
   "source": { "mode": "single", "file": "proto.html" },
   "pages": {
     "container": ".pg-sec",

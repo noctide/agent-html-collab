@@ -1,19 +1,5 @@
-# OpenCode 适配条(可选)
+# OpenCode 接入
 
-OpenCode 用 command(或直接对 agent 说话)。逻辑指向项目 `AGENTS.md`,不复制实现。
+V2 优先使用插件提供的 `/agent-html-collab` 和 `/agent-html-collab-close`，安装和使用步骤见 [插件说明](../packages/opencode-plugin/README.md)。不要另外创建同名 command。
 
-## 建议 command:`.opencode/command/protobridge.md`
-```markdown
----
-description: 起原型协同服务 / 处理原型反馈
----
-参数为空时:读项目 AGENTS.md 的「原型协同(ProtoBridge)约定」§2,运行
-`node <protobridge>/studio/serve.mjs --root . --config proto.config.json`,回报 studio 地址。
-参数为 feedback 时:按 AGENTS.md §4 处理反馈(扫盘 → apply.mjs 报告 → --apply 回灌 → 提示刷新)。
-```
-
-## 也可以不开 command
-直接把 `AGENTS-SNIPPET.md` 追加进项目 `AGENTS.md`,对 OpenCode 说「起原型服务」/「处理反馈」即可。
-skill 放在 `skills/proto-bridge/SKILL.md`(开放 Agent Skills 格式),OpenCode 可自动加载。
-
-其余细节见内核 `skills/proto-bridge/SKILL.md`。
+未安装插件时，可以将 [项目约定](../AGENTS-SNIPPET.md) 加入项目的 AGENTS.md，对 agent 说“起原型服务”或“处理反馈”。此方式保存后需手动交接，不提供插件的会话自动回传。

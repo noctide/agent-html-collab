@@ -1,4 +1,4 @@
-// apply.mjs — ProtoBridge 反馈回灌(契约 + CLI,运行时层 ①)
+// apply.mjs — Agent HTML Collab 反馈回灌(契约 + CLI,运行时层 ①)
 //
 // 用法:
 //   node studio/apply.mjs [feedback.json|latest] [--config <path>] [--root <dir>] [--apply]
@@ -12,6 +12,7 @@
 //     }
 //   没有适配器时,内核用 config(source/pages.list/apply.map)自行定位。
 // 默认只出报告,不改源码;加 --apply 才写回并备份、归包到 feedback/done/。
+import { parseArgs } from './cli-args.mjs';
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, copyFileSync, renameSync, statSync } from 'node:fs';
 import { join, dirname, resolve, basename, relative, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -19,15 +20,6 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const KERNEL = dirname(fileURLToPath(import.meta.url));
 const PKG_ROOT = resolve(KERNEL, '..');
 
-function parseArgs(argv) {
-  const a = { _: [] };
-  for (let i = 0; i < argv.length; i++) {
-    const t = argv[i];
-    if (t.startsWith('--')) { const [k, v] = t.slice(2).split('='); a[k.replace(/-([a-z])/g, (_, c) => c.toUpperCase())] = v != null ? v : (argv[i + 1] && !argv[i + 1].startsWith('--') ? argv[++i] : true); }
-    else a._.push(t);
-  }
-  return a;
-}
 const ARGS = parseArgs(process.argv.slice(2));
 
 export function loadConfig(projectRoot, configPath) {
@@ -177,6 +169,7 @@ export async function applyFeedback({ feedback, config, projectRoot, apply = fal
     const loc = file ? file + (line ? ':' + line : '') : '—';
     lines.push('| ' + (comment.id || '') + ' | ' + (comment.page || '') + ' | ' + norm(comment.region).slice(0, 24) + ' | ' + (comment.type || '') + ' | ' + (comment.priority || '') + ' | ' + norm(comment.comment).slice(0, 60) + ' | ' + (comment.author || '') + ' | ' + loc + ' |');
   });
+  mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, lines.join('\n') + '\n');
 
   /* 归包 */

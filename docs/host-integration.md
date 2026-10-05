@@ -33,7 +33,9 @@ const bridge = createPageBridge({
 通过客户端受限的 preload/RPC 桥，在 Studio 脚本执行前暴露 `window.PROTOBRIDGE_HOST = bridge.pageApi`（version=1、submitFeedback）。Host 对 RPC 的页面发送者做校验，不向 iframe 或任意外部页面暴露该桥。跨进程不能直接注入 Node 对象，要用客户端的 RPC 包装同名方法。
 页面关闭、归属变化、会话删除时调用 `bridge.dispose()`。重新绑定必须创建新 bridge；不得修改已有绑定。
 
-OpenCode 包的 `ctx.protobridge.registerPageBridge(factory)` 是本项目约定的适配入口，**不是已核实的上游 API**。客户端实现它，负责上述页面打开、桥注入和关闭生命周期，同时提供 `saveFeedback` 和 `enqueue`。
+OpenCode V2 已增加命令式本地网页接入实验：`/agent-html-collab` 从命令调用取得 sessionID，通过真实会话目录创建绑定，再以 `ctx.session.prompt` 排队投递。该方案不需要原生侧栏接口；真实 2.0.22 后端与本地模型 fixture 已验证，桌面 GUI 和用户模型尚待验证。详见 [OpenCode 包说明](../packages/opencode-plugin/README.md)。
+
+V1 入口保留的 `ctx.protobridge.registerPageBridge(factory)` 是本项目约定，**不是已核实的上游 API**。客户端实现它时负责上述页面打开、桥注入和关闭生命周期，同时提供 `saveFeedback` 和 `enqueue`。
 
 ## 行为
 
@@ -47,5 +49,5 @@ OpenCode 包的 `ctx.protobridge.registerPageBridge(factory)` 是本项目约定
 
 ## 从 v0.1 迁移
 
-移除全局目标、最近对话兜底及文件扫描自动通知。旧 `protobridge-target.json` 不再读取。
+移除全局目标、最近对话兜底及文件扫描自动通知。旧 `agent-html-collab-target.json` 不再读取。
 升级时停用旧版本插件，安装新包并重启客户端。未实现页面适配的客户端将退回手动处理，不再自动唤醒。

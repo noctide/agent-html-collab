@@ -1,9 +1,9 @@
 ---
-name: proto-bridge
-description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 / 标注提意见 / 反馈回灌源码)。当用户提到「原型协同」「方案稿标注」「处理反馈」「protobridge」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
+name: agent-html-collab
+description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 / 标注提意见 / 反馈回灌源码)。当用户提到「原型协同」「方案稿标注」「处理反馈」「agent-html-collab」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
 ---
 
-# ProtoBridge 操作手册(agent 进阶)
+# Agent HTML Collab 操作手册(agent 进阶)
 
 本 skill 讲**怎么操作**,不内嵌大段代码;所有实现都在内核仓库,按路径引用。
 基础约定(必读、进用户项目)见 `AGENTS-SNIPPET.md`。
@@ -11,16 +11,17 @@ description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 
 ## 客户端启动与等待（优先使用）
 
 - DSH：安装本仓库的 DSH bundle 后，在所属对话点击“打开原型协同”。Host 自动取得页面所属会话和项目。不要用全局绑定或最近会话。
-- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中；随后调用 `wait_feedback`，bindingId 使用 open_studio 返回值，并保持工具等待。
-- ZCode 用户点击发送后，反馈通过等待工具的返回值进入当前对话。按反馈文件处理、备份、核对；要继续收集反馈，再调用 wait_feedback。
-- 超时返回 timedOut 时可继续调用 wait_feedback。对话结束、等待工具取消或超时时，不承诺能从空闲状态主动唤醒；页面会保留反馈并提示重新等待后重试通知。不要把 MCP 服务放到后台后声称已自动通知。
+- OpenCode V2：安装本包后，在所属会话执行 `/agent-html-collab`，将返回的本地网页链接展示给用户。用户发送反馈后，插件向绑定会话排队投递，无需 `wait_feedback` 或扫盘轮询；收到后按反馈文件处理并报告结果。结束时执行 `/agent-html-collab-close`。当前不是原生侧栏，实际桌面 GUI 和用户模型尚待验证。
+- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中。确认页面加载后，先明确告诉用户：“页面已打开，请在右侧原型中选择‘编辑’改字或‘标注’提意见，再点击‘发送反馈’并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。”随后调用一次 `wait_feedback`，bindingId 使用 open_studio 返回值。
+- ZCode 用户点击发送后，反馈通过等待工具的返回值进入当前对话。先报告收到反馈，再按反馈文件处理、备份、核对。完成后询问是否继续收集，得到肯定答复再等待；不要默认收到一次就无限续等。
+- 超时返回 timedOut 时默认结束本轮并告诉用户：“本轮等待已结束，尚未收到反馈。准备好后在聊天里说‘继续收集反馈’，我重新等待后你再发送。”仅在用户明确要求持续收集时自动续等，不反复输出无变化的超时提示。对话结束、等待工具取消或超时时，不能从空闲状态主动唤醒；页面保留反馈并提示重新等待后重试通知。不要把 MCP 服务放到后台后声称已自动通知。
 - 结束协作时调用 close_studio。只在没有这些客户端接口时使用下文手动 CLI。
 
 ## 0. 内核结构
 
 ```
-protobridge/
-├─ bin/protobridge.mjs  CLI 入口(serve / apply / init,供 npx github: 调用)
+agent-html-collab/
+├─ bin/agent-html-collab.mjs  CLI 入口(serve / apply / init,供 npx github: 调用)
 ├─ studio/
 │  ├─ studio.html      内核 studio(配置驱动,内嵌桥接脚本 bridge)
 │  ├─ serve.mjs        通用静态服务 + /api/feedback 落盘 + /api/config + 递归扫描/自动探测
@@ -33,13 +34,13 @@ protobridge/
 ├─ examples/multi/     多文件每文件整页示例(config.pages.singlePerFile)
 ├─ tests/verify-generic.mjs / verify-single.mjs / verify-multi.mjs
 ├─ AGENTS-SNIPPET.md   追加到项目 AGENTS.md 的段落
-├─ packages/opencode-plugin/  OpenCode 插件(全局装一次,③):protobridge install-plugin
+├─ packages/opencode-plugin/  OpenCode 插件(全局装一次,③):agent-html-collab install-plugin
 └─ adapters/           zcode.md / opencode.md / claude.md 薄条
 ```
 
 ## 1. 给新项目接入(只改 config,不碰内核源码)
 
-最快:`npx github:noctide/protobridge init --root .` 自动生成配置(1 个 HTML→single;多个→pages 每文件整页);
+最快:`npx github:noctide/agent-html-collab init --root .` 自动生成配置(1 个 HTML→single;多个→pages 每文件整页);
 或手写一份(照抄 `studio/proto.config.json` 改):
 
 1. 在项目根放 `proto.config.json`(照抄 `studio/proto.config.json` 改):
@@ -54,8 +55,8 @@ protobridge/
    - `storage`(可选):localStorage 键名前缀,默认 `proto.*`。
 2. 方案稿只要满足:`页面根`能被 `pages.container` 选中、当前页带 `pages.activeClass`、页 id 写在 `pages.idAttr`。其余结构随意。
    - 页面清单优先取 `pages.list`;也可让方案稿暴露 `window.PROTO_PAGES` 作为回退。
-3. 起服务:`node <protobridge>/studio/serve.mjs --root . --config proto.config.json`。
-4. 回灌:`node <protobridge>/studio/apply.mjs latest --root . --config proto.config.json [--apply]`。
+3. 起服务:`node <agent-html-collab>/studio/serve.mjs --root . --config proto.config.json`。
+4. 回灌:`node <agent-html-collab>/studio/apply.mjs latest --root . --config proto.config.json [--apply]`。
 
 **真正通用性的验收**:只改 config + 适配器,不改内核。
 
@@ -110,9 +111,9 @@ export function plans({ feedback, config, projectRoot }) {
 | 回灌大量 skipped | 源码文本被重构/折行;看 `report-*.md` 的 `⚠️/❌` 人工核对,`from` 会被用于模糊匹配 |
 | 服务"落盘即退" | 环境里设了 `PROTOBRIDGE_WAKE=1`;要常驻就用 `--stay-alive` 或去掉该变量 |
 | 点发送没有自动收到 | DSH 请从所属对话的按钮打开页面；ZCode 必须保持 wait_feedback 工具运行。旧全局绑定已移除。见 docs/client-adapters.md |
-| 反馈发到了别的窗口 | 插件按"显式绑定 > 最近用户输入 > 最近事件"选目标;在目标会话发一次触发词即可纠正。OpenCode 无"聚焦会话"API,页面无法自行识别会话 |
+| 反馈发到了别的窗口 | 核对页面所属对话绑定及客户端适配；停止使用该页面并从所属对话重新打开。不得改用全局目标、最近用户输入或最近事件兜底 |
 | 点发送提示失败 | studio 已**自动复制反馈包到剪贴板并弹出错误原因**;把内容粘贴给 agent 即可(或点弹层里的「下载为文件」) |
 
 ## 6. 边界(明确不做)
 
-多用户协同、云服务、MCP server、修改方案稿视觉呈现。内核只做"落盘 + 本地 HTTP + 约定"。
+多用户协同、云服务、修改方案稿视觉呈现。内核负责“落盘 + 本地 HTTP + 约定”；ZCode 适配层提供会话隔离 stdio MCP，通过正在等待的工具返回反馈。

@@ -1,22 +1,24 @@
 {
-  "name": "protobridge-opencode-plugin",
-  "version": "0.2.0",
+  "name": "agent-html-collab-opencode-plugin",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
-  "description": "ProtoBridge 页面归属 Host 适配包（需客户端接入）",
-  "main": "index.ts",
+  "description": "Agent HTML Collab 页面归属 Host 适配包（需客户端接入）",
+  "main": "index.js",
   "exports": {
-    ".": "./index.ts"
+    ".": "./index.js"
   },
   "files": [
-    "index.ts",
+    "index.js",
+    "session-host.mjs",
+    "runtime",
     "README.md",
     "host-bridge"
   ],
   "keywords": [
     "opencode",
     "plugin",
-    "protobridge",
+    "agent-html-collab",
     "prototype",
     "feedback"
   ],

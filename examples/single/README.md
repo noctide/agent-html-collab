@@ -17,14 +17,14 @@
 ## 运行
 
 ```bash
-node <protobridge>/studio/serve.mjs --root examples/single --config examples/single/proto.config.json
+node <agent-html-collab>/studio/serve.mjs --root examples/single --config examples/single/proto.config.json
 # 打开 http://127.0.0.1:8133/studio
 ```
 
 ## 冒烟
 
 ```bash
-node <protobridge>/tests/verify-single.mjs
+node <agent-html-collab>/tests/verify-single.mjs
 ```
 
 ## 与多页示例的区别

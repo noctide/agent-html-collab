@@ -1,4 +1,4 @@
-# ProtoBridge · 通用 HTML 原型协同插件
+# Agent HTML Collab · 通用 HTML 原型协同插件
 
 把「高保真原型 → 用户就地改字/标注提意见 → 反馈回灌 agent 改源码」的人机协同闭环,
 做成**任何 HTML 原型项目、任何编码 agent 都能用**的通用插件。
@@ -9,10 +9,10 @@
 
 ```
 ③ 适配层    adapters/zcode.md · opencode.md · claude.md        可选薄条,丢了不影响
-② 约定层    AGENTS-SNIPPET.md · skills/proto-bridge/SKILL.md   跨 agent 的真正载体
+② 约定层    AGENTS-SNIPPET.md · skills/agent-html-collab/SKILL.md   跨 agent 的真正载体
             feedback/*.json + schema(数据契约)
 ① 运行时层  studio/(studio.html · serve.mjs · apply.mjs · init.mjs · anno/) 纯 Web/Node,手动也能用
-            bin/protobridge.mjs(CLI)· proto.config.json
+            bin/agent-html-collab.mjs(CLI)· proto.config.json
 ```
 
 原则:**① 不依赖任何 agent;② 只用开放约定(AGENTS.md / Agent Skills / JSON 文件);③ 可有可无**。
@@ -22,13 +22,13 @@
 
 ```bash
 # 扫描当前项目并起 studio:没配置也能用(1 个 HTML→单文档;多个→多文件,每文件整页)
-npx github:noctide/protobridge serve --root .
+npx github:noctide/agent-html-collab serve --root .
 
 # 想固定配置(生成 proto.config.json,自动探测模式/页面/端口)
-npx github:noctide/protobridge init --root .
+npx github:noctide/agent-html-collab init --root .
 
 # 回灌反馈(先出报告,确认后 --apply)
-npx github:noctide/protobridge apply latest --root . --apply
+npx github:noctide/agent-html-collab apply latest --root . --apply
 ```
 
 打开提示的 `http://127.0.0.1:<port>/studio` 即可改字/标注;点「发送反馈」落盘到 `feedback/`。
@@ -37,8 +37,8 @@ npx github:noctide/protobridge apply latest --root . --apply
 ## 手动启动(选目录,最省事)
 
 ```bash
-npm i -g github:noctide/protobridge    # 装一次
-protobridge open                       # 弹文件夹选择框 → 起 studio → 自动开浏览器
+npm i -g github:noctide/agent-html-collab    # 装一次
+agent-html-collab open                       # 弹文件夹选择框 → 起 studio → 自动开浏览器
 ```
 `open` 也支持 `--root <目录>`(跳过选择框)、`--port`、`--no-open`(自动化不开浏览器)。
 
@@ -68,14 +68,14 @@ node tests/verify-generic.mjs
 
 **接入状态：** 已按本机 DSH 0.2.0-rc.2 和 ZCode 3.14.4 的接口实现适配，Host/HTTP 和 stdio MCP 测试通过，真实 GUI 安装联动尚待验证。DSH 页面按所属对话投递；ZCode 通过当前会话的等待工具返回反馈，需保持 wait_feedback 运行。见 [客户端接入](docs/client-adapters.md)。
 
-`protobridge install-plugin` 仍可全局安装 OpenCode 适配包，但客户端必须实现页面适配契约；旧版 /protobridge 和“启用协同”全局绑定已移除。升级时请停用旧插件并重启客户端。
+`agent-html-collab install-plugin` 安装 OpenCode 适配包。V2（本机 2.0.22）提供 `/agent-html-collab`：从所属会话打开绑定的本地网页链接，保存反馈后自动向该会话排队投递；`/agent-html-collab-close` 结束。后端与本地模型 fixture 已验证，实际桌面 GUI 和用户模型仍待验证。该命令不使用旧版全局目标或“启用协同”兜底；V1 未接入页面契约时仍需手动处理。升级用 `--force` 并重启客户端。见 [OpenCode 接入](packages/opencode-plugin/README.md)。
 
 ## Releases
 
-下载见 [Releases](https://github.com/noctide/protobridge/releases)。每版提供 npm 安装包、独立 ZIP 和 SHA256 校验。草稿版本不对公众可见。
+下载见 [Releases](https://github.com/noctide/agent-html-collab/releases)。每版提供 npm 安装包、独立 ZIP 和 SHA256 校验。草稿版本不对公众可见。
 
-- TGZ：`npm install -g ./protobridge-0.2.0.tgz`。
-- ZIP：解压后运行 `node package/bin/protobridge.mjs serve --root <项目目录>`，无运行时 npm 依赖。
+- TGZ：`npm install -g ./agent-html-collab-0.3.0.tgz`。
+- ZIP：解压后运行 `node package/bin/agent-html-collab.mjs serve --root <项目目录>`，无运行时 npm 依赖。
 - 自动通知仍取决于客户端页面适配是否完成。
 
 发布工作流模板见 docs/release-workflow.yml。当前 GitHub 凭证缺少 workflow 权限，尚未启用 Actions；维护者将模板放入 .github/workflows/release.yml 后，推送与 package.json 一致的 v* 标签可创建草稿 Release。
@@ -84,7 +84,7 @@ node tests/verify-generic.mjs
 
 | 路径 | 说明 |
 |---|---|
-| `bin/protobridge.mjs` | CLI 入口:`serve` / `apply` / `init` / `install-plugin`(供 `npx github:` 调用) |
+| `bin/agent-html-collab.mjs` | CLI 入口:`serve` / `apply` / `init` / `install-plugin`(供 `npx github:` 调用) |
 | `studio/studio.html` | 内核 studio(配置驱动,内嵌 bridge) |
 | `studio/serve.mjs` | 通用服务:静态 + `/api/feedback` 落盘 + `/api/config` + 注入运行时 + 递归扫描/自动探测 |
 | `studio/apply.mjs` | 回灌契约 + CLI:备份 → 定位 → 文本兜底匹配 → 写回 → 报告 → 归包 |
@@ -98,7 +98,7 @@ node tests/verify-generic.mjs
 | `tests/verify-single.mjs` | 单文档模式冒烟 |
 | `tests/verify-multi.mjs` | 多文件每文件整页冒烟 |
 | `AGENTS-SNIPPET.md` | 追加到项目 `AGENTS.md` 的约定段 |
-| `skills/proto-bridge/SKILL.md` | 开放 Agent Skills 格式的进阶操作手册 |
+| `skills/agent-html-collab/SKILL.md` | 开放 Agent Skills 格式的进阶操作手册 |
 | `packages/opencode-plugin/` | OpenCode 插件(全局装一次):页面归属 Host 适配入口（需客户端接入） |
 | `adapters/` | ZCode / OpenCode / Claude 薄条 |
 
@@ -114,3 +114,7 @@ node tests/verify-generic.mjs
 `path` 语义固定:**相对页面根容器、同名标签序 `nth-of-type` 链**。任何 agent 读 JSON 即可定位元素,
 不需要理解 studio 内部。详见 `SPEC.md` §4 与 `AGENTS-SNIPPET.md`。
 
+
+## 从 ProtoBridge 升级
+
+新版名称为 `agent-html-collab`，界面显示 Agent HTML Collab。使用 `node bin/agent-html-collab.mjs install-plugin --force` 更新本地 OpenCode 插件，然后完整重启客户端。安装器迁移旧插件登记，保留其他插件配置。新命令为 `/agent-html-collab` 与 `/agent-html-collab-close`。项目配置仍为 `proto.config.json`，既有反馈文件与浏览器存储继续使用；旧 Host 注入名 `PROTOBRIDGE_HOST`、环境变量 `PROTOBRIDGE_WAKE` 和 V1 自定义 `ctx.protobridge` 契约为兼容格式保留。

@@ -1,4 +1,6 @@
-// serve.mjs — ProtoBridge 通用协同服务(运行时层 ①,agent 无关)
+import { findHtml, readTitle, pageIdOf, uniqueIds } from './project-files.mjs';
+import { parseArgs } from './cli-args.mjs';
+// serve.mjs — Agent HTML Collab 通用协同服务(运行时层 ①,agent 无关)
 //
 // 用法:
 //   node studio/serve.mjs [--root <项目根>] [--config proto.config.json] [--port 8123]
@@ -13,7 +15,7 @@
 //     或 config.server.wakeOnFeedback=true 时才"落盘即退出"(兼容 ZCode 旧行为)。
 import http from 'node:http';
 import { randomUUID } from 'node:crypto';
-import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -21,23 +23,8 @@ import { fileURLToPath } from 'node:url';
    0. 参数 / 路径
    ============================================================ */
 const KERNEL = dirname(fileURLToPath(import.meta.url));        // studio/
-const PKG_ROOT = resolve(KERNEL, '..');                        // protobridge/
-const SKIP_DIRS = new Set(['node_modules', '.git', 'feedback', 'backup', '.opencode', 'dist', 'build']);
+const PKG_ROOT = resolve(KERNEL, '..');                        // agent-html-collab/
 
-function parseArgs(argv) {
-  const a = { _: [] };
-  for (let i = 0; i < argv.length; i++) {
-    const t = argv[i];
-    if (t.startsWith('--')) {
-      const [k, inline] = t.slice(2).split('=');
-      const key = k.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-      if (inline != null) a[key] = inline;
-      else if (argv[i + 1] && !argv[i + 1].startsWith('--')) a[key] = argv[++i];
-      else a[key] = true;
-    } else a._.push(t);
-  }
-  return a;
-}
 const ARGS = parseArgs(process.argv.slice(2));
 const BASE_PATH = typeof ARGS.basePath === 'string' ? ARGS.basePath.replace(/\/$/, '') : '';
 if (BASE_PATH && !/^\/[a-zA-Z0-9/_-]+$/.test(BASE_PATH)) throw new Error('Invalid base path');
@@ -106,30 +93,6 @@ mkdirSync(FEEDBACK_DIR, { recursive: true });
    2. 页面清单 / 自动探测(便于 studio 渲染下拉,不依赖方案稿内部 PROTO_PAGES)
    ============================================================ */
 /* 递归收集 rootDir 下的 HTML(返回相对路径,统一 / 分隔),跳过噪音目录与隐藏项 */
-function findHtml(rootDir, sub) {
-  const base = sub ? join(rootDir, sub) : rootDir;
-  let out = [], entries = [];
-  try { entries = readdirSync(base, { withFileTypes: true }); } catch { return out; }
-  for (const e of entries) {
-    if (e.name.startsWith('.') || SKIP_DIRS.has(e.name)) continue;
-    const rel = (sub ? sub + '/' : '') + e.name;
-    if (e.isDirectory()) out = out.concat(findHtml(rootDir, rel));
-    else if (/\.html?$/i.test(e.name)) out.push(rel.replace(/\\/g, '/'));
-  }
-  return out.sort();
-}
-function readTitle(abs) {
-  try { const m = readFileSync(abs, 'utf8').slice(0, 4096).match(/<title[^>]*>([^<]*)<\/title>/i); return m ? m[1].trim() : ''; } catch { return ''; }
-}
-function pageIdOf(rel) {
-  const slug = String(rel).replace(/\.html?$/i, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-  return slug || 'page';
-}
-function uniqueIds(list) {
-  const seen = Object.create(null);
-  list.forEach(p => { let id = p.id, n = 2; while (seen[id]) id = p.id + '-' + (n++); seen[id] = true; p.id = id; });
-  return list;
-}
 /* 无配置文件时:按根下 HTML 数量推断模式(1 个→single;多个→pages,每文件整页) */
 function autoDetectConfig() {
   const files = findHtml(PROJECT_ROOT, '');
@@ -189,7 +152,7 @@ function buildInjectedConfig() {
       entry: BASE_PATH && CFG.source.entry?.startsWith('/project/') ? BASE_PATH + CFG.source.entry : CFG.source.entry,
     }),
     _meta: {
-      injectedBy: 'protobridge/serve.mjs',
+      injectedBy: 'agent-html-collab/serve.mjs',
       configPath: CONFIG_PATH || null,
       autoDetected: !!AUTO_CFG,
       projectRoot: PROJECT_ROOT,
@@ -231,7 +194,7 @@ function annoMapSrc() {
     const p = resolve(PROJECT_ROOT, custom);
     if (statFile(p)) return readFileSync(p, 'utf8');
   }
-  return '/* protobridge: 未配置 tools.annoMap,区域标注映射为空 */\nwindow.PROTO_ANNO_MAP = { pages: {} };\n';
+  return '/* agent-html-collab: 未配置 tools.annoMap,区域标注映射为空 */\nwindow.PROTO_ANNO_MAP = { pages: {} };\n';
 }
 
 /* ============================================================
@@ -254,7 +217,7 @@ const server = http.createServer((req, res) => {
 
   /* ---- API ---- */
   if (req.method === 'GET' && u.pathname === '/api/ping') {
-    return send(200, MIME['.json'], JSON.stringify({ ok: true, app: 'protobridge', build: new Date().toISOString() }));
+    return send(200, MIME['.json'], JSON.stringify({ ok: true, app: 'agent-html-collab', build: new Date().toISOString() }));
   }
   if (req.method === 'GET' && u.pathname === '/api/config') {
     return send(200, MIME['.json'], JSON.stringify(buildInjectedConfig()));
@@ -340,7 +303,7 @@ const server = http.createServer((req, res) => {
 
 server.on('error', (e) => { console.error('[serve] 启动失败:', e.message); process.exit(1); });
 server.listen(CFG.server.port, '127.0.0.1', () => {
-  console.log('[serve] protobridge  http://127.0.0.1:' + server.address().port + '/studio');
+  console.log('[serve] agent-html-collab  http://127.0.0.1:' + server.address().port + '/studio');
   console.log('[serve] 项目根   ' + PROJECT_ROOT);
   console.log('[serve] 配置     ' + CONFIG_LABEL + '   模式 ' + CFG.source.mode + (CFG.pages.singlePerFile ? '(每文件整页)' : '') + '   入口 ' + CFG.source.entry);
   console.log('[serve] 反馈目录 ' + FEEDBACK_DIR + (process.env.PROTOBRIDGE_WAKE === '1' ? '   [PROTOBRIDGE_WAKE=1 落盘即退出]' : '   [落盘后常驻]'));

@@ -37,7 +37,7 @@ test('DSH launcher registers a persistent entry even without a composer or sessi
 });
 
 test('DSH routes authenticate, capture page owner, proxy Studio and queue to that owner', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'protobridge-dsh-'));
+  const root = await mkdtemp(join(tmpdir(), 'agent-html-collab-dsh-'));
   await writeFile(join(root, 'proto.html'), '<html><body><p>Original</p></body></html>');
   const agentA = { session: { header: { cwd: root } } };
   const agentB = { session: { header: { cwd: root } } };
@@ -62,10 +62,10 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
   const base = 'http://127.0.0.1:' + server.address().port;
   const post = (path, body, auth = true) => fetch(base + path, { method: 'POST', headers: { 'content-type': 'application/json', ...(auth ? { 'x-test-auth': '1' } : {}) }, body: JSON.stringify(body) });
   try {
-    assert.equal((await post('/protobridge/open', { sessionId: 'session-a', pageId: 'page-a' }, false)).status, 401);
-    assert.equal((await fetch(base + '/protobridge/open', { method: 'POST', headers: { origin: 'https://other.example', 'x-test-auth': '1' }, body: '{}' })).status, 403);
-    const a = await post('/protobridge/open', { sessionId: 'session-a', pageId: 'page-a' }).then(r => r.json());
-    const b = await post('/protobridge/open', { sessionId: 'session-b', pageId: 'page-b' }).then(r => r.json());
+    assert.equal((await post('/agent-html-collab/open', { sessionId: 'session-a', pageId: 'page-a' }, false)).status, 401);
+    assert.equal((await fetch(base + '/agent-html-collab/open', { method: 'POST', headers: { origin: 'https://other.example', 'x-test-auth': '1' }, body: '{}' })).status, 403);
+    const a = await post('/agent-html-collab/open', { sessionId: 'session-a', pageId: 'page-a' }).then(r => r.json());
+    const b = await post('/agent-html-collab/open', { sessionId: 'session-b', pageId: 'page-b' }).then(r => r.json());
     assert.ok(a.bindingId, JSON.stringify(a)); assert.ok(b.bindingId, JSON.stringify(b));
     assert.equal(a.runtimeRevision, 'notify-signal-v1');
     const html = await fetch(base + a.url, { headers: { 'x-test-auth': '1' } }).then(r => r.text());
@@ -81,7 +81,7 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
     assert.equal(saved.saved, true); assert.equal(saved.delivery, 'queued');
     await post(feedbackPath, bundle);
     assert.equal(queued.length, 1); assert.equal(queued[0].sessionId, 'session-a');
-    assert.equal(queued[0].requestId, 'protobridge-feedback_dsh_0001');
+    assert.equal(queued[0].requestId, 'agent-html-collab-feedback_dsh_0001');
     assert.equal(JSON.parse(await readFile(saved.file, 'utf8')).routing.pageId, 'page-a');
     await post(prefix + '/close', {});
     assert.equal((await post(feedbackPath, bundle)).status, 410);

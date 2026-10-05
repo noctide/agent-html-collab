@@ -1,4 +1,4 @@
 - insert:
-    - id: protobridge
-      name: protobridge
+    - id: agent-html-collab
+      name: agent-html-collab
       config: {}

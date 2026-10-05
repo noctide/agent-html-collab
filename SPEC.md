@@ -1,6 +1,6 @@
 > v0.2 变更：会话通知采用页面归属绑定，旧版全局目标/最近会话方案已移除。DSH Host 与 ZCode 等待工具已实现，真实 GUI 安装联动尚待验证，详见 [docs/client-adapters.md](docs/client-adapters.md)。下文旧自动监听描述仅为历史设计。
 
-# ProtoBridge 通用协同插件 · 规格说明
+# Agent HTML Collab 通用协同插件 · 规格说明
 
 > 目标:把「高保真原型 → 用户就地改字/标注提意见 → 反馈回灌 agent 改源码」的人机协同闭环,
 > 抽象为**任何 HTML 原型项目、任何编码 agent 都能用**的通用插件。
@@ -25,7 +25,7 @@
 │    adapters/zcode.md · opencode.md · claude.md
 ├─ ② 约定层(跨 agent 的真正载体,进仓库、开放格式)
 │    AGENTS.md 约定段(AGENTS-SNIPPET.md)
-│    skills/proto-bridge/SKILL.md(开放 Agent Skills 格式)
+│    skills/agent-html-collab/SKILL.md(开放 Agent Skills 格式)
 │    feedback/*.json + schema(数据契约)
 └─ ① 运行时层(agent 无关,纯 Web/Node,手动也能用)
      studio/(studio.html · serve.mjs · apply.mjs · anno/)
@@ -182,7 +182,7 @@ export function plans({ feedback, config, projectRoot }) => {
 工具怎么起、studio 地址、反馈包位置与 schema 摘要、处理流程(§5)、回灌最小侵入原则、
 冒烟验证命令、禁止事项(勿手改 `feedback/done/`、勿跳过备份)。
 
-### 6.2 `skills/proto-bridge/SKILL.md`(开放 Agent Skills 格式)
+### 6.2 `skills/agent-html-collab/SKILL.md`(开放 Agent Skills 格式)
 frontmatter `name` + 一句话 description(触发词:原型协同/反馈处理/方案稿标注)。
 正文放**进阶流程知识**:如何为新项目写 config、如何写回灌适配器、三模式差异与坑、
 verify 断言扩展、常见故障。原则:skill 承载"agent 怎么操作",不内嵌大段代码。
@@ -193,10 +193,10 @@ verify 断言扩展、常见故障。原则:skill 承载"agent 怎么操作",不
 
 | 文件 | 内容 |
 |---|---|
-| `adapters/zcode.md` | ZCode 斜杠命令:`/protobridge init` / `/protobridge feedback` |
+| `adapters/zcode.md` | ZCode 斜杠命令:`/agent-html-collab init` / `/agent-html-collab feedback` |
 | `adapters/opencode.md` | OpenCode command 同内容 |
 | `adapters/claude.md` | Claude 系 skill 链接/复制说明 |
-| `packages/opencode-plugin/` | OpenCode 插件(全局装一次):**反馈落盘 → 自动唤醒绑定/最近会话**;`protobridge install-plugin` 安装 |
+| `packages/opencode-plugin/` | OpenCode V2 插件：反馈保存后排队投递到页面所属会话；`agent-html-collab install-plugin` 安装 |
 
 内容都是一句话指向 AGENTS.md 的对应小节,不复制逻辑。
 
@@ -205,7 +205,7 @@ verify 断言扩展、常见故障。原则:skill 承载"agent 怎么操作",不
 ## 8. 仓库结构
 
 ```
-protobridge/
+agent-html-collab/
 ├─ SPEC.md                         # 本文档
 ├─ README.md
 ├─ studio/                         # ① 运行时
@@ -216,7 +216,7 @@ protobridge/
 │  └─ proto.config.json            #   配置模板(全部字段与默认值)
 ├─ examples/demo/                  # 纯通用示例(3 页 + 标注 + apply 适配器样例)
 ├─ AGENTS-SNIPPET.md               # ② 提供给项目 AGENTS.md 追加的现成段落
-├─ skills/proto-bridge/SKILL.md    # ② 开放格式 skill
+├─ skills/agent-html-collab/SKILL.md    # ② 开放格式 skill
 ├─ adapters/                       # ③ zcode.md / opencode.md / claude.md
 └─ tests/verify-generic.mjs        # 通用冒烟(用 examples/demo,不依赖任何具体项目)
 ```
@@ -232,7 +232,7 @@ protobridge/
 - **阶段 2 · 第二项目实测**:任选一个真实 HTML 原型走完整闭环,只改 config + 适配器、不碰内核源码;
   - 验收:只改 config 即接入,发现配置表达不了的就回补内核。
 - **阶段 3 · 打包分发**:ZCode 本地测试市场插件(plugin.json + skills + assets);OpenCode/Claude 适配条;
-  可选 `npx protobridge` 化(把 serve.mjs 挂 bin);
+  可选 `npx agent-html-collab` 化(把 serve.mjs 挂 bin);
   - 验收:三个 harness 各自从零安装 → 发现/触发 skill → 完成一次反馈闭环。
 
 ---

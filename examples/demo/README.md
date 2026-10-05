@@ -1,12 +1,12 @@
 # 示例 · Demo(通用样例)
 
-一个与具体业务无关的 3 页原型,演示 ProtoBridge 完整接入:**single 模式 + 区域标注 + 回灌适配器**。
+一个与具体业务无关的 3 页原型,演示 Agent HTML Collab 完整接入:**single 模式 + 区域标注 + 回灌适配器**。
 它同时是 `tests/verify-generic.mjs` 的运行夹具。
 
 ## 运行
 
 ```bash
-node <protobridge>/studio/serve.mjs --root examples/demo --config examples/demo/proto.config.json
+node <agent-html-collab>/studio/serve.mjs --root examples/demo --config examples/demo/proto.config.json
 # 打开 http://127.0.0.1:8131/studio
 ```
 
@@ -19,5 +19,5 @@ node <protobridge>/studio/serve.mjs --root examples/demo --config examples/demo/
 ## 冒烟
 
 ```bash
-node <protobridge>/tests/verify-generic.mjs
+node <agent-html-collab>/tests/verify-generic.mjs
 ```
