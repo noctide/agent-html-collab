@@ -23,6 +23,7 @@ window.__ModuleLoader__.load({
         setError(null); setPage(null);
         request('/protobridge/open', { sessionId: ownerSessionId, pageId: tab.id }).then(async value => {
           opened = value;
+          if (value.runtimeRevision !== 'notify-signal-v1') throw new Error('客户端主进程仍在运行旧版插件，请从“应用”菜单完整退出 DeepSeek Harness 后重新打开。仅关闭窗口或刷新页面不会更新 Host。');
           if (disposed) request(value.url.replace(/\/studio$/, '/close'), {}).catch(() => {});
           else {
             const response = await fetch(value.url);

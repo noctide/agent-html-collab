@@ -72,7 +72,7 @@ export function apply(ctx) {
         child.once('exit', () => { clearTimeout(timeout); fail(new Error('原型服务提前退出')); });
         child.stderr.on('data', chunk => { log += String(chunk).slice(0, 1000); });
       });
-      return { bindingId: id, url: base + '/studio' };
+      return { bindingId: id, url: base + '/studio', runtimeRevision: 'notify-signal-v1' };
     } catch (error) { stop(id); throw error; }
   };
 

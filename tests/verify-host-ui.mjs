@@ -50,6 +50,10 @@ try {
     throw error;
   }
   await studio.locator('#bar [data-x=m-edit]').click();
+  assert.ok(await studio.locator('#mmap').isVisible());
+  assert.ok((await studio.locator('#current-path').innerText()).includes(root));
+  assert.ok((await studio.locator('#current-path').innerText()).includes('proto.html'));
+  assert.equal(await studio.locator('#current-path').innerText(), '当前页面：' + join(root, 'proto.html'));
   await frame.locator('#title').click();
   await frame.locator('#title').fill('Changed by UI test');
   await frame.locator('p').click();

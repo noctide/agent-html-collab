@@ -67,6 +67,7 @@ test('DSH routes authenticate, capture page owner, proxy Studio and queue to tha
     const a = await post('/protobridge/open', { sessionId: 'session-a', pageId: 'page-a' }).then(r => r.json());
     const b = await post('/protobridge/open', { sessionId: 'session-b', pageId: 'page-b' }).then(r => r.json());
     assert.ok(a.bindingId, JSON.stringify(a)); assert.ok(b.bindingId, JSON.stringify(b));
+    assert.equal(a.runtimeRevision, 'notify-signal-v1');
     const html = await fetch(base + a.url, { headers: { 'x-test-auth': '1' } }).then(r => r.text());
     assert.ok(html.includes('window.PROTOBRIDGE_HOST='));
     const prefix = a.url.replace(/\/studio$/, '');

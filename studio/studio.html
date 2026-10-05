@@ -152,6 +152,7 @@
 <div id="stage">
   <div id="fit"><iframe id="proto" title="方案预览"></iframe></div>
 </div>
+<button id="current-path" type="button" title="点击复制当前编辑页面的路径" style="position:fixed;left:12px;bottom:12px;z-index:89;max-width:calc(100% - 230px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:7px 10px;border:1px solid var(--pb-line);border-radius:6px;background:var(--pb-panel);color:var(--pb-gray);font:12px Consolas,monospace;cursor:pointer"></button>
 
 <div id="mmap">
   <div class="mh"><span>导航 · 小地图</span><button id="mmap-fold" title="折叠/展开">▾</button></div>
@@ -586,6 +587,28 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   var ST = CFG.storage;
 
   var SRC = CFG.source.entry || '';
+  function currentFilePath() {
+    var path = SRC;
+    try { path = decodeURIComponent(path); } catch (e) {}
+    var projectPrefix = '/' + 'project/';
+    var marker = path.indexOf(projectPrefix);
+    if (marker >= 0 && CFG._meta && CFG._meta.projectRoot) {
+      var root = CFG._meta.projectRoot;
+      var relative = path.slice(marker + projectPrefix.length).split('?')[0];
+      return root.replace(/[\\/]+$/, '') + (root.indexOf('\\') >= 0 ? '\\' + relative.replace(/\//g, '\\') : '/' + relative);
+    }
+    return path;
+  }
+  function updateCurrentPath() {
+    var label = document.getElementById('current-path');
+    label.textContent = '当前页面：' + currentFilePath();
+    label.title = currentFilePath() + '（点击复制）';
+  }
+  updateCurrentPath();
+  document.getElementById('current-path').addEventListener('click', async function () {
+    try { await navigator.clipboard.writeText(currentFilePath()); toast('当前页面路径已复制'); }
+    catch (e) { toast('复制失败，请从页面路径提示中复制'); }
+  });
   var iframe = document.getElementById('proto');
   var fit = document.getElementById('fit');
   var stage = document.getElementById('stage');
@@ -603,10 +626,10 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   document.getElementById('proj-entry').addEventListener('click', function () {
     var p = openPop(document.getElementById('proj-entry'),
       '<div class="ph"><span>' + esc(CFG.title) + '</span></div>' +
-      '<div class="pmeta"><span class="k">源文件</span><code class="path">' + esc(SRC || '(未指定)') + '</code></div>' +
+      '<div class="pmeta"><span class="k">源文件</span><code class="path">' + esc(currentFilePath() || '(未指定)') + '</code></div>' +
       '<div class="foot"><button data-x="copy">复制路径</button></div>');
     p.querySelector('[data-x=copy]').addEventListener('click', function () {
-      navigator.clipboard.writeText(SRC).then(function () { toast('已复制路径:' + SRC); }, function () { toast('复制失败'); });
+      navigator.clipboard.writeText(currentFilePath()).then(function () { toast('已复制路径:' + currentFilePath()); }, function () { toast('复制失败'); });
     });
   });
 
@@ -658,6 +681,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     try { win = iframe.contentWindow; doc = iframe.contentDocument; } catch (e) { sameOrigin = false; win = null; doc = null; toast('无法访问方案页面(跨源?):只读浏览'); }
     if (!sameOrigin || !doc || !win) { applyZoom(); return; }
     try { if (win.location && win.location.pathname) SRC = win.location.pathname; } catch (e) {}   /* 页面内跳转后同步当前页 */
+    updateCurrentPath();
     if (win.__PB_INJECTED) return;
     win.__PB_INJECTED = true;
     try { win.PROTOBRIDGE_CFG = CFG; } catch (e) {}
@@ -1086,7 +1110,6 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     $('#mm-styles').textContent = css;
   }
   function buildMinimap() {
-    if (WHOLE) { var mm = document.getElementById('mmap'); if (mm) mm.style.display = 'none'; return; }
     var thumb = $('#mmap-thumb'), body = $('#mmap-body');
     if (!sameOrigin || !doc) return;
     var act = activeRoot(); if (!act) return;
