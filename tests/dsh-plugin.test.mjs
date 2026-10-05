@@ -5,6 +5,34 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { apply } from '../packages/dsh-plugin/index.mjs';
+import vm from 'node:vm';
+
+test('DSH launcher registers a persistent entry even without a composer or session', async () => {
+  let module;
+  let status;
+  const React = {
+    createElement: (type, props, ...children) => ({ type, props, children }),
+    useState: () => [null, value => { status = value; }],
+  };
+  vm.runInNewContext(await readFile(new URL('../packages/dsh-plugin/client.js', import.meta.url), 'utf8'), {
+    window: { __ModuleLoader__: { load: value => { module = value.factory(() => React); } } },
+  });
+  const entries = [];
+  module.apply({
+    effect: factory => factory(),
+    locale: { register: () => () => {}, bind: () => key => key },
+    sidebarRightTabs: { register: () => () => {} },
+    sidebarRight: { openTab: () => { throw new Error('sidebarRight: no session surface is mounted'); } },
+    slots: { inject: (name, factory) => factory(), register: (options, component) => { entries.push({ options, component }); return () => {}; } },
+  });
+  const entry = entries.find(value => value.options.name === 'shell.overlay');
+  assert.ok(entry, 'new-conversation hero must have an entry outside the composer dock');
+  const view = entry.component({ ...entry.options.inject(), t: key => key });
+  const button = view.children.find(value => value?.type === 'button');
+  assert.equal(button.children[0], 'open');
+  button.props.onClick();
+  assert.equal(status, 'select');
+});
 
 test('DSH routes authenticate, capture page owner, proxy Studio and queue to that owner', async () => {
   const root = await mkdtemp(join(tmpdir(), 'protobridge-dsh-'));

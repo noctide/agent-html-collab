@@ -5,8 +5,8 @@ window.__ModuleLoader__.load({
     const h = React.createElement;
     const ID = 'protobridge';
     const copy = {
-      zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', description: '编辑原型并将反馈发送给所属对话' },
-      en: { title: 'ProtoBridge', open: 'Open ProtoBridge', opening: 'Opening prototype…', retry: 'Retry', description: 'Edit prototypes and send feedback to this conversation' },
+      zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开原型协同。', description: '编辑原型并将反馈发送给所属对话' },
+      en: { title: 'ProtoBridge', open: 'Open ProtoBridge', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open ProtoBridge.', description: 'Edit prototypes and send feedback to this conversation' },
     };
     const request = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || String(r.status)); return j; }));
@@ -34,6 +34,15 @@ window.__ModuleLoader__.load({
         sandbox: 'allow-scripts allow-same-origin allow-downloads' });
     }
     function Launcher({ open, t }) { return h('button', { onClick: open, type: 'button', style: { margin: '4px 0' } }, t('open')); }
+    function PersistentLauncher({ open, t }) {
+      const [error, setError] = React.useState(null);
+      return h('div', { style: { position: 'fixed', left: 286, bottom: 24, zIndex: 1000, maxWidth: 320 } },
+        error && h('p', { role: 'status', style: { padding: 12, background: 'var(--dsw-specific-menu, white)', color: 'var(--dsw-alias-label-primary, black)', borderRadius: 8 } }, error),
+        h('button', { type: 'button', style: { minHeight: 44, padding: '8px 14px', cursor: 'pointer' }, onClick: () => {
+          setError(null);
+          try { open(); } catch (e) { setError(e.message === 'sidebarRight: no session surface is mounted' ? t('select') : e.message); }
+        } }, t('open')));
+    }
     return {
       inject: ['slots', 'locale', 'sidebarRight', 'sidebarRightTabs'],
       apply(ctx) {
@@ -48,6 +57,12 @@ window.__ModuleLoader__.load({
           name: 'conversation.composer.dock', id: ID, locale: ID,
           inject: () => ({ open: () => ctx.sidebarRight.openTab(ID) }),
         }, Launcher)), 'protobridge: launch');
+        // The composer dock is absent on the new-conversation hero in DSH rc.2.
+        // Keep an entry visible there without replacing any built-in single slot.
+        ctx.effect(() => ctx.slots.inject('shell.overlay', () => ctx.slots.register({
+          name: 'shell.overlay', id: 'protobridge-launcher', locale: ID, order: 58,
+          inject: () => ({ open: () => ctx.sidebarRight.openTab(ID) }),
+        }, PersistentLauncher)), 'protobridge: persistent launch');
       },
     };
   },
