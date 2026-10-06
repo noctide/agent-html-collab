@@ -5,6 +5,9 @@
 
 设计规格见 [`SPEC.md`](./SPEC.md)。
 
+![Uploading image.png…]()
+
+
 ## 三层架构(agent 无关)
 
 ```
