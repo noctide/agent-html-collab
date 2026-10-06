@@ -1,4 +1,6 @@
-<img width="1872" height="1080" alt="image" src="https://github.com/user-attachments/assets/4f70567a-d5dc-4bb4-b25a-ed7781932edc" /># Agent HTML Collab · 通用 HTML 原型协同插件
+<img width="1872" height="1080" alt="image" src="https://github.com/user-attachments/assets/4f70567a-d5dc-4bb4-b25a-ed7781932edc" />
+
+# Agent HTML Collab · 通用 HTML 原型协同插件
 
 把「高保真原型 → 用户就地改字/标注提意见 → 反馈回灌 agent 改源码」的人机协同闭环,
 做成**任何 HTML 原型项目、任何编码 agent 都能用**的通用插件。
