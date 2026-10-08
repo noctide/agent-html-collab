@@ -1,3 +1,5 @@
+<img width="1872" height="1080" alt="image" src="https://github.com/user-attachments/assets/4f70567a-d5dc-4bb4-b25a-ed7781932edc" />
+
 # Agent HTML Collab
 
 ### 在 HTML 页面上表达想法，与 agent 一起改好它。
