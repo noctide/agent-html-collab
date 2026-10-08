@@ -6,9 +6,9 @@ window.__ModuleLoader__.load({
     const ID = 'agent-html-collab';
     const buttonStyle = { display: 'inline-flex', alignItems: 'center', gap: 7, minHeight: 32, padding: '6px 10px', border: '1px solid var(--dsw-alias-border-l1, #e4e7eb)', borderRadius: 'var(--dsw-radius-md, 8px)', background: 'var(--dsw-specific-menu, #fff)', color: 'var(--dsw-alias-label-secondary, #454b54)', font: 'inherit', fontSize: 13, cursor: 'pointer', WebkitAppRegion: 'no-drag' };
     const icon = () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, 'aria-hidden': true }, h('rect', { x: 3, y: 4, width: 18, height: 16, rx: 3 }), h('path', { d: 'M3 9h18M9 9v11' }));
-    function Action({ onClick, children }) { return h('button', { type: 'button', style: buttonStyle, onClick, onMouseEnter: e => { e.currentTarget.style.background = 'var(--dsw-alias-bg-l2, #f2f4f7)'; }, onMouseLeave: e => { e.currentTarget.style.background = buttonStyle.background; } }, children); }
+    function Action({ onClick, children, title, iconOnly = false }) { return h('button', { type: 'button', title, 'aria-label': title, style: iconOnly ? { ...buttonStyle, justifyContent: 'center', width: 32, height: 32, padding: 0 } : buttonStyle, onClick, onMouseEnter: e => { e.currentTarget.style.background = 'var(--dsw-alias-bg-l2, #f2f4f7)'; }, onMouseLeave: e => { e.currentTarget.style.background = buttonStyle.background; } }, children); }
     const copy = {
-      zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开原型协同。', description: '编辑文字、移动元素、标注原型并将反馈发送给所属对话' },
+      zh: { title: 'Agent HTML Collab', open: '打开 Agent HTML Collab', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开 Agent HTML Collab。', description: '编辑文字、移动元素、标注原型并将反馈发送给所属对话' },
       en: { title: 'Agent HTML Collab', open: 'Open Agent HTML Collab', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open Agent HTML Collab.', description: 'Edit text, move elements, annotate prototypes, and send feedback to this conversation' },
     };
     const request = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
@@ -58,10 +58,10 @@ window.__ModuleLoader__.load({
       const [error, setError] = React.useState(null);
       return h('div', { style: { position: 'relative', display: 'inline-flex', alignItems: 'center', WebkitAppRegion: 'no-drag' } },
         error && h('p', { role: 'status', style: { position: 'absolute', top: '100%', left: 0, zIndex: 100, width: 280, padding: 12, fontSize: 13, lineHeight: 1.6, border: buttonStyle.border, background: buttonStyle.background, color: buttonStyle.color, borderRadius: 8 } }, error),
-        h(Action, { onClick: () => {
+        h(Action, { title: t('open'), iconOnly: true, onClick: () => {
           setError(null);
           try { open(); } catch (e) { setError(e.message === 'sidebarRight: no session surface is mounted' ? t('select') : e.message); }
-        } }, icon(), t('title')));
+        } }, icon()));
     }
     return {
       inject: ['slots', 'locale', 'sidebarRight', 'sidebarRightTabs'],

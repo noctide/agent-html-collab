@@ -107,14 +107,7 @@ try {
   async function stored(view, field, fallback = {}) {
     return view.studio.evaluate((key, value) => JSON.parse(localStorage.getItem(key) || JSON.stringify(value)), view.storage[field], fallback);
   }
-  async function mode(view, value) {
-    await show(view);
-    if (!await view.studio.$eval('#bar [data-x=m-' + value + ']', button => button.classList.contains('on')))
-      await view.studio.click('#bar [data-x=m-' + value + ']');
-    await view.proto.waitForFunction(name => document.body.classList.contains('pbx-' + name) ||
-      (name === 'browse' && !document.body.classList.contains('pbx-edit') && !document.body.classList.contains('pbx-anno')), {}, value);
-  }
-  async function clickPrototype(view, selector) {
+  async function clickPrototype(view, selector, button = 'right') {
     // A badge is rebuilt on scrolling. Click its observed coordinates directly
     // so Puppeteer's auto-scroll cannot replace it before dispatching the click.
     const point = await view.studio.evaluate(value => {
@@ -128,35 +121,30 @@ try {
     const outer = await page.$eval('#' + view.slot, element => {
       const bounds = element.getBoundingClientRect(); return { x: bounds.left, y: bounds.top };
     });
-    await page.mouse.click(outer.x + point.x, outer.y + point.y);
+    await page.mouse.click(outer.x + point.x, outer.y + point.y, { button });
   }
   async function edit(view, text) {
-    await mode(view, 'edit');
+    await show(view);
     await clickPrototype(view, '#title');
+    await view.studio.waitForSelector('.element-menu');
+    await view.studio.click('[data-act=edit]'); await view.proto.waitForFunction(() => document.body.classList.contains('pbx-move')); await clickPrototype(view, '#title', 'left');
     await view.proto.waitForFunction(() => document.querySelector('#title').contentEditable === 'true');
     await page.keyboard.down(process.platform === 'darwin' ? 'Meta' : 'Control');
     await page.keyboard.press('a');
     await page.keyboard.up(process.platform === 'darwin' ? 'Meta' : 'Control');
     await page.keyboard.type(text);
-    await view.proto.evaluate(() => document.activeElement.blur());
+    // The nested srcdoc fixture can retain focus in its child frame; finish through the bridge API after real text input.
+    await view.proto.evaluate(() => window.__PB.finishMove(true));
     await view.studio.waitForFunction((key, value) => Object.values(JSON.parse(localStorage.getItem(key) || '{}'))
-      .some(records => records.some(record => record.to === value)), {}, view.storage.edits, text);
+      .some(records => records.some(record => record.to === value)), { timeout: 10000 }, view.storage.edits, text);
   }
   async function comment(view, text, region = false) {
-    await mode(view, 'anno');
-    if (region) {
-      await view.proto.waitForSelector('.pb-badge[data-anno-id="shared-01"]', { visible: true });
-      await clickPrototype(view, '.pb-badge[data-anno-id="shared-01"]');
-      await view.proto.waitForSelector('.pb-pop [data-f=comment]', { visible: true });
-      await clickPrototype(view, '.pb-pop [data-f=comment]');
-      await page.keyboard.type(text);
-      await clickPrototype(view, '.pb-pop [data-x=save]');
-    } else {
-      await clickPrototype(view, '#intro');
-      await view.studio.waitForSelector('.pop [data-f=comment]', { visible: true });
-      await view.studio.type('.pop [data-f=comment]', text);
-      await view.studio.click('.pop [data-x=save]');
-    }
+    await show(view);
+    await clickPrototype(view, region ? '[data-anno="shared-01"]' : '#intro');
+    await view.studio.waitForSelector('.element-menu');
+    await view.studio.click('[data-act=anno]');
+    await view.studio.type('.pop [data-f=comment]', text);
+    await view.studio.click('.pop [data-x=save]');
     await view.studio.waitForFunction((key, value) => Object.values(JSON.parse(localStorage.getItem(key) || '{}'))
       .some(record => record.comment === value), { timeout: 10000 }, view.storage.comments, text);
   }
@@ -187,8 +175,10 @@ try {
   await edit(A, 'A draft title');
   await comment(A, 'A element comment');
   await comment(A, 'A region comment', true);
-  await A.studio.click('#notify');
-  check(await A.studio.$eval('#notify', button => button.getAttribute('aria-checked')) === 'false', 'A notification switch changed through UI');
+  await A.studio.click('#send');
+  await A.studio.click('#send-notify');
+  check(await A.studio.$eval('#send-notify', button => !button.checked), 'A notification preference changed through send dialog');
+  await page.keyboard.press('Escape');
   const aEdits = await stored(A, 'edits'), aComments = await stored(A, 'comments');
   check(Object.values(aComments).length === 2 && aEdits.shared[0].to === 'A draft title', 'A stores text edit, element comment and region comment');
   stage = 'open identical B on same srcdoc origin';
@@ -201,7 +191,7 @@ try {
   check(await B.proto.$eval('#title', element => element.textContent.trim()) === 'Original title', 'B never applies A text edits despite identical HTML and page IDs');
   check(Object.keys(await stored(B, 'edits')).length === 0 && Object.keys(await stored(B, 'comments')).length === 0,
     'B starts with no A element or region comments');
-  check(await B.studio.$eval('#notify', button => button.getAttribute('aria-checked')) === 'true', 'B notification preference is independent of A');
+  check(await stored(B, 'notify', '1') === '1', 'B notification preference is independent of A');
   check(Object.keys(B.storage).length === 8 && Object.entries(A.storage).every(([field, key]) => key !== B.storage[field]),
     'All eight injected storage fields are project-scoped');
 
@@ -227,7 +217,7 @@ try {
   assert.deepEqual(await stored(reopened, 'edits'), aEdits);
   assert.deepEqual(await stored(reopened, 'comments'), aComments);
   check(await reopened.proto.$eval('#title', element => element.textContent.trim()) === 'A draft title' &&
-    await reopened.studio.$eval('#notify', button => button.getAttribute('aria-checked')) === 'false',
+    await stored(reopened, 'notify', '1') === '0',
   'A restores its own drafts and notification state across resource base paths');
   check(await reopened.studio.evaluate(values => Object.entries(values).every(([key, value]) => localStorage.getItem(key) === value), legacy),
     'Old proto.* keys are preserved without automatic import or deletion');

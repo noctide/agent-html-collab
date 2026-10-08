@@ -43,7 +43,7 @@ async function main() {
   const files = findHtml(ROOT, '');
   if (!files.length) { console.error('[init] 该目录下没有找到 .html 文件: ' + ROOT); process.exit(1); }
   const port = await freePort(8123, 8199);
-  const title = readTitle(resolve(ROOT, files[0])) || '原型协同';
+  const title = readTitle(resolve(ROOT, files[0])) || 'Agent HTML Collab';
 
   let config;
   if (files.length === 1) {

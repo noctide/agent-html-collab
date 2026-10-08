@@ -6,7 +6,7 @@
 
 使用插件管理器的本地包安装入口选择本包目录或 TGZ。根 package.json 提供 `dsh.bundle.patch`、Host export 和浏览器 client export。
 
-在所属对话顶部点击常驻的“原型协同”按钮。入口注册在 `conversation.header.leading`；插件通过会话 scoped Slot 的 `sessionId` 创建独立侧栏页面。Host 使用 `agents.get(sessionId).session.header.cwd` 确定项目，不让原型网页选择会话或项目。尚未创建对话时，按钮会提示先打开已有对话或发送第一条消息。
+在所属对话顶部点击常驻的 Agent HTML Collab 图标按钮。入口注册在 `conversation.header.leading`；插件通过会话 scoped Slot 的 `sessionId` 创建独立侧栏页面。Host 使用 `agents.get(sessionId).session.header.cwd` 确定项目，不让原型网页选择会话或项目。尚未创建对话时，按钮会提示先打开已有对话或发送第一条消息。
 
 Host 路由通过 `connection.admit(req)` 验证客户端认证，提交同时检查 Origin。页面关闭后绑定失效。保存成功后调用 `sessionController.prompt`，requestId 使用 feedbackId，重复投递由控制器去重；当前安装版本的控制器内部调用 `agent.followup()`。这不保证客户端崩溃或重启后的消息恰好执行一次。
 

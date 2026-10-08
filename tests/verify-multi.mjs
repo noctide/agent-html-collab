@@ -70,27 +70,28 @@ try {
   await sleep(500);
   const reframe = () => page.frames().find(f => f !== page.mainFrame());
 
-  t(await page.evaluate(() => !!document.querySelector('#bar .seg')), '装载:顶栏渲染');
-  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
+  t(await page.evaluate(() => !!document.querySelector('#bar #edit-pick')), '装载:顶栏渲染');
+  t(await page.evaluate(() => document.getElementById('proj-entry').getAttribute('aria-label').split(' · ')[0]) === 'Agent HTML Collab', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 2, '装载:页清单 2 项');
   t(await page.$eval('#page-sel', s => s.value) === 'a', '装载:当前页 = a');
   t((await reframe().$eval('#a-title', n => n.textContent.trim())).includes('文件 A'), '装载:默认载入 a.html');
 
-  async function setMode(m) {
-    const on = await page.$eval('#bar [data-x=m-' + m + ']', el => el.classList.contains('on'));
-    if (!on) await page.click('#bar [data-x=m-' + m + ']');
-    await sleep(300);
-  }
+  let wantedAction = 'browse';
+  async function setMode(m) { wantedAction = m; if (m === 'browse') await page.keyboard.press('Escape'); }
+
   async function editSel(sel, text) {
     await setMode('edit');
     const frame = reframe();
     await frame.evaluate((sel) => {
       const n = document.querySelector(sel); const r = n.getBoundingClientRect();
-      n.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: r.x + 2, clientY: r.y + 2 }));
+      n.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: r.x + 2, clientY: r.y + 2 }));
     }, sel);
+    await page.waitForSelector('.element-menu');
+    await page.click('.element-menu [data-act=edit]'); await frame.click(sel); await frame.click(sel);
+    await page.waitForSelector('#move-panel', { visible: true }); await frame.evaluate(value => document.querySelector(value).click(), sel);
     await frame.evaluate((t) => { try { document.execCommand('insertText', false, t); } catch (e) {} }, text);
     await sleep(80);
-    await frame.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
+    await frame.evaluate(() => { document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); });
     await sleep(250);
   }
   const txt = async (sel) => { try { return await reframe().$eval(sel, n => n.textContent.trim()); } catch (e) { return ''; } };

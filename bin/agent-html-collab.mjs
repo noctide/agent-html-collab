@@ -26,7 +26,7 @@ const opt = (name, def) => { const i = rest.indexOf(name); return i >= 0 && rest
 const hasFlag = (name) => rest.includes(name);
 
 function help() {
-  console.log(`Agent HTML Collab — 通用 HTML 原型协同工具
+  console.log(`Agent HTML Collab — HTML 原型编辑与反馈工具
 
 用法:
   agent-html-collab open   [--root <目录>] [--port 8123] [--no-open]  # 选目录 → 起 studio → 开浏览器
