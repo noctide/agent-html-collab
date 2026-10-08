@@ -195,7 +195,7 @@
     <div class="move-nudge" role="group" aria-label="微调位置"><button type="button" data-move-key="ArrowLeft" aria-label="向左移动 1 像素" title="向左 1px，Shift 点击 10px">←</button><button type="button" data-move-key="ArrowUp" aria-label="向上移动 1 像素" title="向上 1px，Shift 点击 10px">↑</button><button type="button" data-move-key="ArrowDown" aria-label="向下移动 1 像素" title="向下 1px，Shift 点击 10px">↓</button><button type="button" data-move-key="ArrowRight" aria-label="向右移动 1 像素" title="向右 1px，Shift 点击 10px">→</button></div>
     <div class="move-actions"><button type="button" id="move-parent">选择父元素</button><button type="button" id="move-reset">还原位置</button></div>
     <div class="sum" style="margin-top:8px">方向键或箭头按钮微调 1px，按住 Shift 微调 10px。Shift 拖动锁定水平/垂直方向，偏移量相对原位置，完成后点击「发送」交给 Agent。</div>
-    <div class="foot"><button id="move-cancel" type="button">取消</button><button class="ok" id="move-apply" type="submit">完成</button></div>
+    <div class="foot"><button id="move-cancel" type="button">取消</button><button class="ok" id="move-apply" type="button">完成</button></div>
   </form>
 </section>
 
@@ -1239,10 +1239,23 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     if (document.activeElement !== $('#move-y')) $('#move-y').value = s.y;
     $('#move-parent').disabled = !s.parent; $('#move-reset').disabled = !s.x && !s.y;
   }
-  $('#move-form').addEventListener('submit', function (e) {
-    e.preventDefault(); var s = win && win.__PB && win.__PB.getMoveSelection();
-    if (s && win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber)) win.__PB.finishMove(true);
-  });
+  function commitMove() {
+    var s = win && win.__PB && win.__PB.getMoveSelection();
+    if (!s) return false;
+    var x = $('#move-x'), y = $('#move-y');
+    if (!x.value.trim() || !y.value.trim() || !x.validity.valid || !y.validity.valid) {
+      toast('请输入有效的 X、Y 偏移量');
+      (!x.value.trim() || !x.validity.valid ? x : y).focus();
+      return false;
+    }
+    if (!win.__PB.setMove(s.page, s.path, x.valueAsNumber, y.valueAsNumber)) {
+      toast('移动未保存：请检查偏移量后重试');
+      return false;
+    }
+    return win.__PB.finishMove(true);
+  }
+  $('#move-form').addEventListener('submit', function (e) { e.preventDefault(); commitMove(); });
+  $('#move-apply').addEventListener('click', commitMove);
   ['#move-x', '#move-y'].forEach(function (selector) {
     $(selector).addEventListener('input', function () { var s = win && win.__PB && win.__PB.getMoveSelection(); if (s) win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber); });
   });

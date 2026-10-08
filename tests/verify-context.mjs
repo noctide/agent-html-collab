@@ -66,8 +66,15 @@ try {
   check(Object.keys(await stored('edits')).length === 0, 'typing remains uncommitted until completion');
   await page.click('#move-cancel'); await browse();
   check(await frame().$eval('#title', el => el.textContent === 'Page a' && !el.hasAttribute('contenteditable')), 'cancel restores original text and editable attribute');
-  await context('#title', 'edit'); await text('Updated title'); await page.keyboard.press('Enter'); await browse();
-  check((await stored('edits')).a[0].to === 'Updated title', 'Enter commits only the selected text and returns to browse');
+  await context('#title', 'edit'); await text('Updated title');
+  await page.click('#move-x'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.press('Backspace');
+  await page.click('#move-apply');
+  check(await page.$eval('#toast', el => el.textContent.includes('请输入有效') && !document.querySelector('#move-panel').hidden), 'Done explains invalid movement input instead of silently failing native form validation');
+  await numeric(51.06, -33.19);
+  await page.click('#move-apply'); await browse();
+  check((await stored('edits')).a[0].to === 'Updated title', 'Done button commits the selected text and returns to browse');
+  const titleMove = (await stored('moves')).a;
+  check(titleMove.length === 1 && titleMove[0].to.x === 51.06 && titleMove[0].to.y === -33.19, 'Done button commits fractional X/Y offsets together with text edits');
   const existingText = JSON.stringify(await stored('edits'));
   await context('#title', 'edit'); await text('Temporary second edit'); await page.keyboard.press('Escape'); await browse();
   check(JSON.stringify(await stored('edits')) === existingText && await frame().$eval('#title', el => el.textContent === 'Updated title'), 'cancel of a repeated edit preserves the earlier draft');
@@ -88,11 +95,13 @@ try {
   check(await frame().$('#pbx-move-handle') !== null, 'selected element exposes a grip');
   await drag('#card', 40, 24);
   let moved = await coordinates('#card'); near(moved.x - original.x, 40); near(moved.y - original.y, 24);
-  check(Object.keys(await stored('moves')).length === 0 && moved.transform === original.transform, 'drag previews without committing and preserves original transform');
+  check(!(await stored('moves')).a.some(record => record.path === 'main>div:nth-of-type(1)') && moved.transform === original.transform, 'drag previews without committing and preserves original transform');
   await page.click('#move-cancel'); await browse(); moved = await coordinates('#card'); near(moved.x, original.x); near(moved.y, original.y);
   check(moved.style === original.style, 'move cancel restores original inline style and creates no record');
   await context('#card', 'move'); await numeric(30, 12); await page.click('#move-apply'); await browse();
-  check((await stored('moves')).a[0].to.x === 30 && (await stored('moves')).a[0].to.y === 12, 'Done commits numeric offsets and returns to browse');
+  const cardMove = () => (storedMoves.a || []).find(record => record.path === 'main>div:nth-of-type(1)');
+  let storedMoves = await stored('moves');
+  check(cardMove().to.x === 30 && cardMove().to.y === 12, 'Done commits numeric offsets and returns to browse');
   const existingMove = JSON.stringify(await stored('moves'));
   await context('#card', 'move'); await page.click('[data-move-key=ArrowRight]'); await page.click('[data-move-key=ArrowDown]'); await page.keyboard.press('Escape'); await browse();
   moved = await coordinates('#card'); near(moved.x - original.x, 30); near(moved.y - original.y, 12);
@@ -100,7 +109,8 @@ try {
   await context('#link', 'move'); await drag('#link', 20, 10, true); await browse();
   check(await frame().evaluate(() => window.activations === 1) && JSON.stringify(await stored('moves')) === existingMove, 'Escape during link drag cancels without activating the link or changing drafts');
   await context('#card', 'move'); await drag('#pbx-move-handle', 10, 8); await page.click('#move-apply'); await browse();
-  check((await stored('moves')).a[0].to.x === 40 && (await stored('moves')).a[0].to.y === 20, 'grip drag continues from existing offset');
+  storedMoves = await stored('moves');
+  check(cardMove().to.x === 40 && cardMove().to.y === 20, 'grip drag continues from existing offset');
   stage = 'transformed parent and transition';
   const scaled = await coordinates('#scaled-child'); await context('#scaled-child', 'move'); await drag('#scaled-child', 30, 18); await page.click('#move-apply'); await browse();
   moved = await coordinates('#scaled-child'); near(moved.x - scaled.x, 30); near(moved.y - scaled.y, 18);
@@ -146,7 +156,7 @@ try {
   await page.click('[data-x=ok]'); await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('已保存'));
   const { readdirSync } = await import('node:fs'); const file = readdirSync(join(fixture, 'feedback')).find(name => name.endsWith('.json'));
   const bundle = JSON.parse(readFileSync(join(fixture, 'feedback', file), 'utf8'));
-  check(bundle.edits.length === 1 && bundle.moves.length === 2 && bundle.comments.length === 1 && bundle.notify === false, 'sending stores only completed changes with selected notification preference');
+  check(bundle.edits.length === 1 && bundle.moves.length === 3 && bundle.comments.length === 1 && bundle.notify === false, 'sending stores only completed changes with selected notification preference');
   await page.waitForFunction(() => document.querySelector('#send').textContent === '发送');
   check(errors.length === 0, 'no browser script errors: ' + errors.join('; '));
   if (process.env.CONTEXT_SCREENSHOT) {

@@ -133,10 +133,18 @@ try {
     await page.keyboard.press('a');
     await page.keyboard.up(process.platform === 'darwin' ? 'Meta' : 'Control');
     await page.keyboard.type(text);
-    // The nested srcdoc fixture can retain focus in its child frame; finish through the bridge API after real text input.
-    await view.proto.evaluate(() => window.__PB.finishMove(true));
+    for (const [selector, value] of [['#move-x', '51.06'], ['#move-y', '-33.19']]) {
+      await view.studio.click(selector);
+      await page.keyboard.down(process.platform === 'darwin' ? 'Meta' : 'Control');
+      await page.keyboard.press('a');
+      await page.keyboard.up(process.platform === 'darwin' ? 'Meta' : 'Control');
+      await page.keyboard.type(value);
+    }
+    await view.studio.click('#move-apply');
     await view.studio.waitForFunction((key, value) => Object.values(JSON.parse(localStorage.getItem(key) || '{}'))
       .some(records => records.some(record => record.to === value)), { timeout: 10000 }, view.storage.edits, text);
+    await view.studio.waitForFunction(key => (JSON.parse(localStorage.getItem(key) || '{}').shared || [])
+      .some(record => record.to.x === 51.06 && record.to.y === -33.19), { timeout: 10000 }, view.storage.moves);
   }
   async function comment(view, text, region = false) {
     await show(view);
@@ -179,8 +187,9 @@ try {
   await A.studio.click('#send-notify');
   check(await A.studio.$eval('#send-notify', button => !button.checked), 'A notification preference changed through send dialog');
   await page.keyboard.press('Escape');
-  const aEdits = await stored(A, 'edits'), aComments = await stored(A, 'comments');
+  const aEdits = await stored(A, 'edits'), aComments = await stored(A, 'comments'), aMoves = await stored(A, 'moves');
   check(Object.values(aComments).length === 2 && aEdits.shared[0].to === 'A draft title', 'A stores text edit, element comment and region comment');
+  check(aMoves.shared[0].to.x === 51.06 && aMoves.shared[0].to.y === -33.19, 'Nested Studio Done commits decimal offsets with the text edit');
   stage = 'open identical B on same srcdoc origin';
   const B = await open('B', 'studio-b');
   await show(B);
@@ -201,7 +210,8 @@ try {
   await comment(B, 'B region comment', true);
   const bEdits = await stored(B, 'edits'), bComments = await stored(B, 'comments');
   const bundle = await submit(B);
-  check(bundle.summary.edits === 1 && bundle.summary.comments === 2 && bundle.edits[0].to === 'B draft title' &&
+  check(bundle.summary.edits === 1 && bundle.summary.moves === 1 && bundle.summary.comments === 2 && bundle.edits[0].to === 'B draft title' &&
+    bundle.moves[0].to.x === 51.06 && bundle.moves[0].to.y === -33.19 &&
     bundle.comments.every(record => record.comment.startsWith('B ')), 'Actual B feedback file contains only B edits and comments');
   check(queued.length === 1 && queued[0].sessionId === 'B', 'B notification is queued to its own session');
 
@@ -216,6 +226,7 @@ try {
   assert.deepEqual(reopened.storage, A.storage);
   assert.deepEqual(await stored(reopened, 'edits'), aEdits);
   assert.deepEqual(await stored(reopened, 'comments'), aComments);
+  assert.deepEqual(await stored(reopened, 'moves'), aMoves);
   check(await reopened.proto.$eval('#title', element => element.textContent.trim()) === 'A draft title' &&
     await stored(reopened, 'notify', '1') === '0',
   'A restores its own drafts and notification state across resource base paths');
