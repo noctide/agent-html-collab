@@ -82,7 +82,13 @@ test('DSH launcher registers a persistent entry even without a composer or sessi
   assert.equal(view.props.style.position, 'relative');
   assert.ok(!entries.some(value => value.options.name === 'shell.overlay'));
   const button = view.children.find(value => typeof value?.type === 'function');
-  assert.equal(button.children[1], 'title');
+  assert.equal(button.children.length, 1);
+  assert.equal(button.children[0].type, 'svg');
+  const rendered = button.type({ ...button.props, children: button.children });
+  assert.equal(rendered.props.title, 'open');
+  assert.equal(rendered.props['aria-label'], 'open');
+  assert.equal(rendered.props.style.width, 32);
+  assert.equal(rendered.props.style.height, 32);
   button.props.onClick();
   assert.equal(status, 'select');
 });

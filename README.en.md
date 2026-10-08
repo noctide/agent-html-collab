@@ -11,7 +11,7 @@ It works with existing HTML files and does not require a new framework or a part
 ## The collaboration loop
 
 1. **Open a prototype**: open existing HTML from its project conversation, preview it, and switch pages.
-2. **Give direct feedback**: edit text in place, move elements, or select an element and leave a comment.
+2. **Give direct feedback**: right-click an element to edit its text, add a comment, or move it. Choose Done or Cancel to return to browsing.
 3. **Send it to the agent**: save a JSON feedback bundle. Integrated clients deliver it to the conversation that owns the page.
 4. **Review the changes**: the agent reads and processes feedback. The text apply tool offers a preview report, backups, and source updates. Refresh the page to check the result.
 
@@ -36,7 +36,7 @@ npx github:noctide/agent-html-collab serve --root .
 
 Open the local Studio URL printed in the terminal. Edit, move, or annotate, then send feedback. Standalone mode saves feedback but does not automatically wake a conversation.
 
-Click **Move** (shortcut `M`), select an element, and drag it. Hold `Shift` while dragging to lock the preview's horizontal or vertical direction; release it to move freely. Arrow keys or the panel's arrow buttons move by 1 CSS pixel; hold `Shift` for 10 pixels. Enter X/Y offsets in the movement panel or select a parent to move the containing element. Hold `Alt` and click to select a child inside the selected container. Offsets start at the element's original layout, with positive X to the right and positive Y down, regardless of preview zoom. Undo or restore an element, the current page, or all pages, and inspect movement markers. Drafts persist and support JSON import, export, and submission.
+Click **Move** (shortcut `M`), select an element, and drag it. Hold `Shift` while dragging to lock the preview's horizontal or vertical direction; release it to move freely. Arrow keys or the panel's arrow buttons move by 1 CSS pixel; hold `Shift` for 10 pixels. Enter X/Y offsets in the movement panel or select a parent to move the containing element. Use the element menu to select a child. Choose Done to keep the preview changes or Cancel to restore the previous position. Offsets start at the element's original layout, with positive X to the right and positive Y down, regardless of preview zoom. Undo or restore an element, the current page, or all pages, and inspect movement markers. Drafts persist and support JSON import, export, and submission.
 
 Ask your agent to read the feedback, or use the text apply tool:
 

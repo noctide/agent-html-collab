@@ -1,5 +1,5 @@
 // verify-generic.mjs — Agent HTML Collab 通用冒烟(用 examples/demo,不依赖任何具体业务项目)
-// 覆盖闭环:装载 → 编辑 → 切页 → 标注 → 右键协作菜单/还原 → 平移 → 双击菜单+撤销
+// 覆盖闭环:装载 → 编辑 → 切页 → 标注 → 右键操作菜单/还原 → 平移 → 右键菜单+撤销
 //           → 弹层关闭 → 缩放+小地图 → 滚轮转发/原生滚动 → 发送反馈 → 落盘 → 回灌
 // 用法: node tests/verify-generic.mjs
 import { createRequire } from 'node:module';
@@ -87,22 +87,31 @@ try {
       return { x: fr.left + (b.x + dx) * s, y: fr.top + (b.y + dy) * s };
     }, sel, dx, dy);
   };
-  async function setMode(m) {
-    const on = await page.$eval('#bar [data-x=m-' + m + ']', el => el.classList.contains('on'));
-    if (!on) await page.click('#bar [data-x=m-' + m + ']');
-    await sleep(300);
-  }
+  let wantedAction = 'browse';
+  async function setMode(m) { wantedAction = m; if (m === 'browse') await page.keyboard.press('Escape'); }
+
   async function clickInFrame(sel) {
-    await frame.evaluate((sel) => {
-      const n = document.querySelector(sel); const r = n.getBoundingClientRect();
-      n.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, clientX: r.x + 2, clientY: r.y + 2 }));
-    }, sel);
+    if (wantedAction === 'edit') {
+      await page.click('#edit-pick');
+      let p = await selPoint(sel, 30, 8); await page.mouse.click(p.x, p.y);
+      await page.waitForSelector('#move-panel', { visible: true });
+      p = await selPoint(sel, 30, 8); await page.mouse.click(p.x, p.y);
+      await frame.waitForFunction(value => document.querySelector(value).contentEditable === 'true', {}, sel);
+    } else {
+      await frame.evaluate((sel) => {
+        const n = document.querySelector(sel); const r = n.getBoundingClientRect();
+        n.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: r.x + 2, clientY: r.y + 2 }));
+      }, sel);
+      await page.waitForSelector('.element-menu');
+      if (wantedAction === 'anno') await page.click('.element-menu [data-act=anno]');
+    }
+    wantedAction = 'browse';
     await sleep(150);
   }
-  async function dblclickInFrame(sel) {
+  async function contextInFrame(sel) {
     await frame.evaluate((sel) => {
       const n = document.querySelector(sel); const r = n.getBoundingClientRect();
-      n.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: r.x + 4, clientY: r.y + 4 }));
+      n.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.x + 4, clientY: r.y + 4 }));
     }, sel);
   }
   async function editSave(sel, text) {
@@ -110,34 +119,35 @@ try {
     await clickInFrame(sel);
     await frame.evaluate((t) => { try { document.execCommand('insertText', false, t); } catch (e) {} }, text);
     await sleep(80);
-    await frame.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
+    await frame.evaluate(() => { document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); });
     await sleep(250);
   }
   const err = async (sel) => { try { return await frame.$eval(sel, n => n.textContent.trim()); } catch (e) { return ''; } };
 
   /* ---------- 装载 ---------- */
-  t(await page.evaluate(() => !!document.querySelector('#bar .seg')), '装载:顶栏渲染');
-  t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
+  t(await page.evaluate(() => !!document.querySelector('#bar #edit-pick')), '装载:顶栏渲染');
+  t(await page.evaluate(() => document.getElementById('proj-entry').getAttribute('aria-label').split(' · ')[0]) === 'Agent HTML Collab', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 3, '装载:页面清单来自 config(3 页)');
   t((await frame.$eval('.pg-sec.act', s => s.dataset.page)) === 'p01', '装载:默认活动页 p01');
 
-  /* ---------- 协同通知开关 ---------- */
-  t((await page.$('#notify')) !== null, '通知:开关按钮就位');
-  await page.click('#notify'); await sleep(80);
-  t(await page.evaluate(() => localStorage.getItem(window.PROTO_CONFIG.storage.notify) === '"0"' && document.getElementById('notify').getAttribute('aria-checked') === 'false' && document.getElementById('notify').classList.contains('off') && document.getElementById('notify').textContent === ''), '通知:关闭并保存状态，开关不显示重复文案');
-  await page.click('#notify'); await sleep(80);
-  t(await page.evaluate(() => document.getElementById('notify').getAttribute('aria-checked') === 'true' && !document.getElementById('notify').classList.contains('off')), '通知:再点恢复开');
-
   /* ---------- 编辑 ---------- */
   await setMode('edit');
-  t(await frame.evaluate(() => document.body.classList.contains('pbx-edit')), '编辑:模式同步进 iframe');
   await clickInFrame('#demo-title');
+  t(await frame.evaluate(() => document.body.classList.contains('pbx-move')), '编辑:局部修改进入 iframe');
   await frame.evaluate(() => { try { document.execCommand('insertText', false, '改版'); } catch (e) {} });
   await sleep(80);
-  await frame.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
+  await frame.evaluate(() => { document.activeElement.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true })); });
   await sleep(250);
   t((await err('#demo-title')).includes('改版'), '编辑:就地改字生效', await err('#demo-title'));
   t(await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.edits) || '{}')).reduce((a, b) => a + b.length, 0)) >= 1, '编辑:改动入库');
+
+  await page.click('#send');
+  t(await page.$('#send-notify') !== null, '通知:发送确认框内有明确的选项');
+  await page.click('#send-notify');
+  t(await page.evaluate(() => localStorage.getItem(window.PROTO_CONFIG.storage.notify) === '"0"' && !document.getElementById('send-notify').checked), '通知:关闭并保存设置');
+  await page.click('#send-notify');
+  t(await page.$eval('#send-notify', el => el.checked), '通知:恢复开启');
+  await page.click('.pop [data-x=c]');
 
   // Esc 还原:不落库
   await setMode('edit');
@@ -172,40 +182,41 @@ try {
   t(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.comments) || '{}')).length) >= 1, '标注:元素意见入库');
   t(await frame.evaluate(() => document.querySelectorAll('.pbx-echip').length) >= 1, '标注:iframe 内意见徽章');
 
-  /* ---------- 右键协作菜单 + 还原此元素 ---------- */
+  /* ---------- 右键操作菜单 + 还原此元素 ---------- */
   await setMode('browse');
-  const sp = await selPoint('#demo-sub', 30, 8);
-  await page.mouse.click(sp.x, sp.y, { button: 'right' });
-  t(await page.$('.pop .mi') !== null, '协作菜单:右键轻点弹出');
+  await contextInFrame('#demo-sub');
+  t(await page.$('.pop .mi') !== null, '操作菜单:右键轻点弹出');
   await page.click('.pop [data-act=revert]');
   await sleep(300);
-  t(!(await err('#demo-sub')).includes('ABC'), '协作菜单:还原此元素', await err('#demo-sub'));
+  t(!(await err('#demo-sub')).includes('ABC'), '操作菜单:还原此元素', await err('#demo-sub'));
   await page.evaluate(() => document.querySelector('#proto').contentDocument.body.dispatchEvent(new MouseEvent('mousedown', { bubbles: true })));
 
-  /* ---------- 右键拖动平移(且不弹菜单) ---------- */
+  /* ---------- 中键拖动平移(且不弹菜单) ---------- */
   await page.evaluate(() => { const st = document.querySelector('#stage'); st.scrollTop = 0; st.scrollLeft = 0; });
   const s0 = await page.evaluate(() => { const st = document.querySelector('#stage'); return [st.scrollLeft, st.scrollTop]; });
   const pp = await selPoint('#demo-title', 30, 8);
   await page.mouse.move(pp.x, pp.y);
-  await page.mouse.down({ button: 'right' });
+  await page.mouse.down({ button: 'middle' });
   await page.mouse.move(pp.x - 200, pp.y - 140, { steps: 6 });
-  await page.mouse.up({ button: 'right' });
+  await page.mouse.up({ button: 'middle' });
   await sleep(200);
   const s1 = await page.evaluate(() => { const st = document.querySelector('#stage'); return [st.scrollLeft, st.scrollTop]; });
   const moved = (s1[0] - s0[0]) + (s1[1] - s0[1]);
-  t(moved > 60 && !(await page.$('.pop')), '交互:右键拖动平移且不出菜单', JSON.stringify([s0, s1]));
+  t(moved > 60 && !(await page.$('.pop')), '交互:中键拖动平移且不出菜单', JSON.stringify([s0, s1]));
 
-  /* ---------- 双击菜单 → 编辑 → 保存 → 撤销 ---------- */
+  /* ---------- 右键菜单 → 编辑 → 保存 → 撤销 ---------- */
   await page.evaluate(() => { const st = document.querySelector('#stage'); st.scrollTop = 0; st.scrollLeft = 0; });
-  await dblclickInFrame('#demo-sub');
-  t(await page.$('.pop .mi') !== null, '协作菜单:双击弹出');
+  await contextInFrame('#demo-sub');
+  t(await page.$('.pop .mi') !== null, '操作菜单:右键弹出');
   await page.click('.pop [data-act=edit]');
+  let editPoint = await selPoint('#demo-sub', 30, 8); await page.mouse.click(editPoint.x, editPoint.y);
+  await page.waitForFunction(() => document.querySelector('#proto').contentDocument.querySelector('#demo-sub').contentEditable === 'true');
   await sleep(350);
   await frame.evaluate(() => { try { document.execCommand('insertText', false, '再改'); } catch (e) {} });
   await sleep(80);
-  await page.click('#zoom-out');                     // 点工具栏触发 iframe 失焦保存
+  await page.click('#move-apply');
   await sleep(300);
-  t((await err('#demo-sub')).includes('再改'), '协作菜单:进入就地编辑并保存', await err('#demo-sub'));
+  t((await err('#demo-sub')).includes('再改'), '操作菜单:进入就地编辑并保存', await err('#demo-sub'));
   await page.click('#more');
   await page.click('.pop [data-act=undo-last]');
   await sleep(300);
@@ -213,12 +224,12 @@ try {
 
   /* ---------- 弹层关闭 ---------- */
   await setMode('browse');
-  const openMenu = async () => { await dblclickInFrame('#demo-sub'); await page.waitForFunction(() => !!document.querySelector('.pop'), { timeout: 3000 }).catch(() => {}); };
+  const openMenu = async () => { await contextInFrame('#demo-sub'); await page.waitForFunction(() => !!document.querySelector('.pop'), { timeout: 3000 }).catch(() => {}); };
   await openMenu();
   await page.keyboard.press('Escape');
   t(await page.$('.pop') === null, '弹层:Esc 收掉');
   await openMenu();
-  t(await page.$('.pop .x') !== null, '弹层:协作菜单✕按钮');
+  t(await page.$('.pop .x') !== null, '弹层:操作菜单✕按钮');
   await page.click('.pop .x');
   t(await page.$('.pop') === null, '弹层:✕ 收掉');
   await openMenu();

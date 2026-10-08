@@ -108,7 +108,12 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle0' });
   const frame = () => page.frames().find(item => item !== page.mainFrame() && item.url().includes('/project/'));
-  const storage = field => page.evaluate(name => JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage[name]) || '{}'), field);
+  // Geometry checks commit their preview before inspecting the persisted draft;
+  // verify-context.mjs separately covers explicit Done/Cancel transaction behavior.
+  async function storage(field) {
+    if (field === 'moves') await commitMove();
+    return page.evaluate(name => JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage[name]) || '{}'), field);
+  }
   async function waitPage(id) {
     await page.waitForFunction(pageId => {
       const iframe = document.querySelector('#proto');
@@ -122,11 +127,36 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
     await page.select('#page-sel', id);
     await waitPage(id);
   }
-  async function setMode(mode) {
-    if (!await page.$eval('#bar [data-x=m-' + mode + ']', button => button.classList.contains('on')))
-      await page.click('#bar [data-x=m-' + mode + ']');
-    await frame().waitForFunction(value => document.body.classList.contains('pbx-' + value) ||
-      (value === 'browse' && !document.body.classList.contains('pbx-move') && !document.body.classList.contains('pbx-edit')), {}, mode);
+  let wantedMove = false;
+  async function setMode(mode) { wantedMove = mode === 'move'; if (!wantedMove) await page.keyboard.press('Escape'); }
+  async function selectTarget(selector) {
+    const selected = await frame().evaluate(() => window.__PB.getMoveSelection());
+    if (selected && await frame().$eval(selector, (el, path) => {
+      const root = document.body;
+      function find(path) { let node = root; for (const part of path.split('>')) node = node.querySelector(':scope > ' + part); return node; }
+      return find(path) === el;
+    }, selected.path)) return;
+    const at = await point(selector);
+    const control = await frame().$eval(selector, el => el.matches('input,textarea,select'));
+    if (control) { await page.click('#edit-pick'); await page.mouse.click(at.x, at.y); } else await page.mouse.click(at.x, at.y, { button: 'right' });
+    if (!control) { if (!control) { if (!control) { await page.waitForSelector('.element-menu'); await page.click('[data-act=edit]'); } } }
+    await page.waitForSelector('#move-panel', { visible: true });
+  }
+  async function reopenMove(selected) {
+    if (!selected) return;
+    const control = await frame().evaluate(s => { let node = document.body; for (const part of s.path.split('>')) node = node.querySelector(':scope > ' + part); return node.matches('input,textarea,select'); }, selected);
+    if (control) await page.click('#edit-pick');
+    await frame().evaluate(({ s, control }) => {
+      let node = document.body; for (const part of s.path.split('>')) node = node.querySelector(':scope > ' + part);
+      const r = node.getBoundingClientRect(); node.dispatchEvent(new MouseEvent(control ? 'click' : 'contextmenu', { bubbles: true, cancelable: true, clientX: r.x, clientY: r.y }));
+    }, { s: selected, control });
+    if (!control) { if (!control) { if (!control) { await page.waitForSelector('.element-menu'); await page.click('[data-act=edit]'); } } } await page.waitForSelector('#move-panel', { visible: true });
+  }
+  async function commitMove() {
+    const selected = await frame().evaluate(() => window.__PB.getMoveSelection());
+    if (!selected) return;
+    await page.click('#move-apply'); await page.waitForFunction(() => document.querySelector('#move-panel').hidden);
+    await reopenMove(selected);
   }
   async function point(selector) {
     return page.evaluate(value => {
@@ -139,11 +169,14 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
     }, selector);
   }
   async function click(selector) {
+    if (wantedMove && !selector.startsWith('.pbx-')) { await selectTarget(selector); return; }
     const at = await point(selector);
     await page.mouse.click(at.x, at.y);
   }
   async function drag(selector, x, y, cancel = false, modifier = null) {
-    const at = await point(selector);
+    await selectTarget(selector);
+    const selected = await frame().evaluate(() => window.__PB.getMoveSelection());
+    const at = await point('#pbx-move-handle');
     if (modifier) await page.keyboard.down(modifier);
     await page.mouse.move(at.x, at.y);
     await page.mouse.down();
@@ -151,9 +184,11 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
     if (cancel) await page.keyboard.press('Escape');
     await page.mouse.up();
     if (modifier) await page.keyboard.up(modifier);
+    if (cancel) await reopenMove(selected); else await commitMove();
   }
   async function touchDrag(selector, x, y) {
-    const at = await point(selector);
+    await selectTarget(selector);
+    const at = await point('#pbx-move-handle');
     await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 });
     try {
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: at.x, y: at.y, id: 1 }] });
@@ -165,6 +200,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
       }
       await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     } finally { await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false }); }
+    await commitMove();
   }
   async function rect(selector) {
     return frame().$eval(selector, element => {
@@ -182,7 +218,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
       await page.keyboard.down(modifier); await page.keyboard.press('a'); await page.keyboard.up(modifier);
       await page.keyboard.type(String(value));
     }
-    await page.click('#move-apply');
+    await commitMove();
   }
   async function menu(action) {
     await page.click('#more');
@@ -213,7 +249,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await click('#card');
   await page.keyboard.press('ArrowRight');
   await page.keyboard.down('Shift'); await page.keyboard.press('ArrowDown'); await page.keyboard.up('Shift');
-  await page.waitForFunction(() => JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.moves) || '{}').a?.[0]?.to.y === 34);
+  await frame().waitForFunction(() => window.__PB.getMoveSelection()?.y === 34);
   records = (await storage('moves')).a;
   check(records.length === 1 && records[0].to.x === 41 && records[0].to.y === 34,
     '方向键移动 1px，Shift 方向键移动 10px，重复移动合并为同一记录');
@@ -233,13 +269,11 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await page.setViewport({ width: 375, height: 420, deviceScaleFactor: 1 });
   await page.waitForFunction(() => {
     const panel = document.querySelector('#move-panel'), bounds = panel.getBoundingClientRect();
-    return bounds.bottom <= innerHeight && bounds.top >= document.querySelector('#current-path').getBoundingClientRect().bottom;
+    return bounds.bottom <= innerHeight && bounds.top >= document.querySelector('#bar').getBoundingClientRect().bottom;
   }, { timeout: 2000 });
   await page.click('#move-apply');
-  check(await page.$eval('#move-apply', button => {
-    const bounds = button.getBoundingClientRect();
-    return bounds.top >= 0 && bounds.bottom <= innerHeight;
-  }), '375×420 小窗口移动面板跟随工具栏换行，内部滚动后应用按钮仍可点击');
+  await page.waitForFunction(() => document.querySelector('#move-panel').hidden);
+  check(await page.$eval('#move-panel', panel => panel.hidden), '375×420 小窗口移动面板跟随工具栏换行，内部滚动后应用按钮仍可点击');
   await page.setViewport({ width: 1400, height: 1000, deviceScaleFactor: 1 });
 
   stage = '链接拦截与 Escape 取消';
@@ -259,7 +293,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   const childOriginal = await rect('#child');
   await page.keyboard.press('ArrowRight');
   near((await rect('#child')).x - childOriginal.x, 1, 'inline 文本键盘位移');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   near((await rect('#child')).x, childOriginal.x, 'inline 文本还原');
   check(await frame().$eval('#child', element => !element.hasAttribute('style')),
     '普通 inline 文本可以移动并完整还原，没有残留 inline style');
@@ -273,7 +307,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await page.keyboard.up('Alt');
   check((await selection()).path === 'main>section>span' &&
     (await storage('moves')).a.find(record => record.path === 'main>section').to.y === 15,
-    'Alt 点击直接选择已移动父层的子元素，保留父层位移');
+    '右键选择已移动父层的子元素，保留父层位移');
   for (const key of ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp']) {
     const before = await selection();
     await page.click('[data-move-key=' + key + ']');
@@ -287,9 +321,9 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near((await rect('#child')).x - childOriginal.x, 10, '微调按钮实际位移');
   check((await selection()).x === 10 && (await selection()).y === 0,
     '四向按钮每次微调 1px，Shift 点击微调 10px，支持按钮保留焦点');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   await page.click('#move-parent');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   check((await storage('moves')).a.length === 1 && (await storage('moves')).a[0].path === 'main>div',
     '还原所选父层只删除该层移动，保留其他元素');
   const scaledOriginal = await rect('#scaled-child');
@@ -300,7 +334,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near(scaledMoved.y - scaledOriginal.y, 18, '父层缩放下屏幕纵向位移');
   check(scaledRecord.to.x === 20 && scaledRecord.to.y === 12,
     '父层 scale(1.5) 中拖动跟随指针，保存正确的局部 CSS 位移');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
 
   stage = 'Shift 锁定拖动方向';
   await drag('#scaled-child', 30, 18, false, 'Shift');
@@ -309,16 +343,16 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near(constrained.y, scaledOriginal.y, '锁定横向不改变纵坐标');
   check((await selection()).x === 20 && (await selection()).y === 0,
     'Shift 横向拖动在缩放父层中按局部 CSS 像素保存');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   await drag('#scaled-child', 12, 30, false, 'Shift');
   constrained = await rect('#scaled-child');
   near(constrained.x, scaledOriginal.x, '锁定纵向不改变横坐标');
   near(constrained.y - scaledOriginal.y, 30, '锁定纵向拖动');
   check((await selection()).x === 0 && (await selection()).y === 20,
     'Shift 纵向拖动按开始时的主要方向锁定');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
 
-  const dragAt = await point('#scaled-child');
+  const dragAt = await point('#pbx-move-handle');
   await page.mouse.move(dragAt.x, dragAt.y);
   await page.keyboard.down('Shift');
   await page.mouse.down();
@@ -328,7 +362,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await page.mouse.up();
   check((await selection()).x === 20 && (await selection()).y === 12,
     '拖动途中松开 Shift 恢复自由移动');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   await drag('#scaled-child', 30, 18, true, 'Shift');
   near((await rect('#scaled-child')).x, scaledOriginal.x, '方向锁定拖动取消后恢复横坐标');
   check(!(await storage('moves')).a.some(record => record.path === 'main>aside>div'),
@@ -342,7 +376,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near((await selection()).x, 30 * Math.cos(Math.PI / 6), '旋转父层局部 X');
   near((await selection()).y, -15, '旋转父层局部 Y');
   check(true, 'Shift 在旋转父层中锁定预览水平轴，保持指针方向与反馈坐标一致');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
 
   stage = '触屏移动';
   await touchDrag('#link', 24, 16);
@@ -353,7 +387,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   check(touchRecord?.to.x === 24 && touchRecord?.to.y === 16 &&
     await frame().evaluate(() => !location.hash && window.activations === 0),
   '真实 CDP 触屏拖动保存位移，不被浏览器平移取消、不触发链接动作');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
 
   stage = '刷新与位置徽章';
   await setMode('browse');
@@ -366,7 +400,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await page.waitForSelector('#move-panel', { visible: true });
   check((await selection()).path === 'main>div' && await page.$eval('#move-x', input => +input.value) === 52,
     '刷新恢复移动草稿；点击原位置附近移动徽章可查看和继续调整');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   const restored = await rect('#card');
   near(restored.x, original.x, '还原横坐标'); near(restored.y, original.y, '还原纵坐标');
   check(Object.keys(await storage('moves')).length === 0 && restored.transform === original.transform &&
@@ -457,7 +491,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near(transitionMoved.y - transitionOriginal.y, 22, 'transition 元素即时纵向位移');
   check(transitionRecord?.to.x === 35 && transitionRecord?.to.y === 22,
     'transition:all 1s 的元素真实拖动准确保存位移');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   const transitionRestored = await rect('#transition');
   near(transitionRestored.x, transitionOriginal.x, 'transition 元素还原横坐标');
   near(transitionRestored.y, transitionOriginal.y, 'transition 元素还原纵坐标');
@@ -507,7 +541,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
     await page.waitForFunction(count => window.__moveFailures === count && document.querySelector('#toast').textContent.includes('存储'), {}, index + 1);
     check(true, method + ' 存储失败返回失败状态、保留预览与原移动记录，并提示错误');
   }
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   near((await rect('#dynamic')).x, dynamicChanged.x, '恢复存储后正常还原');
   check(Object.keys(await storage('moves')).length === 0, '恢复 Storage setter 后可正常还原，不遗留记录');
 
@@ -521,7 +555,7 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   near(vectorMoved.y - vectorOriginal.y, 9, 'SVG 根元素纵向位移');
   check(vectorMoved.transform === vectorOriginal.transform && await frame().$eval('#vector', svg => !svg.style.left && !svg.style.top),
     'inline SVG 使用 translate 移动，保留 transform 且无普通文本定位残留');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   const vectorRestored = await rect('#vector');
   near(vectorRestored.x, vectorOriginal.x, 'SVG 还原横坐标');
   near(vectorRestored.y, vectorOriginal.y, 'SVG 还原纵坐标');
@@ -535,12 +569,14 @@ input{display:block;width:200px;padding:10px;margin-top:20px}
   await setMode('move');
   const inputOriginal = await rect('#input');
   await click('#input');
+  await frame().focus('#pbx-move-handle');
   await page.keyboard.press('ArrowRight');
-  await page.waitForFunction(() => JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.moves) || '{}').a?.some(record => record.path === 'main>input' && record.to.x === 1));
+  await frame().waitForFunction(() => window.__PB.getMoveSelection()?.x === 1);
+  await commitMove();
   near((await rect('#input')).x - inputOriginal.x, 1, '输入控件键盘移动');
   check(await frame().$eval('#input', input => input.value === 'Editable control'),
     '移动模式选择原先聚焦的输入控件后，方向键移动元素而不编辑输入值');
-  await page.click('#move-reset');
+  await page.click('#move-reset'); await commitMove();
   assert.deepEqual(errors, []);
   check(true, '浏览器无运行时错误');
 } catch (error) {

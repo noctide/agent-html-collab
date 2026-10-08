@@ -1,6 +1,6 @@
 ---
 name: agent-html-collab
-description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 / 移动元素 / 标注提意见 / 反馈回灌源码)。当用户提到「原型协同」「方案稿标注」「处理反馈」「agent-html-collab」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
+description: 为任意 HTML 原型项目提供页面编辑与反馈功能(就地改字 / 移动元素 / 标注提意见 / 反馈回灌源码)。当用户提到「Agent HTML Collab」「方案稿标注」「处理反馈」「agent-html-collab」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
 ---
 
 # Agent HTML Collab 操作手册(agent 进阶)
@@ -10,9 +10,9 @@ description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 
 
 ## 客户端启动与等待（优先使用）
 
-- DSH：安装本仓库的 DSH bundle 后，在所属对话点击“打开原型协同”。Host 自动取得页面所属会话和项目。不要用全局绑定或最近会话。
+- DSH：安装本仓库的 DSH bundle 后，在所属对话点击 Agent HTML Collab 图标。Host 自动取得页面所属会话和项目。不要用全局绑定或最近会话。
 - OpenCode V2：安装本包后，在所属会话执行 `/agent-html-collab`，将返回的本地网页链接展示给用户。用户发送反馈后，插件向绑定会话排队投递，无需 `wait_feedback` 或扫盘轮询；收到后按反馈文件处理并报告结果。结束时执行 `/agent-html-collab-close`。当前不是原生侧栏，实际桌面 GUI 和用户模型尚待验证。
-- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中。确认页面加载后，先明确告诉用户：“页面已打开，请在右侧原型中选择‘编辑’改字、‘移动’调整元素位置或‘标注’提意见，再点击‘发送反馈’并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。”随后调用一次 `wait_feedback`，bindingId 使用 open_studio 返回值。
+- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中。确认页面加载后，先明确告诉用户：“页面已打开，请在右侧原型中右键目标元素，选择修改文字、添加标注或移动元素；完成操作后点击‘发送’并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。”随后调用一次 `wait_feedback`，bindingId 使用 open_studio 返回值。
 - ZCode 用户点击发送后，反馈通过等待工具的返回值进入当前对话。先报告收到反馈，再按反馈文件处理、备份、核对。完成后询问是否继续收集，得到肯定答复再等待；不要默认收到一次就无限续等。
 - 超时返回 timedOut 时默认结束本轮并告诉用户：“本轮等待已结束，尚未收到反馈。准备好后在聊天里说‘继续收集反馈’，我重新等待后你再发送。”仅在用户明确要求持续收集时自动续等，不反复输出无变化的超时提示。对话结束、等待工具取消或超时时，不能从空闲状态主动唤醒；页面保留反馈并提示重新等待后重试通知。不要把 MCP 服务放到后台后声称已自动通知。
 - 结束协作时调用 close_studio。只在没有这些客户端接口时使用下文手动 CLI。
@@ -44,7 +44,7 @@ agent-html-collab/
 或手写一份(照抄 `studio/proto.config.json` 改):
 
 1. 在项目根放 `proto.config.json`(照抄 `studio/proto.config.json` 改):
-   - `title`:顶栏品牌。
+   - `title`:项目名称，显示在页面信息和浏览器标题中。
    - `source.mode` + 对应字段(见 §2)。
    - `pages`:原型内部如何区分页面(容器选择器 / 当前页类 / 页 id 属性 / 切换方式);单文档用 `single:true` + `defaultId`。
    - `viewport`:`desktop` 宽 + `narrow` 列表(命中 `match` 选择器的页用更窄的设计宽)。
@@ -99,7 +99,7 @@ export function plans({ feedback, config, projectRoot }) {
 ## 4. 扩展/维护 verify
 
 `tests/verify-generic.mjs` 用 `examples/demo` 跑完整闭环(服务/装载/编辑/切页/标注/发送/落盘/回灌/备份/归包),
-并覆盖右键协作菜单、平移、双击菜单+撤销、缩放+小地图、滚轮转发、舞台原生滚动、弹层关闭等交互。
+并覆盖右键元素菜单、中键平移、完成/取消与撤销、缩放+小地图、滚轮转发、舞台原生滚动、弹层关闭等交互。
 `tests/verify-single.mjs` 覆盖单文档;`tests/verify-multi.mjs` 覆盖多文件每文件整页(切页 + 各页独立定位)。
 加断言:在对应阶段后 `t(条件, '名称', extra)`。demo 改动后请保持:
 - 待编辑文本在 `proto.html` 中**唯一且连续**,否则回灌定位会退化或走 skipped;

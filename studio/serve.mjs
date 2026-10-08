@@ -1,6 +1,6 @@
 import { findHtml, readTitle, pageIdOf, uniqueIds } from './project-files.mjs';
 import { parseArgs } from './cli-args.mjs';
-// serve.mjs — Agent HTML Collab 通用协同服务(运行时层 ①,agent 无关)
+// serve.mjs — Agent HTML Collab 原型预览服务(运行时层 ①,agent 无关)
 //
 // 用法:
 //   node studio/serve.mjs [--root <项目根>] [--config proto.config.json] [--port 8123]
@@ -56,7 +56,7 @@ function readJson(p) {
    1. 配置合并(defaults → config 文件 → CLI)
    ============================================================ */
 const DEFAULTS = {
-  title: '原型协同',
+  title: 'Agent HTML Collab',
   source: { mode: 'single', file: 'proto.html', dir: 'pages/', urls: [], index: '' },
   pages: { container: '.pg-sec', activeClass: 'act', idAttr: 'data-page', switch: 'auto', rootId: 'pg-{id}', single: false, singlePerFile: false, list: [] },
   viewport: { desktop: 1440, narrow: [{ match: '.is-mobile', width: 390 }] },
@@ -110,7 +110,7 @@ function autoDetectConfig() {
   if (files.length === 1) {
     const rel = files[0];
     return {
-      title: readTitle(resolve(PROJECT_ROOT, rel)) || '原型协同',
+      title: readTitle(resolve(PROJECT_ROOT, rel)) || 'Agent HTML Collab',
       source: { mode: 'single', file: rel },
       pages: { container: 'body', single: true, defaultId: 'page', list: [{ id: 'page', title: '整页文档' }] },
     };
@@ -122,7 +122,7 @@ function autoDetectConfig() {
   })));
   const idx = list.find(p => /(^|\/)index\.html?$/i.test(p.file));
   return {
-    title: (idx || list[0]).title || '原型协同',
+    title: (idx || list[0]).title || 'Agent HTML Collab',
     source: { mode: 'pages', dir: '.', index: idx ? idx.file : '' },
     pages: { container: 'body', singlePerFile: true, list },
   };
@@ -257,13 +257,13 @@ const server = http.createServer((req, res) => {
         const file = join(FEEDBACK_DIR, 'feedback-' + stamp + '.json');
         writeFileSync(file, JSON.stringify(j, null, 2));
         const notify = j.notify !== false;
-        console.log('[feedback] 已保存 ' + file + '  意见 ' + (j.comments || []).length + ' 条 / 改字 ' + (j.edits || []).length + ' 处 / 移动 ' + (j.moves || []).length + ' 处' + (notify ? '' : '  (协同通知关闭)'));
+        console.log('[feedback] 已保存 ' + file + '  意见 ' + (j.comments || []).length + ' 条 / 改字 ' + (j.edits || []).length + ' 处 / 移动 ' + (j.moves || []).length + ' 处' + (notify ? '' : '  (通知关闭)'));
         send(200, MIME['.json'], JSON.stringify({ ok: true, saved: true, file, delivery: 'manual' }));
         const wake = process.env.PROTOBRIDGE_WAKE === '1' && !CFG.server.stayAlive;
         if (wake || CFG.server.wakeOnFeedback) {
           setTimeout(() => { console.log('[feedback] 按约定退出,唤醒 Agent 处理'); process.exit(0); }, 1200);
         } else {
-          console.log('[feedback] 反馈已落盘,服务继续运行;' + (notify ? '对 Agent 说「处理反馈」即可回灌。' : '协同通知为关,需手动让 Agent「处理反馈」。'));
+          console.log('[feedback] 反馈已落盘,服务继续运行;' + (notify ? '对 Agent 说「处理反馈」即可回灌。' : '通知为关,需手动让 Agent「处理反馈」。'));
         }
       } catch (e) {
         console.error('[feedback] 解析失败:', e.message);

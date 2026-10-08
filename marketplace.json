@@ -5,10 +5,10 @@
       "name": "agent-html-collab",
       "source": ".",
       "version": "0.3.0",
-      "description": "HTML 原型协同：按页面绑定反馈到当前对话",
+      "description": "HTML 原型编辑与反馈：将反馈发送到页面所属对话",
       "displayName": "Agent HTML Collab",
       "displayName_i18n": {
-        "zh-CN": "原型协同"
+        "zh-CN": "Agent HTML Collab"
       },
       "category": "developer-tools"
     }

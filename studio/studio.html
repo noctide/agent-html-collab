@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Agent HTML Collab 协同工具</title>
+<title>Agent HTML Collab</title>
 <!-- ============================================================
      Agent HTML Collab 内核 studio(agent 无关,纯 Web)
      - 方案 HTML 装进 iframe(同源注入桥接脚本)
@@ -27,18 +27,22 @@
   #bar .brand { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 700; font-size: 13.5px; margin-right: 4px; white-space: nowrap; border: 0; background: transparent; color: var(--pb-ink); padding: 5px 7px; border-radius: 6px; cursor: pointer; font-family: inherit; }
   #bar .brand:hover { background: var(--pb-chip); }
   #bar .brand .logo { width: 24px; height: 24px; border-radius: 6px; background: var(--pb-ink); color: var(--pb-paper); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex: none; }
-  #bar .brand #brand-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  #bar .brand .caret { font-size: 10px; color: var(--pb-gray); flex: none; }
   @media (prefers-reduced-motion: reduce) { :is(.pop, #move-panel), #toast.show { animation: none; } }
   #bar .sep { width: 1px; height: 20px; background: var(--pb-line); flex: none; }
   #bar button, #bar select { font: inherit; font-size: 12.5px; border: 1px solid transparent; background: transparent; color: var(--pb-gray); border-radius: 6px; padding: 6px 11px; cursor: pointer; line-height: 1.3; white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
   #bar button:hover, #bar select:hover { background: var(--pb-chip); color: var(--pb-ink); }
   #bar button:focus-visible, #bar select:focus-visible { outline: 2px solid var(--pb-teal); outline-offset: 1px; }
-  #bar .seg { display: flex; gap: 2px; background: transparent; border: 0; border-radius: 7px; padding: 2px; }
-  #bar .seg button { border: 0; background: transparent; padding: 5px 13px; border-radius: 6px; color: var(--pb-gray); }
-  #bar .seg button:hover { background: var(--pb-chip); color: var(--pb-ink); }
-  #bar .seg button.on { background: var(--pb-chip); color: var(--pb-ink); font-weight: 600; }
-  #bar select { max-width: 240px; }
+  #bar #edit-pick[aria-pressed="true"] { background: var(--pb-chip); color: var(--pb-ink); }
+  #bar button:disabled { opacity: .45; cursor: default; }
+  #bar select { max-width: 280px; }
+  #bar .actions { display: flex; align-items: center; gap: 4px; }
+  #bar #page-notes { width: 34px; padding: 6px; position: relative; }
+  #bar #page-notes svg { display: block; margin: auto; }
+  #bar #page-notes.has-feedback { color: var(--pb-teal); }
+  #bar #page-notes.has-feedback::after { content: ''; position: absolute; right: 5px; top: 4px; width: 5px; height: 5px; border-radius: 50%; background: var(--pb-teal); }
+  #bar #page-notes[aria-expanded="true"] { background: var(--pb-chip); }
+  #bar #undo { width: 34px; padding: 6px; }
+  #bar #undo svg { display: block; margin: auto; }
   #bar .zoom { display: flex; align-items: center; gap: 2px; }
   #bar .zoom button { padding: 6px 9px; }
   #bar .zoom select { max-width: 108px; }
@@ -47,30 +51,22 @@
   #bar .count b { color: var(--pb-gray); font-variant-numeric: tabular-nums; font-weight: 600; }
   #bar .count b.c-more { color: var(--pb-teal); }
   #bar .count b.e-more { color: var(--pb-ochre); }
-  #bar #more { position: relative; }
-  #bar #more .bdg { position: absolute; top: -5px; right: -5px; min-width: 15px; height: 15px; padding: 0 4px; background: var(--pb-ochre); color: #fff; border-radius: 8px; font-size: 10px; font-weight: 700; display: none; align-items: center; justify-content: center; border: 1.5px solid var(--pb-paper); }
-  #bar #more .bdg.show { display: flex; }
   #bar .send { background: var(--pb-teal-bg); border-color: transparent; color: var(--pb-teal); font-weight: 600; }
   #bar .send:hover { background: var(--pb-teal); color: #fff; }
   #bar .send:disabled { opacity: .55; cursor: default; }
-  #bar #notify { width: 34px; height: 20px; padding: 0; border: 0; border-radius: 10px; background: var(--pb-teal); position: relative; }
-  #bar #notify::after { content: ''; position: absolute; width: 14px; height: 14px; top: 3px; left: 17px; border-radius: 50%; background: #fff; }
-  #bar #notify.off { background: #a9a79f; }
-  #bar #notify.off::after { left: 3px; }
   #bar > * { flex-shrink: 0; }
 
-  /* 窄侧栏使用两行工具栏，保留页面选择和缩放入口。 */
-  @media (max-width: 1180px) {
-    #bar { flex-wrap: wrap; height: auto; gap: 4px; padding: 8px 10px; }
-    #bar .brand { max-width: 150px; }
-    #bar .sep, #bar .spacer, #notify { display: none; }
-    #bar .zoom { display: flex; margin-left: auto; }
-    #bar #page-sel { max-width: 170px; }
-    #bar .seg button { padding: 6px 9px; }
+  @media (max-width: 720px) {
+    #bar { flex-wrap: wrap; height: auto; gap: 6px; padding: 8px 10px; }
+    #bar #page-sel { flex: 1; min-width: 0; max-width: none; }
+    #bar .spacer { display: none; }
+    #bar .zoom { margin-right: auto; }
+    #bar .actions { margin-left: auto; }
   }
-  #current-path { flex: none; display: block; width: 100%; min-height: 32px; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 6px 12px; border: 0; border-bottom: 1px solid var(--pb-line); background: var(--pb-panel); color: var(--pb-gray); font: 12px Consolas, monospace; cursor: pointer; }
-  #current-path:focus-visible { outline: 2px solid var(--pb-teal); outline-offset: -2px; }
-
+  @media (max-width: 420px) {
+    #bar .zoom button { display: none; }
+    #bar .count { padding: 6px; }
+  }
   #stage { flex: 1; position: relative; overflow: auto; background: var(--pb-paper); }
   #stage::-webkit-scrollbar { width: 11px; height: 11px; }
   #stage::-webkit-scrollbar-thumb { background: #d2d0ca; border-radius: 6px; border: 2.5px solid var(--pb-paper); }
@@ -125,12 +121,26 @@
   .feedback-manager { width: min(360px, calc(100vw - 24px)); }
   .feedback-detail { width: min(420px, calc(100vw - 24px)); }
   .feedback-manager .foot { flex-wrap: wrap; }
+  .feedback-pages { width: min(360px, calc(100vw - 24px)); min-width: 0; }
+  .feedback-pages .page-list { max-height: min(360px, 50vh); overflow-y: auto; }
+  .feedback-pages .page-entry { white-space: normal; margin-bottom: 4px; }
+  .feedback-pages .page-heading { display: flex; align-items: baseline; gap: 8px; }
+  .feedback-pages .page-name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-weight: 600; }
+  .feedback-pages .page-current { font-size: 11px; color: var(--pb-teal); flex: none; }
+  .feedback-pages .page-count, .feedback-pages .page-excerpt { display: block; font-size: 12px; color: var(--pb-gray); margin-top: 3px; }
+  .feedback-pages .page-excerpt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .feedback-pages .page-entry:disabled { cursor: default; opacity: .6; }
+  .feedback-pages .page-entry:disabled:hover { background: none; }
   .review-diff { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 6px; margin: 8px 0; overflow-wrap: anywhere; }
   .review-diff span { color: var(--pb-gray); }
   .review-diff del { color: var(--pb-danger); text-decoration: none; white-space: pre-wrap; }
   .review-diff ins { color: var(--pb-teal); text-decoration: none; white-space: pre-wrap; }
-  #move-panel { position: fixed; top: 108px; right: 16px; z-index: 95; width: min(300px, calc(100vw - 24px)); overflow-y: auto; }
+  #move-panel { position: fixed; z-index: 95; width: min(300px, calc(100vw - 24px)); overflow-y: auto; }
   #move-panel[hidden] { display: none; }
+  .pop { max-width: calc(100vw - 24px); max-height: calc(100vh - 24px); overflow-y: auto; }
+  .pop .menu-sep { border: 0; border-top: 1px solid var(--pb-line); margin: 6px 0; }
+  .pop .send-preference { display: flex; align-items: center; gap: 8px; font-size: 12px; margin: 10px 0; }
+  .pop .send-preference input { width: auto; margin: 0; }
   #move-panel .elinfo { max-height: 76px; overflow: auto; }
   #move-panel .move-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
   #move-panel .move-actions button { font: inherit; padding: 5px 9px; border: 1px solid var(--pb-line); border-radius: 6px; background: #fff; color: var(--pb-ink); cursor: pointer; }
@@ -145,39 +155,27 @@
 <body>
 
 <div id="bar">
-  <button class="brand" id="proj-entry" title="项目 / 源文件">
-    <span class="logo" id="brand-logo">A</span>
-    <span id="brand-title">Agent HTML Collab · 人机协同</span>
-    <span class="caret">▾</span>
+  <button class="brand" id="proj-entry" title="Agent HTML Collab · 页面信息" aria-label="Agent HTML Collab · 页面信息">
+    <span class="logo">A</span>
   </button>
-  <span class="sep"></span>
-  <div class="seg" title="原型模式">
-    <button data-x="m-browse" class="on">浏览</button>
-    <button data-x="m-edit" title="快捷键 E:就地改文字">编辑</button>
-    <button data-x="m-move" title="快捷键 M:拖动元素或输入偏移量">移动</button>
-    <button data-x="m-anno" title="快捷键 A:任意元素提意见(含区域编号)">标注</button>
-  </div>
-  <span class="sep"></span>
-  <select id="page-sel" title="切换页面(← →)"></select>
+  <select id="page-sel" title="切换页面（← →）" aria-label="当前页面"></select>
+  <button id="page-notes" title="查找有标注的页面" aria-label="查找有标注的页面" aria-haspopup="dialog" aria-expanded="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-5l-5 4v-4H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"/><path d="M8 8h8M8 12h5"/></svg></button>
+  <button id="edit-pick" aria-pressed="false" title="选中元素：点击框内改字，拖动右上角手柄移动">编辑</button>
   <span class="spacer"></span>
-  <div class="zoom" title="缩放(Ctrl+滚轮)">
-    <button id="zoom-out" title="缩小">−</button>
-    <select id="zoom-sel">
-      <option value="fit">适应宽度</option>
-      <option value="1">100%</option>
-      <option value="0.75">75%</option>
-      <option value="0.5">50%</option>
-    </select>
-    <button id="zoom-in" title="放大">＋</button>
+  <div class="zoom" title="缩放（Ctrl+滚轮）">
+    <button id="zoom-out" title="缩小" aria-label="缩小">−</button>
+    <select id="zoom-sel" aria-label="缩放"><option value="fit">适应宽度</option><option value="1">100%</option><option value="0.75">75%</option><option value="0.5">50%</option></select>
+    <button id="zoom-in" title="放大" aria-label="放大">＋</button>
   </div>
   <span class="sep"></span>
-  <button class="count" id="count" title="查看和管理意见 / 改动" aria-haspopup="dialog"></button>
-  <button id="notify" role="switch" aria-label="通知所属会话" aria-checked="true" title="通知所属会话：开"></button>
-  <button class="send" id="send">发送反馈 ↗</button>
-  <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
+  <div class="actions">
+    <button class="count" id="count" title="查看和管理标注 / 改动" aria-haspopup="dialog"></button>
+    <button id="undo" title="撤销最近一处改动（Ctrl+Z）" aria-label="撤销最近一处改动" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 4 3 9l5 5M3 9h10a7 7 0 0 1 0 14" transform="translate(0 -2)"/></svg></button>
+    <button class="send" id="send">发送</button>
+    <button id="more" title="更多操作" aria-label="更多操作" aria-haspopup="dialog">⋯</button>
+  </div>
 </div>
 
-<button id="current-path" type="button" title="点击复制当前编辑页面的路径"></button>
 <div id="stage">
   <div id="fit"><iframe id="proto" title="方案预览"></iframe></div>
 </div>
@@ -187,16 +185,17 @@
   <div class="mbody" id="mmap-body"><div class="thumb" id="mmap-thumb"></div><div class="vp" id="mmap-vp"></div></div>
 </div>
 
-<div id="toast"></div>
-<section id="move-panel" aria-label="移动元素" hidden>
-  <div class="ph"><span>移动元素</span><button class="x" id="move-close" title="取消选择" aria-label="取消选择">✕</button></div>
+<div id="toast" role="status"></div>
+<section id="move-panel" role="dialog" aria-label="编辑元素" hidden>
+  <div class="ph"><span>编辑元素</span><button class="x" id="move-close" title="取消编辑" aria-label="取消编辑">✕</button></div>
   <div class="elinfo" id="move-target"></div>
+  <div class="sum">点击元素框内修改文字，拖动右上角手柄移动。完成保留全部改动，Esc 取消。</div>
   <form id="move-form">
     <div class="row2"><div><label for="move-x">水平偏移 X（px）</label><input id="move-x" type="number" step="any" required value="0"></div><div><label for="move-y">垂直偏移 Y（px）</label><input id="move-y" type="number" step="any" required value="0"></div></div>
     <div class="move-nudge" role="group" aria-label="微调位置"><button type="button" data-move-key="ArrowLeft" aria-label="向左移动 1 像素" title="向左 1px，Shift 点击 10px">←</button><button type="button" data-move-key="ArrowUp" aria-label="向上移动 1 像素" title="向上 1px，Shift 点击 10px">↑</button><button type="button" data-move-key="ArrowDown" aria-label="向下移动 1 像素" title="向下 1px，Shift 点击 10px">↓</button><button type="button" data-move-key="ArrowRight" aria-label="向右移动 1 像素" title="向右 1px，Shift 点击 10px">→</button></div>
     <div class="move-actions"><button type="button" id="move-parent">选择父元素</button><button type="button" id="move-reset">还原位置</button></div>
-    <div class="sum" style="margin-top:8px">方向键或箭头按钮微调 1px，按住 Shift 微调 10px。Shift 拖动锁定水平/垂直方向，Alt 点击选择容器内的子元素。偏移量相对原位置；发送反馈后由 Agent 调整布局源码。</div>
-    <div class="foot"><button class="ok" id="move-apply" type="submit">应用偏移</button></div>
+    <div class="sum" style="margin-top:8px">方向键或箭头按钮微调 1px，按住 Shift 微调 10px。Shift 拖动锁定水平/垂直方向，偏移量相对原位置，完成后点击「发送」交给 Agent。</div>
+    <div class="foot"><button id="move-cancel" type="button">取消</button><button class="ok" id="move-apply" type="submit">完成</button></div>
   </form>
 </section>
 
@@ -204,9 +203,12 @@
 <style type="text/plain" id="bridge-css">
 .pb-anno-fab { display: none !important; }
 body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select: none !important; }
-body.pbx-move * { cursor: grab !important; }
+body.pbx-pick * { cursor: crosshair !important; }
+.pbx-move-selected, .pbx-move-selected * { cursor: text !important; }
 body.pbx-move { touch-action: none; }
 body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: none !important; }
+.pbx-context-selected { outline: 1px solid #27685f !important; outline-offset: 2px; }
+#pbx-move-handle { position: absolute; width: 28px; height: 28px; border: 1px solid #95603a; border-radius: 6px; background: #fff; color: #95603a; cursor: grab; pointer-events: auto; touch-action: none; }
 .pbx-move-selected { outline: 2px solid #95603a !important; outline-offset: 2px; }
 .pbx-hover { outline: 2px solid #27685f !important; outline-offset: -1px; cursor: crosshair !important; }
 .pbx-editing { outline: 2px solid #27685f !important; outline-offset: 1px; background: rgba(39,104,95,.07); }
@@ -244,7 +246,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   var MKEY = ST.moves || EKEY + '.moves';
   var CKEY = ST.comments || 'proto.anno.comments';
   var NKEY = ST.ecount || 'proto.anno.ecount';
-  var WL = ((CFG.ui && CFG.ui.whitelist) || ['.pb-badge', '.pb-pop', '.pb-anno-fab']).concat(['.pbx-echip', '.pbx-edit-chip', '.pbx-move-chip']);
+  var WL = ((CFG.ui && CFG.ui.whitelist) || ['.pb-badge', '.pb-pop', '.pb-anno-fab']).concat(['.pbx-echip', '.pbx-edit-chip', '.pbx-move-chip', '#pbx-move-handle']);
   var mode = 'browse';
 
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
@@ -278,13 +280,13 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   function isAuto() { return SWITCH === 'auto'; }
 
   function setMode(m) {
-    if (editing) finishEdit(true);
+    if (editing) finishEdit(false, true, true);
     if (moveDrag) finishMoveDrag(false);
     if (m !== 'move') clearMoveSelection();
     mode = m;
-    document.body.classList.toggle('pbx-edit', m === 'edit');
     document.body.classList.toggle('pbx-anno', m === 'anno');
     document.body.classList.toggle('pbx-move', m === 'move');
+    document.body.classList.toggle('pbx-pick', m === 'pick');
     positionChips();
     if (hoverEl) { hoverEl.classList.remove('pbx-hover'); hoverEl = null; }
   }
@@ -367,7 +369,8 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     else recs.push({ path: path, from: from, to: to, ts: new Date().toISOString() });
     all[pageId] = recs.filter(function (r) { return r.from !== r.to && (r.path !== path || r === hit || !hit); });
     if (!all[pageId].length) delete all[pageId];
-    lsSet(EKEY, all); el.classList.toggle('pbx-edited', !!(all[pageId] || []).some(function (r) { return r.path === path; })); positionChips();
+    if (!lsSet(EKEY, all)) return false;
+    el.classList.toggle('pbx-edited', !!(all[pageId] || []).some(function (r) { return r.path === path; })); positionChips(); return true;
   }
   function revertRec(pageId, rec) {
     var el = findEl(pageId, rec, rec.to); if (!el) return false;
@@ -406,13 +409,14 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     lsSet(EKEY, all); positionChips(); return true;
   }
   window.__PB = {
-    resetPage: resetPage, resetAll: resetAll, undoLast: undoLast, resetElement: resetElement, applyEdits: applyEdits,
+    setMode: setMode, resetPage: resetPage, resetAll: resetAll, undoLast: undoLast, resetElement: resetElement, applyEdits: applyEdits,
     selectMove: selectMove, setMove: setMove, resetMove: resetMove, applyMoves: applyMoves,
+    finishEdit: finishEdit, finishMove: finishMove, highlightTarget: highlightTarget,
     moveParent: moveParent, getMoveSelection: getMoveSelection, clearMoveSelection: clearMoveSelection, nudgeMove: nudgeMove, escapeMove: escapeMove
   };
 
   /* ---------- 元素移动：保留布局结构，以原位置为偏移基准 ---------- */
-  var moveSelection = null, moveDrag = null, moveStyles = new WeakMap(), movedElements = new Map();
+  var moveSelection = null, moveDrag = null, ignoreMoveClick = false, moveStyles = new WeakMap(), movedElements = new Map();
   function moveElement(pageId, path) {
     var root = pageRoot(pageId), el = root && queryPath(root, path);
     return el && el !== root && buildPath(el) === path && !inUI(el) ? el : null;
@@ -475,32 +479,55 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   }
   function getMoveSelection() {
     if (!moveSelection || !moveSelection.el.isConnected || moveSelection.page !== curPage()) return null;
-    var s = moveSelection, offset = moveDrag ? moveDrag.current : moveOffset(s.page, s.path);
-    return { page: s.page, path: s.path, label: elLabel(s.el), x: offset.x, y: offset.y, parent: s.el.parentElement !== pageRoot(s.page) };
+    var s = moveSelection, offset = moveDrag ? moveDrag.current : s.draft, rect = s.el.getBoundingClientRect();
+    return { page: s.page, path: s.path, label: elLabel(s.el), x: offset.x, y: offset.y, parent: s.el.parentElement !== pageRoot(s.page), rect: { x: rect.x, y: rect.y, w: rect.width, h: rect.height } };
   }
   function publishMoveSelection() { post('pbx-move-selected', { selection: getMoveSelection() }); }
   function clearMoveSelection() {
     if (moveDrag) finishMoveDrag(false);
-    if (moveSelection) moveSelection.el.classList.remove('pbx-move-selected');
-    moveSelection = null; publishMoveSelection();
+    if (moveSelection) { var old = moveOffset(moveSelection.page, moveSelection.path); previewMove(moveSelection.el, old.x, old.y); moveSelection.el.classList.remove('pbx-move-selected'); }
+    moveSelection = null; positionChips(); publishMoveSelection();
   }
-  function escapeMove() { if (moveDrag) finishMoveDrag(false); else clearMoveSelection(); }
+  function escapeMove() { finishMove(false); }
+  function finishMove(save, silent) {
+    if (moveDrag) finishMoveDrag(false);
+    var s = moveSelection;
+    var textChanged = editing && textOf(editing.el) !== editing.orig, previousEdits = lsGet(EKEY, {});
+    if (save && textChanged && !saveEdit(curPage(), editing.el, editing.orig, textOf(editing.el))) { post('pbx-edit-error', {}); return false; }
+    if (save && s && !setMove(s.page, s.path, s.draft.x, s.draft.y, true)) {
+      if (textChanged) {
+        if (!lsSet(EKEY, previousEdits)) post('pbx-edit-error', {});
+        editing.el.classList.toggle('pbx-edited', (previousEdits[curPage()] || []).some(function (r) { return r.path === buildPath(editing.el); }));
+      }
+      previewMove(s.el, s.draft.x, s.draft.y); positionChips(); return false;
+    }
+    finishEdit(save, true, true, save);
+    clearMoveSelection(); setMode('browse'); if (s && !silent) post('pbx-operation-ended', { saved: save && textChanged }); return true;
+  }
   function selectMove(pageId, path) {
     var el = moveElement(pageId, path); if (!el || pageId !== curPage()) return false;
-    if (moveSelection && moveSelection.el !== el) moveSelection.el.classList.remove('pbx-move-selected');
-    moveSelection = { page: pageId, path: path, el: el }; el.classList.add('pbx-move-selected');
-    publishMoveSelection(); return true;
+    if (el.closest('svg')) { el = el.closest('svg'); path = buildPath(el); }
+    if (moveSelection && moveSelection.el === el) return true;
+    finishEdit(false, true, true); clearMoveSelection();
+    var offset = moveOffset(pageId, path);
+    moveSelection = { page: pageId, path: path, el: el, draft: { x: offset.x, y: offset.y } }; el.classList.add('pbx-move-selected');
+    positionChips(); publishMoveSelection(); return true;
   }
   function moveParent() {
     if (!moveSelection) return false;
     var parentEl = moveSelection.el.parentElement;
     return parentEl && parentEl !== pageRoot(moveSelection.page) ? selectMove(moveSelection.page, buildPath(parentEl)) : false;
   }
-  function setMove(pageId, path, x, y) {
+  function setMove(pageId, path, x, y, commit) {
     var el = moveElement(pageId, path);
     if (!el || !Number.isFinite(x) || !Number.isFinite(y)) return false;
     x = Math.round(x * 100) / 100; y = Math.round(y * 100) / 100;
     if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+    if (!commit && mode === 'move' && moveSelection && moveSelection.page === pageId && moveSelection.path === path) {
+      moveSelection.draft = { x: x, y: y }; previewMove(el, x, y); positionChips(); publishMoveSelection(); return true;
+    }
+    var previous = moveOffset(pageId, path);
+    if (commit && previous.x === x && previous.y === y) return true;
     var all = lsGet(MKEY, {}), recs = all[pageId] || [];
     all[pageId] = recs.filter(function (r) { return r.path !== path; });
     if (x || y) all[pageId].push({ path: path, label: elLabel(el), from: { x: 0, y: 0 }, to: { x: x, y: y }, ts: new Date().toISOString() });
@@ -549,23 +576,25 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   function finishMoveDrag(save) {
     if (!moveDrag) return;
     var drag = moveDrag; moveDrag = null;
+    ignoreMoveClick = true;
     document.body.classList.remove('pbx-moving');
     if (save && drag.moved) setMove(drag.page, drag.path, drag.current.x, drag.current.y);
     else previewMove(drag.el, drag.offset.x, drag.offset.y);
     try { if (drag.el.hasPointerCapture(drag.id)) drag.el.releasePointerCapture(drag.id); } catch (e) {}
     positionChips(); publishMoveSelection();
   }
-  document.addEventListener('pointerdown', function (e) {
-    if (mode !== 'move' || e.button !== 0 || !e.isPrimary || inUI(e.target)) return;
-    e.preventDefault(); e.stopImmediatePropagation();
-    var root = activeSec(), el = e.target.closest && (e.target.closest('svg') || e.target);
-    if (!root || el === root || !root.contains(el)) { clearMoveSelection(); return; }
-    if (!e.altKey && moveSelection && moveSelection.el.contains(el)) el = moveSelection.el;
+  function startMoveDrag(el, e) {
     if (!selectMove(curPage(), buildPath(el))) return;
-    var offset = moveOffset(curPage(), buildPath(el)), basis = dragBasis(el, offset);
+    var offset = moveSelection.draft, basis = dragBasis(el, offset);
     if (!basis) return;
     moveDrag = { el: el, page: curPage(), path: buildPath(el), id: e.pointerId, x: e.clientX, y: e.clientY, offset: offset, current: offset, basis: basis, moved: false };
     try { el.setPointerCapture(e.pointerId); } catch (x) {}
+  }
+  document.addEventListener('pointerdown', function (e) {
+    ignoreMoveClick = false;
+    if (mode !== 'move' || e.button !== 0 || !e.isPrimary || inUI(e.target)) return;
+    if (editing && editing.el.contains(e.target)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
   }, true);
   document.addEventListener('pointermove', function (e) {
     if (!moveDrag || e.pointerId !== moveDrag.id) return;
@@ -584,7 +613,17 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   document.addEventListener('pointercancel', function (e) { if (moveDrag && e.pointerId === moveDrag.id) finishMoveDrag(false); }, true);
   document.addEventListener('lostpointercapture', function (e) { if (moveDrag && e.pointerId === moveDrag.id) finishMoveDrag(false); }, true);
   document.addEventListener('dragstart', function (e) { if (mode === 'move' && !inUI(e.target)) e.preventDefault(); }, true);
-  document.addEventListener('click', function (e) { if (mode === 'move' && !inUI(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  document.addEventListener('click', function (e) {
+    if (ignoreMoveClick) { ignoreMoveClick = false; e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if (mode === 'move' && !inUI(e.target)) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (moveSelection && moveSelection.el.contains(e.target)) {
+        var el = editableFrom(moveSelection.el);
+        if (el && !(editing && editing.el === el)) beginEdit(el, true);
+        else if (!el) post('pbx-edit-unavailable', {});
+      } else emitSelection(e.target);
+    }
+  }, true);
   window.addEventListener('blur', function () { finishMoveDrag(false); });
 
   var editing = null;
@@ -601,8 +640,10 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     return null;
   }
   function beginEdit(el, caretEnd) {
-    if (editing) finishEdit(true);
-    editing = { el: el, orig: textOf(el) };
+    if (editing) finishEdit(false);
+    var nodes = [];
+    (function remember(node) { var children = Array.prototype.slice.call(node.childNodes); nodes.push({ node: node, children: children, value: node.nodeValue }); children.forEach(remember); })(el);
+    editing = { el: el, orig: textOf(el), nodes: nodes, editable: el.getAttribute('contenteditable') };
     el.contentEditable = 'true'; el.classList.add('pbx-editing');
     el.focus();
     try {
@@ -610,37 +651,33 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       if (caretEnd) { rng.selectNodeContents(el); rng.collapse(false); } else rng.selectNodeContents(el);
       sel.removeAllRanges(); sel.addRange(rng);
     } catch (x) {}
-    el.addEventListener('blur', onBlur, true);
+    var r = el.getBoundingClientRect(); post('pbx-edit-started', { rect: { x: r.x, y: r.y, w: r.width, h: r.height } });
     el.addEventListener('keydown', onEditKey, true);
   }
-  function startEdit(e) {
-    var el = editableFrom(e.target); if (!el) return;
-    beginEdit(el, false);
-    try {
-      var rng = document.caretRangeFromPoint(e.clientX, e.clientY);
-      if (rng && el.contains(rng.startContainer)) { var sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(rng); }
-    } catch (x) {}
-  }
-  function onBlur() { finishEdit(true); }
   function onEditKey(e) {
-    if (!editing) return;
-    if (e.key === 'Escape') { e.preventDefault(); finishEdit(false); }
-    if (e.key === 'Enter' && !e.shiftKey && !editing.el.closest('p,div.msg-body,textarea')) { e.preventDefault(); editing.el.blur(); }
+    if (!editing || e.isComposing || e.keyCode === 229) return;
+    if (e.key === 'Escape' || (e.key === 'Enter' && !e.shiftKey)) {
+      e.preventDefault(); e.stopPropagation(); finishMove(e.key === 'Enter');
+    }
   }
-  function finishEdit(save) {
+  function finishEdit(save, silent, keepSelection, stored) {
     if (!editing) return;
-    var el = editing.el, orig = editing.orig;
-    el.removeEventListener('blur', onBlur, true);
-    el.removeEventListener('keydown', onEditKey, true);
-    el.contentEditable = 'false'; el.classList.remove('pbx-editing');
-    var now = textOf(el);
-    if (!save || now === orig) { if (!save) setTextOnly(el, orig); }
-    else { saveEdit(curPage(), el, orig, now); post('pbx-edit-saved', { page: curPage() }); }
+    var current = editing, el = current.el, now = textOf(el);
+    if (save && !stored && now !== current.orig && !saveEdit(curPage(), el, current.orig, now)) { post('pbx-edit-error', {}); return; }
     editing = null;
+    el.removeEventListener('keydown', onEditKey, true);
+    if (!save) current.nodes.forEach(function (item) {
+      if (item.node.nodeType === 1 && (item.node.childNodes.length !== item.children.length || item.children.some(function (child, i) { return item.node.childNodes[i] !== child; }))) item.node.replaceChildren.apply(item.node, item.children);
+      if (item.node.nodeType === 3) item.node.nodeValue = item.value;
+    });
+    if (current.editable == null) el.removeAttribute('contenteditable'); else el.setAttribute('contenteditable', current.editable);
+    el.classList.remove('pbx-editing');
+    if (!keepSelection) { setMode('browse'); if (!silent) post('pbx-operation-ended', { saved: save && now !== current.orig }); }
   }
   document.addEventListener('click', function (e) {
-    if (mode !== 'edit' || inUI(e.target) || typing(e.target)) return;
-    e.preventDefault(); e.stopPropagation(); startEdit(e);
+    if (editing && editing.el.contains(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    if (mode !== 'pick' || inUI(e.target)) return;
+    e.preventDefault(); e.stopImmediatePropagation(); emitSelection(e.target);
   }, true);
 
   /* ---------- 任意元素标注(拾取) ---------- */
@@ -679,7 +716,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     var s = activeSec(); if (!s) return;
     var pageId = curPage(), comments = lsGet(CKEY, {}), edits = pageEdits(pageId), moves = lsGet(MKEY, {})[pageId] || [];
     var items = Object.keys(comments).filter(function (id) { return comments[id].page === pageId; });
-    if (!items.length && !edits.length && !moves.length) return;
+    if (!items.length && !edits.length && !moves.length && !moveSelection) return;
     chipLayer = document.createElement('div'); chipLayer.id = 'pbx-chip-layer';
     document.body.appendChild(chipLayer);
     var groups = [];
@@ -713,7 +750,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       chip.addEventListener('mousedown', function (e) { e.preventDefault(); });
       chip.addEventListener('click', function (e) {
         e.stopPropagation();
-        finishEdit(true);
+        finishEdit(false);
         var r2 = el.getBoundingClientRect();
         post('pbx-pick-edit', { id: id, page: rec.page, path: rec.path, label: rec.region, text: rec.origText,
           rect: { x: r2.x, y: r2.y, w: r2.width, h: r2.height } });
@@ -730,7 +767,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       chip.addEventListener('mousedown', function (e) { e.preventDefault(); });
       chip.addEventListener('click', function (e) {
         e.stopPropagation();
-        finishEdit(true);
+        finishEdit(false);
         var r = el.getBoundingClientRect();
         post('pbx-edit-review', { page: pageId, path: rec.path, rect: { x: r.x, y: r.y, w: r.width, h: r.height } });
       });
@@ -745,10 +782,19 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       chip.addEventListener('click', function (e) { e.stopPropagation(); post('pbx-move-review', { page: pageId, path: rec.path }); });
       addMarker(el, chip);
     });
+    if (moveSelection) {
+      var grip = document.createElement('button'); grip.id = 'pbx-move-handle'; grip.type = 'button';
+      grip.setAttribute('aria-label', '拖动所选元素'); grip.title = '拖动移动，方向键微调';
+      grip.addEventListener('keydown', function (e) { if (!e.ctrlKey && !e.metaKey && !e.altKey && nudgeMove(e.key, e.shiftKey)) { e.preventDefault(); e.stopImmediatePropagation(); } });
+      grip.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><circle cx="5" cy="4" r="1.2"/><circle cx="11" cy="4" r="1.2"/><circle cx="5" cy="8" r="1.2"/><circle cx="11" cy="8" r="1.2"/><circle cx="5" cy="12" r="1.2"/><circle cx="11" cy="12" r="1.2"/></svg>';
+      grip.addEventListener('pointerdown', function (e) { if (e.button !== 0 || !e.isPrimary) return; e.preventDefault(); e.stopPropagation(); startMoveDrag(moveSelection.el, e); });
+      chipLayer.appendChild(grip); var bounds = moveSelection.el.getBoundingClientRect();
+      grip.style.left = Math.max(2, Math.min(bounds.right - 28, document.documentElement.clientWidth - 30)) + window.scrollX + 'px'; grip.style.top = Math.max(2, bounds.top - 30) + window.scrollY + 'px';
+    }
     groups.forEach(function (g) {
       var r = g.el.getBoundingClientRect();
       var range = document.createRange(); range.selectNodeContents(g.el);
-      var textRect = range.getBoundingClientRect(); if (textRect.width && textRect.height) r = textRect;
+      var textRect = range.getBoundingClientRect(); if (!g.node.querySelector('.pbx-move-chip') && textRect.width && textRect.height) r = textRect;
       var width = g.node.offsetWidth, height = g.node.offsetHeight, viewW = document.documentElement.clientWidth;
       var x, y = r.top + Math.max(0, (Math.min(r.height, height * 2) - height) / 2);
       if (r.right + width + 8 <= viewW) x = r.right + 6;
@@ -761,50 +807,42 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   window.addEventListener('resize', positionChips, { passive: true });
   window.addEventListener('scroll', positionChips, { passive: true, capture: true });
 
-  /* ---------- 右键/中键拖动平移;右键轻点/双击=协作菜单 ---------- */
+  /* ---------- 右键菜单；中键平移 ---------- */
   function isTextInput(t) { return !!(t.closest && t.closest('input,textarea,[contenteditable="true"]')); }
-  var panBtn = -1, panStart = null, panMoved = false;
-  document.addEventListener('contextmenu', function (e) { if (isTextInput(e.target)) return; e.preventDefault(); });
+  var panStart = null;
+  document.addEventListener('contextmenu', function (e) {
+    if (isTextInput(e.target) || inUI(e.target)) return;
+    e.preventDefault(); emitContext(e.target, e);
+  });
   document.addEventListener('mousedown', function (e) {
-    if (panBtn !== -1) return;
-    if (e.button !== 2 && e.button !== 1) return;
-    if (isTextInput(e.target)) return;
-    panBtn = e.button; panMoved = false;
-    panStart = { sx: e.screenX, sy: e.screenY, target: e.target };
-    post('pbx-pan-start', {});
-    if (e.button === 1) e.preventDefault();
+    if (e.button !== 1 || isTextInput(e.target) || inUI(e.target)) return;
+    e.preventDefault(); panStart = { x: e.screenX, y: e.screenY }; post('pbx-pan-start', {});
+    document.body.classList.add('pbx-panning');
   }, true);
   document.addEventListener('mousemove', function (e) {
-    if (panBtn === -1) return;
-    var need = panBtn === 2 ? 2 : 4;
-    if (!(e.buttons & need)) { panBtn = -1; panStart = null; panMoved = false; document.body.classList.remove('pbx-panning'); post('pbx-pan-end', {}); return; }
-    var dx = e.screenX - panStart.sx, dy = e.screenY - panStart.sy;
-    if (!panMoved && Math.abs(dx) + Math.abs(dy) > 5) { panMoved = true; document.body.classList.add('pbx-panning'); }
-    if (panMoved) { post('pbx-pan', { dx: dx, dy: dy }); e.preventDefault(); }
+    if (!panStart) return;
+    if (!(e.buttons & 4)) { panStart = null; document.body.classList.remove('pbx-panning'); post('pbx-pan-end', {}); return; }
+    post('pbx-pan', { dx: e.screenX - panStart.x, dy: e.screenY - panStart.y }); e.preventDefault();
   }, true);
-  document.addEventListener('mouseup', function (e) {
-    if (e.button !== panBtn || panBtn === -1) return;
-    var wasPan = panMoved, t = panStart.target;
-    panBtn = -1; panStart = null; panMoved = false;
-    document.body.classList.remove('pbx-panning'); post('pbx-pan-end', {});
-    if (wasPan || e.button !== 2) return;
-    emitContext(t, e);
-  }, true);
+  document.addEventListener('mouseup', function (e) { if (e.button === 1) { panStart = null; document.body.classList.remove('pbx-panning'); post('pbx-pan-end', {}); } }, true);
+  var contextTarget = null;
+  function highlightTarget(pageId, path) {
+    if (contextTarget) contextTarget.classList.remove('pbx-context-selected');
+    contextTarget = path ? queryPath(pageRoot(pageId), path) : null;
+    if (contextTarget) contextTarget.classList.add('pbx-context-selected');
+  }
+  function emitSelection(t) {
+    if (inUI(t)) return;
+    var el = t.closest && t.closest(PAGESEL + ' *'); if (!el) return;
+    post('pbx-select', { page: curPage(), path: buildPath(el) });
+  }
   function emitContext(t, e) {
     if (inUI(t)) return;
-    var el = t.closest && t.closest(PAGESEL + ' *');
-    if (!el) return;
+    var el = t.closest && t.closest(PAGESEL + ' *'); if (!el) return;
     var r = el.getBoundingClientRect();
-    post('pbx-context', { page: curPage(), path: buildPath(el), label: elLabel(el), text: textOf(el).slice(0, 60),
+    post('pbx-context', { page: curPage(), path: buildPath(el), regionId: el.getAttribute('data-anno') || '', label: elLabel(el), text: textOf(el).slice(0, 60),
       rect: { x: r.x, y: r.y, w: r.width, h: r.height }, cx: e.clientX, cy: e.clientY });
   }
-  document.addEventListener('dblclick', function (e) {
-    if (mode !== 'browse' || inUI(e.target) || isTextInput(e.target)) return;
-    var el = e.target.closest && e.target.closest(PAGESEL);
-    if (!el || e.target === el) return;
-    e.preventDefault();
-    emitContext(e.target.closest(PAGESEL + ' *') || e.target, e);
-  });
   function inScrollable(t) {
     for (var n = t; n; n = n.parentElement) {
       var s = getComputedStyle(n);
@@ -825,7 +863,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       if (!e.ctrlKey && !e.metaKey && !e.altKey && nudgeMove(e.key, e.shiftKey)) { e.preventDefault(); e.stopImmediatePropagation(); return; }
     }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !typing(e.target)) { e.preventDefault(); post('pbx-undo', {}); }
-    if (!typing(e.target) && !e.ctrlKey && !e.metaKey && !e.altKey && /^(e|a|m)$/i.test(e.key)) post('pbx-mode-key', { key: e.key.toLowerCase() });
+    if (!typing(e.target) && ((e.shiftKey && e.key === 'F10') || e.key === 'ContextMenu')) { e.preventDefault(); var r = e.target.getBoundingClientRect(); emitContext(e.target, { clientX: r.left, clientY: r.bottom }); }
     if (e.key === 'Escape') post('pbx-dismiss', {});
   });
   document.addEventListener('mousedown', function () { post('pbx-dismiss', {}); }, true);
@@ -837,7 +875,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     if (d.type === 'pbx-anno-updated') positionChips();
     if (d.type === 'pbx-go-page' && isAuto()) showPage(d.page);
     if (d.type === 'pbx-page-shown') applyEdits(d.page);
-    if (d.type === 'pbx-start-edit') { var el = queryPath(pageRoot(curPage()), d.path); if (el) beginEdit(el, true); }
+
   });
   window.addEventListener('storage', function (e) {
     if (e.key === MKEY || e.key === null) { if (moveDrag) finishMoveDrag(false); applyMoves(curPage()); publishMoveSelection(); }
@@ -847,7 +885,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     var d = e.data || {};
     if (d.type === 'pbx-page') { applyEdits(d.page); positionChips(); post('pbx-page-sync', { page: d.page }); }
   });
-  setMode(lsGet(ST.mode || 'proto.studio.mode', 'browse'));
+  setMode('browse');
   (function () { if (!activeSec()) { var first = document.querySelector(CONTAINER); if (first) first.classList.add(ACTIVE); } })();
   applyEdits(curPage());
   positionChips();
@@ -903,16 +941,8 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     }
     return path;
   }
-  function updateCurrentPath() {
-    var label = document.getElementById('current-path');
-    label.textContent = '当前页面：' + currentFilePath();
-    label.title = currentFilePath() + '（点击复制）';
-  }
+  function updateCurrentPath() { document.getElementById('proj-entry').title = 'Agent HTML Collab · 页面信息\n' + currentFilePath(); }
   updateCurrentPath();
-  document.getElementById('current-path').addEventListener('click', async function () {
-    try { await navigator.clipboard.writeText(currentFilePath()); toast('当前页面路径已复制'); }
-    catch (e) { toast('复制失败，请从页面路径提示中复制'); }
-  });
   var iframe = document.getElementById('proto');
   var fit = document.getElementById('fit');
   var stage = document.getElementById('stage');
@@ -924,8 +954,6 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
 
   /* ---------- 顶栏品牌 ---------- */
   document.title = 'Agent HTML Collab · ' + CFG.title;
-  document.getElementById('brand-title').textContent = 'Agent HTML Collab · 人机协同';
-  document.getElementById('brand-logo').textContent = 'A';
 
   /* ---------- 项目入口:下拉展示源文件路径 ---------- */
   document.getElementById('proj-entry').addEventListener('click', function () {
@@ -993,7 +1021,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     win.__PB_INJECTED = true;
     try { win.PROTOBRIDGE_CFG = CFG; } catch (e) {}
     injectNode('style', $('#bridge-css').textContent);
-    injectNode('style', 'body.pbx-edit ' + PAGESEL + ' { cursor: text; } body.pbx-anno ' + PAGESEL + ' { cursor: crosshair; }');
+    injectNode('style', 'body.pbx-anno ' + PAGESEL + ' { cursor: crosshair; }');
     var sourceDoc = doc, sourceWin = win, jobs = [];
     if (CFG.tools && CFG.tools.anno) {
       jobs = Promise.all([
@@ -1009,6 +1037,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     injectNode('script', $('#bridge-src').textContent);
     Promise.resolve(jobs).then(function () {
       if (doc !== sourceDoc || pageLoading) return;
+      sourceWin.postMessage({ type: 'pb-anno-set', on: false }, '*');
       syncPages(); syncSelect(); refreshCount(); applyZoom(); buildMinimap();
       var timer = null, lastH = docH(), resizeObserver, mutationObserver;
       function refresh() {
@@ -1093,6 +1122,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
 
   /* ---------- 切页 ---------- */
   function gotoPage(id) {
+    cancelOperation(); closePop();
     if (SINGLE && !PERFILE) return;
     var entry = pageList().filter(function (p) { return p.id === id; })[0];
     if (CFG.source.mode === 'pages' && entry && entry.file) {
@@ -1113,44 +1143,35 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   $('#page-sel').addEventListener('change', function (e) { gotoPage(e.target.value); });
 
   /* ---------- 模式 ---------- */
-  function paintMode() { document.querySelectorAll('#bar .seg button').forEach(function (b) { var on = b.getAttribute('data-x') === 'm-' + mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); }
+  function paintMode() { $('#edit-pick').setAttribute('aria-pressed', String(mode === 'pick' || mode === 'move')); }
   function setMode(m, skipRegion) {
-    mode = m; lsSet(ST.mode, m); paintMode();
+    mode = m; paintMode();
     if (m !== 'move') $('#move-panel').hidden = true;
+
     if (win) {
-      win.postMessage({ type: 'pbx-mode', mode: m }, '*');
+      if (win.__PB) win.__PB.setMode(m); else win.postMessage({ type: 'pbx-mode', mode: m }, '*');
       if (!skipRegion) { try { win.postMessage({ type: 'pb-anno-set', on: m === 'anno' }, '*'); } catch (e) {} }
     }
     refreshCount();
   }
-  document.querySelectorAll('#bar .seg button').forEach(function (b) {
-    b.addEventListener('click', function () {
-      var m = b.getAttribute('data-x').slice(2);
-      setMode(mode === m && m !== 'browse' ? 'browse' : m);
-      toast(m === 'edit' ? '编辑模式:点击方案里任意文字就地修改,Esc 还原'
-        : m === 'move' ? '移动模式:拖动调整位置，Shift 拖动锁定方向；Alt 点击选择子元素，面板可精确微调'
-        : m === 'anno' ? '标注模式:点击方案里任意元素提意见;也可在浏览视图右键/双击元素'
-        : '浏览模式:右键拖动平移 · 右键轻点/双击元素呼出协作菜单');
-    });
+  function cancelOperation() {
+    if (win && win.__PB) win.__PB.finishMove(false, true);
+    setMode('browse');
+  }
+  $('#edit-pick').addEventListener('click', function () {
+    var picking = mode === 'pick' || mode === 'move'; cancelOperation(); closePop();
+    if (!picking) { setMode('pick'); toast('先选中元素，再点击框内改字；拖动右上角手柄移动，Esc 返回浏览'); }
   });
   document.addEventListener('keydown', function (e) {
     if (e.target.closest && e.target.closest('input,textarea,select')) return;
     if (e.metaKey || e.ctrlKey || e.altKey) return;
-    if (e.key === 'e' || e.key === 'E') setMode(mode === 'edit' ? 'browse' : 'edit');
-    if (e.key === 'a' || e.key === 'A') setMode(mode === 'anno' ? 'browse' : 'anno');
-    if (e.key === 'm' || e.key === 'M') setMode(mode === 'move' ? 'browse' : 'move');
     if (mode === 'move' && win && win.__PB && win.__PB.nudgeMove(e.key, e.shiftKey)) { e.preventDefault(); return; }
-    if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && win) {
-      var list = pageList().map(function (p) { return p.id; });
-      var i = Math.max(0, list.indexOf(currentPage()));
-      gotoPage(list[(i + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length]);
+    if (mode !== 'browse' || pop || !win) return;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      var list = pageList().map(function (p) { return p.id; }), i = Math.max(0, list.indexOf(currentPage()));
+      if (list.length) gotoPage(list[(i + (e.key === 'ArrowRight' ? 1 : list.length - 1)) % list.length]);
     }
   });
-  if (CFG.tools && CFG.tools.anno) setInterval(function () {
-    var raw = ''; try { raw = localStorage.getItem(ST.annoMode) || ''; } catch (e) {}
-    var regionOn = raw.replace(/"/g, '') === '1';
-    if (regionOn !== (mode === 'anno')) setMode(regionOn ? 'anno' : 'browse', regionOn);
-  }, 800);
 
   /* ---------- iframe → 工具层 ---------- */
   var panBase = null;
@@ -1168,12 +1189,15 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     if (d.type === 'pbx-pan-start') panBase = { sl: stage.scrollLeft, st: stage.scrollTop };
     if (d.type === 'pbx-pan' && panBase) { stage.scrollLeft = Math.max(0, panBase.sl - d.dx); stage.scrollTop = Math.max(0, panBase.st - d.dy); }
     if (d.type === 'pbx-pan-end') panBase = null;
-    if (d.type === 'pbx-edit-saved') { toast('已保存文字修改(随反馈包发回 Agent)'); feedbackUpdated(); }
+    if (d.type === 'pbx-edit-started') paintMoveSelection(win && win.__PB && win.__PB.getMoveSelection());
+    if (d.type === 'pbx-select') startLocalElement(d);
+    if (d.type === 'pbx-operation-ended') { setMode('browse'); feedbackUpdated(); if (d.saved) toast('已保留文字改动，点击「发送」交给 Agent'); }
+    if (d.type === 'pbx-edit-error') toast('文字未保存：本地草稿存储不可用，请重试');
+    if (d.type === 'pbx-edit-unavailable') toast('该元素没有可修改的文字，仍可拖动右上角手柄移动');
     if (d.type === 'pbx-move-selected') paintMoveSelection(d.selection);
     if (d.type === 'pbx-move-saved') { feedbackUpdated(); }
     if (d.type === 'pbx-move-error') toast('移动未保存：本地草稿存储不可用');
-    if (d.type === 'pbx-move-review') { setMode('move'); if (win && win.__PB) win.__PB.selectMove(d.page, d.path); }
-    if (d.type === 'pbx-mode-key') { var next = { e: 'edit', a: 'anno', m: 'move' }[d.key]; if (next) setMode(mode === next ? 'browse' : next); }
+    if (d.type === 'pbx-move-review') startLocalElement(d);
     if (d.type === 'pbx-anno-updated') { refreshCount(); if (win) win.postMessage({ type: 'pbx-anno-updated' }, '*'); }
     if (d.type === 'pbx-pick') openElForm(d, null);
     if (d.type === 'pbx-pick-edit') openElForm(d, d.id);
@@ -1190,32 +1214,51 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
 
   function iframePoint(cx, cy) { var r = iframe.getBoundingClientRect(); return { x: r.left + cx * scale, y: r.top + cy * scale }; }
 
+  function placePanel(panel, rect) {
+    var top = $('#bar').getBoundingClientRect().bottom + 8;
+    panel.style.maxHeight = Math.max(80, innerHeight - top - 12) + 'px';
+    var at = iframePoint(rect.x, rect.y), width = panel.offsetWidth;
+    var right = at.x + rect.w * scale + 12, left = at.x - width - 12;
+    var beside = right + width <= innerWidth - 8 || left >= 8;
+    var y = beside ? at.y : at.y + rect.h * scale + 10;
+    if (!beside && y + panel.offsetHeight > innerHeight - 12 && at.y - panel.offsetHeight - 10 >= top) y = at.y - panel.offsetHeight - 10;
+    panel.style.left = Math.max(8, Math.min(right + width <= innerWidth - 8 ? right : left >= 8 ? left : at.x, innerWidth - width - 8)) + 'px';
+    panel.style.top = Math.max(top, Math.min(y, innerHeight - panel.offsetHeight - 12)) + 'px';
+  }
+  function startLocalElement(d) {
+    cancelOperation(); closePop(); setMode('move');
+    if (win && win.__PB) win.__PB.selectMove(d.page, d.path);
+  }
   function paintMoveSelection(s) {
     var panel = $('#move-panel'); panel.hidden = !s || mode !== 'move';
-    if (!s) return;
-    panel.style.top = ($('#current-path').getBoundingClientRect().bottom + 12) + 'px';
-    panel.style.maxHeight = Math.max(0, window.innerHeight - parseFloat(panel.style.top) - 12) + 'px';
-    $('#move-target').textContent = s.label + ' · ' + s.path;
+    if (!s) { panel.dataset.target = ''; return; }
+    var target = s.page + ':' + s.path;
+    if (panel.dataset.target !== target) { panel.dataset.target = target; placePanel(panel, s.rect); }
+    $('#move-target').textContent = s.label;
     if (document.activeElement !== $('#move-x')) $('#move-x').value = s.x;
     if (document.activeElement !== $('#move-y')) $('#move-y').value = s.y;
-    $('#move-parent').disabled = !s.parent;
-    $('#move-reset').disabled = !s.x && !s.y;
+    $('#move-parent').disabled = !s.parent; $('#move-reset').disabled = !s.x && !s.y;
   }
   $('#move-form').addEventListener('submit', function (e) {
     e.preventDefault(); var s = win && win.__PB && win.__PB.getMoveSelection();
-    if (s && win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber)) { paintMoveSelection(win.__PB.getMoveSelection()); feedbackUpdated(); }
+    if (s && win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber)) win.__PB.finishMove(true);
+  });
+  ['#move-x', '#move-y'].forEach(function (selector) {
+    $(selector).addEventListener('input', function () { var s = win && win.__PB && win.__PB.getMoveSelection(); if (s) win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber); });
   });
   $('#move-parent').addEventListener('click', function () { if (win && win.__PB) win.__PB.moveParent(); });
-  document.querySelectorAll('[data-move-key]').forEach(function (button) {
-    button.addEventListener('click', function (e) { if (win && win.__PB) win.__PB.nudgeMove(button.dataset.moveKey, e.shiftKey); });
+  document.querySelectorAll('[data-move-key]').forEach(function (button) { button.addEventListener('click', function (e) { if (win && win.__PB) win.__PB.nudgeMove(button.dataset.moveKey, e.shiftKey); }); });
+  $('#move-reset').addEventListener('click', function () { var s = win && win.__PB && win.__PB.getMoveSelection(); if (s) win.__PB.setMove(s.page, s.path, 0, 0); });
+  $('#move-close').addEventListener('click', cancelOperation);
+  $('#move-cancel').addEventListener('click', cancelOperation);
+  window.addEventListener('resize', function () {
+    var s = win && win.__PB && win.__PB.getMoveSelection(); if (s && !$('#move-panel').hidden) placePanel($('#move-panel'), s.rect);
   });
-  $('#move-reset').addEventListener('click', function () { var s = win && win.__PB && win.__PB.getMoveSelection(); if (s) { win.__PB.resetMove(s.page, s.path); feedbackUpdated(); } });
-  $('#move-close').addEventListener('click', function () { if (win && win.__PB) win.__PB.clearMoveSelection(); $('#bar [data-x=m-move]').focus(); });
 
   /* ---------- 弹层 ---------- */
   var pop = null;
-  function closePop() { if (pop) { var review = pop.classList.contains('feedback-manager'); pop.remove(); pop = null; if (review) $('#count').focus(); } document.removeEventListener('mousedown', onDocMDown, true); }
-  function onDocMDown(e) { if (pop && !pop.contains(e.target)) closePop(); }
+  function closePop() { if (win && win.__PB) win.__PB.highlightTarget(); if (pop) { var review = pop.classList.contains('feedback-manager'), pages = pop.classList.contains('feedback-pages'); pop.remove(); pop = null; if (review) $('#count').focus(); if (pages) { $('#page-notes').setAttribute('aria-expanded', 'false'); $('#page-notes').focus(); } } document.removeEventListener('mousedown', onDocMDown, true); }
+  function onDocMDown(e) { if (pop && !pop.contains(e.target) && !(pop.classList.contains('feedback-pages') && $('#page-notes').contains(e.target))) closePop(); }
   function openPop(anchor, html, px, className) {
     closePop();
     pop = document.createElement('div'); pop.className = 'pop' + (className ? ' ' + className : ''); pop.innerHTML = html; document.body.appendChild(pop);
@@ -1228,28 +1271,29 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     return pop;
   }
 
-  /* ---------- 协作菜单 ---------- */
+  /* ---------- 操作菜单 ---------- */
   function openContext(d) {
+    cancelOperation();
     var pt = iframePoint(d.cx, d.cy);
     var hasEdit = elementHasEdit(d.page, d.path), hasMove = (lsGet(ST.moves, {})[d.page] || []).some(function (r) { return r.path === d.path; });
     var changed = hasEdit || hasMove;
     var p = openPop(null,
-      '<div class="ph"><span>协作 · ' + esc(d.label) + '</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
-      '<button class="mi" data-act="edit">编辑文字</button>' +
-      '<button class="mi" data-act="move">移动元素</button>' +
-      '<button class="mi" data-act="anno">添加意见</button>' +
-      '<button class="mi' + (changed ? '' : ' dis') + '" data-act="revert">还原此元素' + (changed ? '' : '(未改动)') + '</button>' +
-      '<button class="mi" data-act="copy">复制元素路径</button>', pt);
+      '<div class="ph"><span>' + esc(d.label) + '</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
+      '<button class="mi" data-act="edit">编辑元素</button>' +
+      '<button class="mi" data-act="anno">添加标注</button>' +
+      '<hr class="menu-sep">' +
+      '<button class="mi' + (changed ? '' : ' dis') + '" data-act="revert">还原此元素' + (changed ? '' : '(未改动)') + '</button>', pt, 'element-menu');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '元素操作');
+    if (win && win.__PB) win.__PB.highlightTarget(d.page, d.path);
     p.querySelector('[data-x=close]').addEventListener('click', closePop);
+    p.querySelector('[data-act=edit]').focus();
     p.addEventListener('click', function (e2) {
       var a = e2.target.getAttribute && e2.target.getAttribute('data-act');
       if (!a || (a === 'revert' && !changed)) return;
       closePop();
-      if (a === 'edit') { setMode('edit'); if (win) win.postMessage({ type: 'pbx-start-edit', path: d.path }, '*'); toast('就地编辑中:改完点击别处保存,Esc 还原'); }
-      if (a === 'move') { setMode('move'); if (win && win.__PB) win.__PB.selectMove(d.page, d.path); }
-      if (a === 'anno') openElForm(d, null);
+      if (a === 'edit') startLocalElement(d);
+      if (a === 'anno') openElForm(d, d.regionId || null);
       if (a === 'revert') { try { var ok = win.__PB.resetElement(d.page, d.path); ok = win.__PB.resetMove(d.page, d.path) || ok; toast(ok ? '已还原该元素' : '还原失败:未找到匹配改动'); feedbackUpdated(); } catch (e) { toast('还原失败'); } }
-      if (a === 'copy') navigator.clipboard.writeText(d.path).then(function () { toast('元素路径已复制:' + d.path); }, function () { toast('复制失败(路径:' + d.path + ')'); });
     });
   }
   function elementHasEdit(pageId, path) { var recs = lsGet(ST.edits, {})[pageId] || []; return recs.some(function (r) { return r.path === path; }); }
@@ -1260,6 +1304,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     buildMinimap();
   }
   function undoLast() {
+    cancelOperation();
     if (!win || !win.__PB) { toast('方案页未就绪'); return; }
     var r = win.__PB.undoLast(); toast(r ? '已撤销:(' + r.page + ') ' + r.path : '没有可撤销的改动'); feedbackUpdated();
   }
@@ -1277,7 +1322,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       '<div class="foot"><button data-act="edit">继续编辑</button><button class="danger" data-act="restore-edit">还原这处改动</button></div>', pt, 'feedback-detail');
     p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '文字改动');
     p.querySelector('[data-x=close]').addEventListener('click', closePop);
-    p.querySelector('[data-act=edit]').addEventListener('click', function () { closePop(); setMode('edit'); if (win) win.postMessage({ type: 'pbx-start-edit', path: d.path }, '*'); });
+    p.querySelector('[data-act=edit]').addEventListener('click', function () { startLocalElement(d); });
     p.querySelector('[data-act=restore-edit]').addEventListener('click', function () {
       if (!win || !win.__PB) { toast('方案页未就绪'); return; }
       win.__PB.resetElement(d.page, d.path); closePop(); feedbackUpdated(); toast('已还原这处文字改动');
@@ -1288,6 +1333,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   /* ---------- 元素意见表单 ---------- */
   function newElId(pageId) { var n = lsGet(ST.ecount, {}); var i = (n[pageId] || 0) + 1; n[pageId] = i; lsSet(ST.ecount, n); return pageId.toUpperCase() + '-E' + i; }
   function openElForm(d, existingId) {
+    cancelOperation();
     var comments = lsGet(ST.comments, {});
     var id = existingId, c = existingId ? comments[existingId] || {} : {};
     var pt = iframePoint(d.cx != null ? d.cx : (d.rect.x + 20), d.cy != null ? d.cy : (d.rect.y + 10));
@@ -1301,8 +1347,9 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       '</select></div></div>' +
       '<label>意见</label><textarea data-f="comment" placeholder="对这个元素希望怎么改…">' + esc(c.comment || '') + '</textarea>' +
       '<label>提出人</label><input data-f="author" value="' + esc(c.author || '') + '" placeholder="姓名/角色">' +
-      '<div class="foot">' + (id ? '<button class="danger" data-x="del">删除</button>' : '') + '<button class="ok" data-x="save">保存</button></div>', pt, 'feedback-detail');
-    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '意见');
+      '<div class="foot">' + (id ? '<button class="danger" data-x="del">删除</button>' : '') + '<button data-x="cancel">取消</button><button class="ok" data-x="save">保存</button></div>', pt, 'feedback-detail');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '添加标注');
+    p.querySelector('[data-x=cancel]').addEventListener('click', closePop);
     p.querySelector('[data-x=close]').addEventListener('click', closePop);
     p.querySelector('[data-x=save]').addEventListener('click', function () {
       var g = function (f) { var n = p.querySelector('[data-f="' + f + '"]'); return n ? n.value.trim() : ''; };
@@ -1313,13 +1360,51 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       cs[rid] = Object.assign({}, cs[rid] || {}, { type: g('type'), priority: g('priority'), comment: g('comment'), author: g('author'), region: d.label || '', page: d.page || 'p00', updatedAt: new Date().toISOString() });
       if (!id || c.path) { cs[rid].path = d.path || ''; cs[rid].origText = (d.text || '').slice(0, 60); }
       lsSet(ST.comments, cs); closePop(); feedbackUpdated();
-      toast('已记录 ' + rid + '(点「发送反馈」交回 Agent)');
+      toast('已记录 ' + rid + '(点「发送」交回 Agent)');
     });
     if (id) p.querySelector('[data-x=del]').addEventListener('click', function () {
       var cs = lsGet(ST.comments, {}); delete cs[id]; lsSet(ST.comments, cs); closePop(); feedbackUpdated(); toast('已删除意见 ' + id);
     });
+    if (win && win.__PB && d.path) win.__PB.highlightTarget(d.page, d.path);
     p.querySelector('[data-f=comment]').focus();
   }
+
+  /* ---------- 按页面找回意见与改动 ---------- */
+  function feedbackPages() {
+    var comments = lsGet(ST.comments, {}), edits = lsGet(ST.edits, {}), moves = lsGet(ST.moves, {}), list = pageList();
+    var ids = list.map(function (p) { return p.id; });
+    Object.keys(comments).forEach(function (id) { var pg = comments[id].page; if (pg && ids.indexOf(pg) < 0) ids.push(pg); });
+    Object.keys(edits).concat(Object.keys(moves)).forEach(function (pg) { if (ids.indexOf(pg) < 0) ids.push(pg); });
+    return ids.map(function (id) {
+      var entry = list.filter(function (p) { return p.id === id; })[0];
+      var cs = Object.keys(comments).map(function (key) { return comments[key]; }).filter(function (c) { return c.page === id; });
+      var ed = edits[id] || [], mv = moves[id] || [];
+      return { id: id, title: entry ? entry.title || id : id, available: !!entry, c: cs.length, t: ed.length, m: mv.length,
+        excerpt: cs.length ? cs[0].comment : (ed.length ? ed[0].to : (mv.length ? mv[0].label || mv[0].path : '')) };
+    }).filter(function (p) { return p.c || p.t || p.m; });
+  }
+  function openFeedbackPages() {
+    cancelOperation();
+    var rows = feedbackPages(), current = currentPage();
+    var p = openPop($('#page-notes'),
+      '<div class="ph"><span id="feedback-pages-title">有标注的页面</span><button class="x" data-x="close" title="关闭" aria-label="关闭">✕</button></div>' +
+      '<div class="sum">' + (rows.length ? '点击页名返回该页，查看原位置的标注。' : '还没有标注或改动。右键页面元素即可添加。') + '</div>' +
+      '<div class="page-list">' + rows.map(function (r) {
+        return '<button class="mi page-entry" data-page="' + esc(r.id) + '"' + (r.available ? '' : ' disabled') + '>' +
+          '<span class="page-heading"><span class="page-name">' + esc(r.title) + '</span>' + (r.id === current ? '<span class="page-current">当前页</span>' : '') + '</span>' +
+          '<span class="page-count">意见 ' + r.c + ' · 文字改动 ' + r.t + ' · 移动 ' + r.m + (r.available ? '' : ' · 页面已不在目录中') + '</span>' +
+          '<span class="page-excerpt">' + esc(r.excerpt) + '</span></button>';
+      }).join('') + '</div>', null, 'feedback-pages');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-labelledby', 'feedback-pages-title');
+    $('#page-notes').setAttribute('aria-expanded', 'true');
+    p.querySelector('[data-x=close]').addEventListener('click', closePop);
+    p.querySelectorAll('[data-page]').forEach(function (button) { button.addEventListener('click', function () {
+      var id = button.getAttribute('data-page');
+      if (id === currentPage()) closePop(); else gotoPage(id);
+    }); });
+    (p.querySelector('[data-page]:not(:disabled)') || p.querySelector('[data-x=close]')).focus();
+  }
+  $('#page-notes').addEventListener('click', function () { if (pop && pop.classList.contains('feedback-pages')) closePop(); else openFeedbackPages(); });
 
   /* ---------- 快速还原 ---------- */
   function feedbackCount(pageId) {
@@ -1332,7 +1417,12 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     var n = feedbackCount();
     $('#count').innerHTML = '意见 <b class="' + (n.c ? 'c-more' : '') + '">' + n.c + '</b> / 改动 <b class="' + (n.e ? 'e-more' : '') + '">' + n.e + '</b>';
     $('#count').setAttribute('aria-label', '管理意见 ' + n.c + ' 条、改动 ' + n.e + ' 处');
-    var bdg = $('#undo-bdg'); bdg.textContent = n.e; bdg.classList.toggle('show', n.e > 0);
+    var pages = feedbackPages().length, pageButton = $('#page-notes');
+    pageButton.classList.toggle('has-feedback', !!pages);
+    pageButton.title = pages ? pages + ' 个页面有标注或改动，点击查找' : '查找有标注的页面';
+    pageButton.setAttribute('aria-label', pageButton.title);
+    $('#undo').disabled = !n.e;
+    $('#send').disabled = submitting || mode !== 'browse' || (!pendingBundle && !n.c && !n.e);
   }
   setInterval(refreshCount, 1200);
   window.addEventListener('storage', function (e) { if (e.key === ST.comments || e.key === ST.edits || e.key === ST.moves || e.key === null) refreshCount(); });
@@ -1377,23 +1467,23 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     });
     p.querySelector('[data-act=cancel-clear]').focus();
   }
-  $('#count').addEventListener('click', function () { openFeedback(); });
+  $('#undo').addEventListener('click', undoLast);
+  $('#count').addEventListener('click', function () { cancelOperation(); openFeedback(); });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { if (mode === 'move' && win && win.__PB) win.__PB.escapeMove(); closePop(); return; }
+    if (e.key === 'Escape') { cancelOperation(); closePop(); return; }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !(e.target.closest && e.target.closest('input,textarea,[contenteditable="true"]'))) {
       e.preventDefault();
       undoLast();
     }
   });
 
-  /* ---------- 协同通知开关 ---------- */
+  /* ---------- 通知开关 ---------- */
   function isNotifyOn() { return lsGet(ST.notify, '1') !== '0'; }
-  function paintNotify() { var b = $('#notify'); if (b) { var on = isNotifyOn(); b.setAttribute('aria-checked', String(on)); b.title = '通知所属会话：' + (on ? '开' : '关'); b.classList.toggle('off', !on); } }
+  function paintNotify() { var b = $('#send-notify'); if (b) b.checked = isNotifyOn(); }
   function toggleNotify() {
     var on = !isNotifyOn(); lsSet(ST.notify, on ? '1' : '0'); paintNotify();
-    toast(on ? '协同通知已开:反馈落盘后自动唤醒绑定的会话' : '协同通知已关:反馈只落盘,需手动让 agent「处理反馈」');
+    toast(on ? '通知已开:反馈落盘后自动唤醒绑定的会话' : '通知已关:反馈只落盘,需手动让 agent「处理反馈」');
   }
-  $('#notify').addEventListener('click', toggleNotify);
   paintNotify();
 
   /* ---------- 发送反馈 ---------- */
@@ -1410,18 +1500,20 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
   }
-  var pendingBundle = null;
+  var pendingBundle = null, submitting = false;
   $('#send').addEventListener('click', function () {
     var btn = $('#send'); var n = feedbackCount();
-    if (!pendingBundle && !n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
+    if (!pendingBundle && !n.c && !n.e) { toast('还没有任何意见或改动:右键元素即可添加标注或修改'); return; }
     var p = openPop(btn,
-      '<div class="ph">发送反馈给 Agent</div>' +
+      '<div class="ph">发送给 Agent</div>' +
       '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.t + '</b> 处 · 元素移动 <b>' + n.m + '</b> 处<br>' +
       '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.AgentHtmlCollabTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
-      '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">确认发送</button></div>');
+      '<label class="send-preference"><input id="send-notify" type="checkbox"' + (isNotifyOn() ? ' checked' : '') + '>发送后通知所属会话</label>' +
+      '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">发送</button></div>');
+    $('#send-notify').addEventListener('change', toggleNotify);
     p.querySelector('[data-x=c]').addEventListener('click', closePop);
     p.querySelector('[data-x=ok]').addEventListener('click', function () {
-      closePop(); btn.disabled = true; btn.textContent = '发送中…';
+      closePop(); submitting = true; btn.disabled = true; btn.textContent = '发送中…';
       if (!pendingBundle) {
         pendingBundle = collectBundle();
         pendingBundle.feedbackId = window.crypto.randomUUID();
@@ -1467,12 +1559,11 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
             downloadText('proto-feedback-' + new Date().toISOString().slice(0, 10) + '.json', text, 'application/json');
           });
         })
-        .finally(function () { setTimeout(function () { btn.disabled = false; btn.textContent = pendingBundle ? '重试上次反馈 ↗' : '发送反馈 ↗'; }, 3000); });
+        .finally(function () { setTimeout(function () { submitting = false; btn.textContent = pendingBundle ? '重试发送' : '发送'; refreshCount(); }, 3000); });
     });
   });
 
   /* ---------- 操作菜单(还原 / 反馈 / 缩放 / 通知) ---------- */
-  function barHidden(sel) { var el = $(sel); return !el || getComputedStyle(el).display === 'none'; }
   function restoreMenu(n) {
     var dis = n.e ? '' : ' dis';
     return '<div class="mtitle">还原</div>' +
@@ -1481,20 +1572,8 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       '<button class="mi' + dis + '" data-act="undo-all">还原全部页面改动</button>';
   }
   $('#more').addEventListener('click', function () {
+    cancelOperation();
     var n = feedbackCount();
-    var extra = '';
-    if (barHidden('#bar .zoom')) {
-      extra += '<div class="mtitle">视图缩放</div>' +
-        '<button class="mi" data-act="zoom-fit">适应宽度</button>' +
-        '<button class="mi" data-act="zoom-1">100%</button>' +
-        '<button class="mi" data-act="zoom-075">75%</button>' +
-        '<button class="mi" data-act="zoom-05">50%</button>' +
-        '<button class="mi" data-act="zoom-in">放大 +</button>' +
-        '<button class="mi" data-act="zoom-out">缩小 −</button>';
-    }
-    if (barHidden('#notify')) {
-      extra += '<button class="mi" data-act="notify-toggle" role="switch" aria-label="通知所属会话" aria-checked="' + isNotifyOn() + '" title="通知所属会话">' + (isNotifyOn() ? '开' : '关') + '</button>';
-    }
     var p = openPop($('#more'),
       '<div class="ph">操作</div>' +
       '<button class="mi" data-act="feedback-review">管理意见 / 改动</button>' +
@@ -1502,8 +1581,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       '<div class="mtitle">反馈</div>' +
       '<button class="mi" data-act="export-json">导出反馈包(JSON)</button>' +
       '<button class="mi" data-act="import">导入反馈包</button>' +
-      (CFG.tools && CFG.tools.anno ? '<button class="mi" data-act="anno-export">修改清单(MD/JSON/CSV)</button><button class="mi" data-act="anno-clear">清空本页区域意见</button>' : '') +
-      extra);
+      (CFG.tools && CFG.tools.anno ? '<button class="mi" data-act="anno-export">修改清单(MD/JSON/CSV)</button><button class="mi" data-act="anno-clear">清空本页区域意见</button>' : ''));
     p.addEventListener('click', function (e2) {
       if (e2.target.classList && e2.target.classList.contains('dis')) return;
       var a = e2.target.getAttribute && e2.target.getAttribute('data-act');
@@ -1512,16 +1590,9 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
       if (a === 'feedback-review') openFeedback();
       if (a === 'export-json') { downloadText('proto-feedback-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(collectBundle(), null, 2), 'application/json'); toast('反馈包已下载'); }
       if (a === 'import') fileInput.click();
-      if (a === 'notify-toggle') toggleNotify();
       if (a === 'anno-export' || a === 'anno-clear') {
         try { var b = doc.querySelector('.pb-anno-fab [data-x=' + (a === 'anno-export' ? 'export' : 'clear') + ']'); if (b) b.click(); else toast('标注组件未就绪'); } catch (e) { toast('需要本地服务(标注组件未注入)'); }
       }
-      if (a === 'zoom-fit') setZoom('fit');
-      if (a === 'zoom-1') setZoom('1');
-      if (a === 'zoom-075') setZoom('0.75');
-      if (a === 'zoom-05') setZoom('0.5');
-      if (a === 'zoom-in') stepZoom(1.1);
-      if (a === 'zoom-out') stepZoom(1 / 1.1);
       if (a.indexOf('undo-') === 0) {
         if (!win || !win.__PB) { toast('方案页未就绪'); return; }
         try {
@@ -1620,7 +1691,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
     });
     snapshot.querySelectorAll((CFG.ui.whitelist || []).join(',') + ',script,[data-pbx-runtime],#pb-badge-layer,#pbx-chip-layer,base,meta[http-equiv="refresh"]').forEach(function (n) { n.remove(); });
     snapshot.querySelectorAll('*').forEach(function (n) {
-      ['pbx-edit', 'pbx-anno', 'pbx-move', 'pbx-moving', 'pbx-move-selected', 'pbx-panning', 'pbx-hover', 'pbx-editing', 'pbx-edited', 'pb-anno-on'].forEach(function (name) { n.classList.remove(name); });
+      ['pbx-anno', 'pbx-move', 'pbx-pick', 'pbx-context-selected', 'pbx-moving', 'pbx-move-selected', 'pbx-panning', 'pbx-hover', 'pbx-editing', 'pbx-edited', 'pb-anno-on'].forEach(function (name) { n.classList.remove(name); });
       n.removeAttribute('autofocus');
       Array.prototype.slice.call(n.attributes).forEach(function (attr) { if (/^on/i.test(attr.name)) n.removeAttribute(attr.name); });
     });
@@ -1679,7 +1750,7 @@ body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: n
   });
 
   /* ---------- 启动 ---------- */
-  mode = qs.get('anno') === '1' ? 'anno' : (lsGet(ST.mode, 'browse'));
+  mode = 'browse';
   paintMode(); applyZoom();
 })();
 </script>
