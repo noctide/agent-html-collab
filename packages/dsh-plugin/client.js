@@ -8,8 +8,8 @@ window.__ModuleLoader__.load({
     const icon = () => h('svg', { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, 'aria-hidden': true }, h('rect', { x: 3, y: 4, width: 18, height: 16, rx: 3 }), h('path', { d: 'M3 9h18M9 9v11' }));
     function Action({ onClick, children }) { return h('button', { type: 'button', style: buttonStyle, onClick, onMouseEnter: e => { e.currentTarget.style.background = 'var(--dsw-alias-bg-l2, #f2f4f7)'; }, onMouseLeave: e => { e.currentTarget.style.background = buttonStyle.background; } }, children); }
     const copy = {
-      zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开原型协同。', description: '编辑原型并将反馈发送给所属对话' },
-      en: { title: 'Agent HTML Collab', open: 'Open Agent HTML Collab', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open Agent HTML Collab.', description: 'Edit prototypes and send feedback to this conversation' },
+      zh: { title: '原型协同', open: '打开原型协同', opening: '正在打开原型…', retry: '重试', select: '请先打开已有对话，或发送第一条消息创建对话，再打开原型协同。', description: '编辑文字、移动元素、标注原型并将反馈发送给所属对话' },
+      en: { title: 'Agent HTML Collab', open: 'Open Agent HTML Collab', opening: 'Opening prototype…', retry: 'Retry', select: 'Open an existing conversation, or send the first message to create one, then open Agent HTML Collab.', description: 'Edit text, move elements, annotate prototypes, and send feedback to this conversation' },
     };
     const request = (url, body) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })
       .then(r => r.json().then(j => { if (!r.ok) throw new Error(j.error || String(r.status)); return j; }));
@@ -23,7 +23,7 @@ window.__ModuleLoader__.load({
         setError(null); setPage(null);
         request('/agent-html-collab/open', { sessionId: ownerSessionId, pageId: tab.id }).then(async value => {
           opened = value;
-          if (value.runtimeRevision !== 'notify-signal-v1') throw new Error('客户端主进程仍在运行旧版插件，请从“应用”菜单完整退出 DeepSeek Harness 后重新打开。仅关闭窗口或刷新页面不会更新 Host。');
+          if (value.runtimeRevision !== 'project-storage-v1') throw new Error('客户端主进程仍在运行旧版插件，请从“应用”菜单完整退出 DeepSeek Harness 后重新打开。仅关闭窗口或刷新页面不会更新 Host。');
           if (disposed) request(value.url.replace(/\/studio$/, '/close'), {}).catch(() => {});
           else {
             const response = await fetch(value.url);

@@ -124,7 +124,7 @@ try {
   /* ---------- 协同通知开关 ---------- */
   t((await page.$('#notify')) !== null, '通知:开关按钮就位');
   await page.click('#notify'); await sleep(80);
-  t(await page.evaluate(() => localStorage.getItem('proto.notify') === '"0"' && document.getElementById('notify').getAttribute('aria-checked') === 'false' && document.getElementById('notify').classList.contains('off') && document.getElementById('notify').textContent === ''), '通知:关闭并保存状态，开关不显示重复文案');
+  t(await page.evaluate(() => localStorage.getItem(window.PROTO_CONFIG.storage.notify) === '"0"' && document.getElementById('notify').getAttribute('aria-checked') === 'false' && document.getElementById('notify').classList.contains('off') && document.getElementById('notify').textContent === ''), '通知:关闭并保存状态，开关不显示重复文案');
   await page.click('#notify'); await sleep(80);
   t(await page.evaluate(() => document.getElementById('notify').getAttribute('aria-checked') === 'true' && !document.getElementById('notify').classList.contains('off')), '通知:再点恢复开');
 
@@ -137,7 +137,7 @@ try {
   await frame.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
   await sleep(250);
   t((await err('#demo-title')).includes('改版'), '编辑:就地改字生效', await err('#demo-title'));
-  t(await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem('proto.edits') || '{}')).reduce((a, b) => a + b.length, 0)) >= 1, '编辑:改动入库');
+  t(await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.edits) || '{}')).reduce((a, b) => a + b.length, 0)) >= 1, '编辑:改动入库');
 
   // Esc 还原:不落库
   await setMode('edit');
@@ -169,7 +169,7 @@ try {
   await page.type('.pop [data-f=author]', '验收员');
   await page.click('.pop [data-x=save]');
   await sleep(300);
-  t(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('proto.anno.comments') || '{}')).length) >= 1, '标注:元素意见入库');
+  t(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.comments) || '{}')).length) >= 1, '标注:元素意见入库');
   t(await frame.evaluate(() => document.querySelectorAll('.pbx-echip').length) >= 1, '标注:iframe 内意见徽章');
 
   /* ---------- 右键协作菜单 + 还原此元素 ---------- */
@@ -230,7 +230,7 @@ try {
   await page.select('#zoom-sel', '0.5'); await sleep(200);
   const tr = await page.$eval('#proto', el => el.style.transform);
   t(tr === 'scale(0.5)' && await page.$eval('#mmap .vp', el => !!el.style.width), '视图:缩放 50% + 小地图视口框', tr);
-  const mmVar = await page.evaluate(() => { const c = document.querySelector('#mmap-thumb .pg-sec'); return c ? getComputedStyle(c).getPropertyValue('--blue') : ''; });
+  const mmVar = await page.evaluate(() => { const f = document.querySelector('#mmap-thumb iframe[data-minimap]'), c = f?.contentDocument?.querySelector('.pg-sec'); return c ? f.contentWindow.getComputedStyle(c).getPropertyValue('--blue') : ''; });
   t(!!mmVar.trim(), '视图:小地图缩略图样式生效', mmVar);
 
   /* ---------- 滚轮转发 + 原生滚动 + 小地图定位 ---------- */

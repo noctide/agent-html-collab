@@ -12,7 +12,8 @@ export function createPageBridge({ owner, saveFeedback, enqueue, maxFeedback = 1
   async function submitFeedback(input) {
     if (!active) throw new Error('页面绑定已失效，请重新打开页面');
     const bundle = JSON.parse(JSON.stringify(input));
-    if (!bundle || !Array.isArray(bundle.comments) || !Array.isArray(bundle.edits)) throw new Error('反馈结构不符');
+    if (!bundle || !Array.isArray(bundle.comments) || !Array.isArray(bundle.edits) ||
+        (bundle.moves !== undefined && !Array.isArray(bundle.moves))) throw new Error('反馈结构不符');
     if (typeof bundle.feedbackId !== 'string' || !/^[a-zA-Z0-9_-]{8,100}$/.test(bundle.feedbackId)) throw new Error('反馈 ID 不合法');
     delete bundle.sessionId;
     delete bundle.sessionID;
@@ -37,7 +38,7 @@ export function createPageBridge({ owner, saveFeedback, enqueue, maxFeedback = 1
         try {
           await enqueue({ sessionId: binding.sessionId, projectRoot: binding.projectRoot,
             feedbackId: record.bundle.feedbackId, file: record.file,
-            text: `Agent HTML Collab:新反馈包，请按项目约定读取并处理。\n包路径:${record.file}` });
+            text: `Agent HTML Collab:新反馈包，请按项目约定读取并处理。\n意见 ${record.bundle.comments.length} 条 / 改字 ${record.bundle.edits.length} 处 / 元素移动 ${(record.bundle.moves || []).length} 处。\n包路径:${record.file}` });
           record.delivery = 'queued';
         } catch (error) {
           record.delivery = 'failed';

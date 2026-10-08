@@ -21,7 +21,7 @@
   function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
 
-  /* 当前页 id:优先活动容器,回退 body 属性(单文件方案稿必须这样取) */
+  /* 当前页 id:与工具桥接使用一致的单文档/多文件/活动容器约定 */
   function activeRoots() {
     var list = document.querySelectorAll(CONTAINER);
     if (list.length <= 1) return null;               /* 单页文档:全文档即一页 */
@@ -29,9 +29,16 @@
     return act ? [act] : [];
   }
   function pageId() {
-    var act = document.querySelector(CONTAINER + '.' + ACTIVE);
+    if (PC.singlePerFile) {
+      var list = PC.list || [], path = location.pathname;
+      try { path = decodeURIComponent(path); } catch (e) {}
+      for (var i = 0; i < list.length; i++) if (list[i].file && path.indexOf(list[i].file) >= 0) return list[i].id;
+      return PC.defaultId || '';
+    }
+    var act = document.querySelector(PC.single ? CONTAINER : CONTAINER + '.' + ACTIVE);
     if (act && act.getAttribute(IDATTR)) return act.getAttribute(IDATTR);
-    return document.body.getAttribute(IDATTR) || '';
+    var id = document.body.getAttribute(IDATTR);
+    return (id && id !== 'allinone') ? id : (PC.single ? PC.defaultId || '' : '');
   }
   function TLQ(sel) {
     var roots = activeRoots();
@@ -138,6 +145,7 @@
       if (act === 'save') {
         var get = function (f) { var n = popEl.querySelector('[data-f="' + f + '"]'); return n ? n.value.trim() : ''; };
         var node = document.querySelector('[data-anno="' + id + '"]');
+        comments = lsGet(LS_COMMENTS, {});
         comments[id] = {
           region: node ? (node.getAttribute('data-anno-label') || '') : '',
           type: get('type'), priority: get('priority'), comment: get('comment'), author: get('author'),
@@ -145,7 +153,7 @@
         };
         lsSet(LS_COMMENTS, comments); closePop(); positionBadges(); notify();
       }
-      if (act === 'del') { delete comments[id]; lsSet(LS_COMMENTS, comments); closePop(); positionBadges(); notify(); }
+      if (act === 'del') { comments = lsGet(LS_COMMENTS, {}); delete comments[id]; lsSet(LS_COMMENTS, comments); closePop(); positionBadges(); notify(); }
     });
     document.addEventListener('click', onDocClick, true);
   }
@@ -274,8 +282,12 @@
   window.addEventListener('message', function (e) {
     var d = e.data || {};
     if (d.type === 'pb-anno-set') setMode(!!d.on);
-    if (d.type === 'pb-anno-refresh') { comments = lsGet(LS_COMMENTS, {}); closePop(); positionBadges(); }
+    if (d.type === 'pb-anno-refresh' || d.type === 'pbx-anno-updated') { comments = lsGet(LS_COMMENTS, {}); closePop(); positionBadges(); }
     if (d.type === 'pbx-page') { comments = lsGet(LS_COMMENTS, {}); positionBadges(); }
+  });
+  window.addEventListener('storage', function (e) {
+    if (e.key !== LS_COMMENTS && e.key !== null) return;
+    comments = lsGet(LS_COMMENTS, {}); closePop(); positionBadges();
   });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'a' && !/input|textarea|select/i.test(e.target.tagName) && !e.metaKey && !e.ctrlKey && !e.altKey) setMode(!mode);

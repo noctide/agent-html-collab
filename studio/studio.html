@@ -29,7 +29,7 @@
   #bar .brand .logo { width: 24px; height: 24px; border-radius: 6px; background: var(--pb-ink); color: var(--pb-paper); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex: none; }
   #bar .brand #brand-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #bar .brand .caret { font-size: 10px; color: var(--pb-gray); flex: none; }
-  @media (prefers-reduced-motion: reduce) { .pop, #toast.show { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { :is(.pop, #move-panel), #toast.show { animation: none; } }
   #bar .sep { width: 1px; height: 20px; background: var(--pb-line); flex: none; }
   #bar button, #bar select { font: inherit; font-size: 12.5px; border: 1px solid transparent; background: transparent; color: var(--pb-gray); border-radius: 6px; padding: 6px 11px; cursor: pointer; line-height: 1.3; white-space: nowrap; transition: background .15s, color .15s, border-color .15s; }
   #bar button:hover, #bar select:hover { background: var(--pb-chip); color: var(--pb-ink); }
@@ -60,9 +60,7 @@
   #bar > * { flex-shrink: 0; }
 
   /* 窄侧栏使用两行工具栏，保留页面选择和缩放入口。 */
-  @media (max-width: 1180px) { #bar .brand { max-width: 170px; } }
-  @media (max-width: 980px) { #bar .count { display: none; } }
-  @media (max-width: 840px) {
+  @media (max-width: 1180px) {
     #bar { flex-wrap: wrap; height: auto; gap: 4px; padding: 8px 10px; }
     #bar .brand { max-width: 150px; }
     #bar .sep, #bar .spacer, #notify { display: none; }
@@ -91,36 +89,54 @@
   #mmap.fold .mbody { display: none; }
   #mmap.fold { width: auto; }
 
-  .pop { position: fixed; z-index: 100; background: var(--pb-panel); color: var(--pb-ink); border: 1px solid var(--pb-line); border-radius: 6px; box-shadow: 0 12px 32px rgba(32,33,31,.14); padding: 12px; min-width: 250px; animation: pop-in .14s ease; font-size: 12.5px; }
+  :is(.pop, #move-panel) { position: fixed; z-index: 100; background: var(--pb-panel); color: var(--pb-ink); border: 1px solid var(--pb-line); border-radius: 6px; box-shadow: 0 12px 32px rgba(32,33,31,.14); padding: 12px; min-width: 250px; animation: pop-in .14s ease; font-size: 12.5px; }
   @keyframes pop-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
-  .pop .ph { font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--pb-ink); }
-  .pop .ph .x { border: 0; background: none; cursor: pointer; color: var(--pb-gray); font-size: 14px; padding: 0 2px; }
-  .pop .ph .x:hover { color: var(--pb-ink); }
-  .pop .elinfo { font-size: 12px; color: var(--pb-gray); background: #efede8; border: 1px solid var(--pb-line); border-radius: 6px; padding: 7px 9px; margin-bottom: 8px; line-height: 1.5; word-break: break-all; }
-  .pop .elinfo code { font-family: Consolas, monospace; font-size: 11px; color: var(--pb-teal); }
-  .pop label { display: block; font-size: 11.5px; color: var(--pb-gray); margin: 7px 0 3px; }
-  .pop select, .pop textarea, .pop input { width: 100%; font: inherit; font-size: 12.5px; border: 1px solid var(--pb-line); border-radius: 6px; padding: 6px 8px; background: #fff; color: var(--pb-ink); }
-  .pop select:focus, .pop textarea:focus, .pop input:focus { outline: none; border-color: var(--pb-teal); box-shadow: 0 0 0 3px rgba(39,104,95,.15); }
-  .pop textarea { min-height: 62px; resize: vertical; }
-  .pop .row2 { display: flex; gap: 8px; }
-  .pop .row2 > div { flex: 1; }
-  .pop .pmeta { display: flex; gap: 8px; align-items: baseline; margin: 2px 0 4px; }
-  .pop .pmeta .k { flex: none; font-size: 11px; color: var(--pb-gray); }
-  .pop .pmeta .path { font-family: Consolas, monospace; font-size: 11.5px; color: var(--pb-ink); word-break: break-all; }
-  .pop .mtitle { font-size: 11px; color: var(--pb-gray); margin: 10px 0 2px; }
-  .pop .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 11px; }
-  .pop .foot button { font: inherit; font-size: 12px; border-radius: 6px; padding: 6px 13px; cursor: pointer; border: 1px solid var(--pb-line); background: #fff; color: var(--pb-ink); }
-  .pop .foot button:hover { background: var(--pb-chip); }
-  .pop .foot .ok { background: var(--pb-teal); border-color: var(--pb-teal); color: #fff; font-weight: 600; }
-  .pop .foot .ok:hover { background: #1f554e; border-color: #1f554e; }
-  .pop .foot .danger { color: var(--pb-danger); border-color: #e2c9c4; background: #fbf3f1; }
-  .pop .sum { color: var(--pb-gray); line-height: 1.6; margin-bottom: 10px; }
-  .pop .sum b { color: var(--pb-ink); }
-  .pop .sum span { font-size: 11.5px; color: var(--pb-gray); }
-  .pop .mi { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 6px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--pb-ink); }
-  .pop .mi:hover { background: var(--pb-chip); }
-  .pop .mi.dis { color: #a9a79f; cursor: default; }
-  .pop .mi.dis:hover { background: none; }
+  :is(.pop, #move-panel) .ph { font-weight: 700; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--pb-ink); }
+  :is(.pop, #move-panel) .ph .x { border: 0; background: none; cursor: pointer; color: var(--pb-gray); font-size: 14px; padding: 0 2px; }
+  :is(.pop, #move-panel) .ph .x:hover { color: var(--pb-ink); }
+  :is(.pop, #move-panel) .elinfo { font-size: 12px; color: var(--pb-gray); background: #efede8; border: 1px solid var(--pb-line); border-radius: 6px; padding: 7px 9px; margin-bottom: 8px; line-height: 1.5; word-break: break-all; }
+  :is(.pop, #move-panel) .elinfo code { font-family: Consolas, monospace; font-size: 11px; color: var(--pb-teal); }
+  :is(.pop, #move-panel) label { display: block; font-size: 11.5px; color: var(--pb-gray); margin: 7px 0 3px; }
+  :is(.pop, #move-panel) select, :is(.pop, #move-panel) textarea, :is(.pop, #move-panel) input { width: 100%; font: inherit; font-size: 12.5px; border: 1px solid var(--pb-line); border-radius: 6px; padding: 6px 8px; background: #fff; color: var(--pb-ink); }
+  :is(.pop, #move-panel) select:focus, :is(.pop, #move-panel) textarea:focus, :is(.pop, #move-panel) input:focus { outline: none; border-color: var(--pb-teal); box-shadow: 0 0 0 3px rgba(39,104,95,.15); }
+  :is(.pop, #move-panel) textarea { min-height: 62px; resize: vertical; }
+  :is(.pop, #move-panel) .row2 { display: flex; gap: 8px; }
+  :is(.pop, #move-panel) .row2 > div { flex: 1; }
+  :is(.pop, #move-panel) .pmeta { display: flex; gap: 8px; align-items: baseline; margin: 2px 0 4px; }
+  :is(.pop, #move-panel) .pmeta .k { flex: none; font-size: 11px; color: var(--pb-gray); }
+  :is(.pop, #move-panel) .pmeta .path { font-family: Consolas, monospace; font-size: 11.5px; color: var(--pb-ink); word-break: break-all; }
+  :is(.pop, #move-panel) .mtitle { font-size: 11px; color: var(--pb-gray); margin: 10px 0 2px; }
+  :is(.pop, #move-panel) .foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 11px; }
+  :is(.pop, #move-panel) .foot button { font: inherit; font-size: 12px; border-radius: 6px; padding: 6px 13px; cursor: pointer; border: 1px solid var(--pb-line); background: #fff; color: var(--pb-ink); }
+  :is(.pop, #move-panel) .foot button:hover { background: var(--pb-chip); }
+  :is(.pop, #move-panel) .foot button:disabled { opacity: .5; cursor: default; }
+  :is(.pop, #move-panel) .foot .ok { background: var(--pb-teal); border-color: var(--pb-teal); color: #fff; font-weight: 600; }
+  :is(.pop, #move-panel) .foot .ok:hover { background: #1f554e; border-color: #1f554e; }
+  :is(.pop, #move-panel) .foot .danger { color: var(--pb-danger); border-color: #e2c9c4; background: #fbf3f1; }
+  :is(.pop, #move-panel) .sum { color: var(--pb-gray); line-height: 1.6; margin-bottom: 10px; }
+  :is(.pop, #move-panel) .sum b { color: var(--pb-ink); }
+  :is(.pop, #move-panel) .sum span { font-size: 11.5px; color: var(--pb-gray); }
+  :is(.pop, #move-panel) .mi { display: block; width: 100%; text-align: left; border: 0; background: none; padding: 8px 10px; border-radius: 6px; font: inherit; font-size: 12.5px; cursor: pointer; color: var(--pb-ink); }
+  :is(.pop, #move-panel) .mi:hover { background: var(--pb-chip); }
+  :is(.pop, #move-panel) .mi.dis { color: #a9a79f; cursor: default; }
+  :is(.pop, #move-panel) .mi.dis:hover { background: none; }
+  :is(.pop, #move-panel) button:focus-visible { outline: 2px solid var(--pb-teal); outline-offset: 2px; }
+  .feedback-manager, .feedback-detail { min-width: 0; max-height: calc(100vh - 24px); overflow-y: auto; }
+  .feedback-manager { width: min(360px, calc(100vw - 24px)); }
+  .feedback-detail { width: min(420px, calc(100vw - 24px)); }
+  .feedback-manager .foot { flex-wrap: wrap; }
+  .review-diff { display: grid; grid-template-columns: 42px minmax(0, 1fr); gap: 6px; margin: 8px 0; overflow-wrap: anywhere; }
+  .review-diff span { color: var(--pb-gray); }
+  .review-diff del { color: var(--pb-danger); text-decoration: none; white-space: pre-wrap; }
+  .review-diff ins { color: var(--pb-teal); text-decoration: none; white-space: pre-wrap; }
+  #move-panel { position: fixed; top: 108px; right: 16px; z-index: 95; width: min(300px, calc(100vw - 24px)); overflow-y: auto; }
+  #move-panel[hidden] { display: none; }
+  #move-panel .elinfo { max-height: 76px; overflow: auto; }
+  #move-panel .move-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  #move-panel .move-actions button { font: inherit; padding: 5px 9px; border: 1px solid var(--pb-line); border-radius: 6px; background: #fff; color: var(--pb-ink); cursor: pointer; }
+  #move-panel .move-nudge { display: flex; justify-content: center; gap: 6px; margin-top: 10px; }
+  #move-panel .move-nudge button { width: 44px; height: 44px; border: 1px solid var(--pb-line); border-radius: 6px; background: #fff; color: var(--pb-ink); font-size: 18px; cursor: pointer; }
+  #move-panel .move-nudge button:hover { background: var(--pb-chip); }
 
   #toast { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 200; background: var(--pb-panel); color: var(--pb-ink); font-size: 12.5px; line-height: 1.6; padding: 9px 16px; border-radius: 6px; border: 1px solid var(--pb-line); max-width: 640px; box-shadow: 0 12px 30px rgba(32,33,31,.16); display: none; pointer-events: none; }
   #toast.show { display: block; animation: pop-in .18s ease; }
@@ -138,6 +154,7 @@
   <div class="seg" title="原型模式">
     <button data-x="m-browse" class="on">浏览</button>
     <button data-x="m-edit" title="快捷键 E:就地改文字">编辑</button>
+    <button data-x="m-move" title="快捷键 M:拖动元素或输入偏移量">移动</button>
     <button data-x="m-anno" title="快捷键 A:任意元素提意见(含区域编号)">标注</button>
   </div>
   <span class="sep"></span>
@@ -154,7 +171,7 @@
     <button id="zoom-in" title="放大">＋</button>
   </div>
   <span class="sep"></span>
-  <span class="count" id="count"></span>
+  <button class="count" id="count" title="查看和管理意见 / 改动" aria-haspopup="dialog"></button>
   <button id="notify" role="switch" aria-label="通知所属会话" aria-checked="true" title="通知所属会话：开"></button>
   <button class="send" id="send">发送反馈 ↗</button>
   <button id="more" title="操作:还原 / 导出导入 / 缩放">⋯<span class="bdg" id="undo-bdg"></span></button>
@@ -171,18 +188,36 @@
 </div>
 
 <div id="toast"></div>
-<style id="mm-styles"></style>
+<section id="move-panel" aria-label="移动元素" hidden>
+  <div class="ph"><span>移动元素</span><button class="x" id="move-close" title="取消选择" aria-label="取消选择">✕</button></div>
+  <div class="elinfo" id="move-target"></div>
+  <form id="move-form">
+    <div class="row2"><div><label for="move-x">水平偏移 X（px）</label><input id="move-x" type="number" step="any" required value="0"></div><div><label for="move-y">垂直偏移 Y（px）</label><input id="move-y" type="number" step="any" required value="0"></div></div>
+    <div class="move-nudge" role="group" aria-label="微调位置"><button type="button" data-move-key="ArrowLeft" aria-label="向左移动 1 像素" title="向左 1px，Shift 点击 10px">←</button><button type="button" data-move-key="ArrowUp" aria-label="向上移动 1 像素" title="向上 1px，Shift 点击 10px">↑</button><button type="button" data-move-key="ArrowDown" aria-label="向下移动 1 像素" title="向下 1px，Shift 点击 10px">↓</button><button type="button" data-move-key="ArrowRight" aria-label="向右移动 1 像素" title="向右 1px，Shift 点击 10px">→</button></div>
+    <div class="move-actions"><button type="button" id="move-parent">选择父元素</button><button type="button" id="move-reset">还原位置</button></div>
+    <div class="sum" style="margin-top:8px">方向键或箭头按钮微调 1px，按住 Shift 微调 10px。Shift 拖动锁定水平/垂直方向，Alt 点击选择容器内的子元素。偏移量相对原位置；发送反馈后由 Agent 调整布局源码。</div>
+    <div class="foot"><button class="ok" id="move-apply" type="submit">应用偏移</button></div>
+  </form>
+</section>
 
 <!-- 注入 iframe 的样式 -->
 <style type="text/plain" id="bridge-css">
 .pb-anno-fab { display: none !important; }
 body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select: none !important; }
+body.pbx-move * { cursor: grab !important; }
+body.pbx-move { touch-action: none; }
+body.pbx-moving, body.pbx-moving * { cursor: grabbing !important; user-select: none !important; }
+.pbx-move-selected { outline: 2px solid #95603a !important; outline-offset: 2px; }
 .pbx-hover { outline: 2px solid #27685f !important; outline-offset: -1px; cursor: crosshair !important; }
 .pbx-editing { outline: 2px solid #27685f !important; outline-offset: 1px; background: rgba(39,104,95,.07); }
 .pbx-edited { text-decoration: underline dotted #95603a; text-underline-offset: 3px; }
 #pbx-chip-layer { position: absolute; top: 0; left: 0; width: 100%; height: 0; z-index: 8990; pointer-events: none; }
-.pbx-echip { position: absolute; pointer-events: auto; cursor: pointer; background: #27685f; color: #fff; font-size: 11px; font-weight: 700; line-height: 1; padding: 4px 7px; border-radius: 6px; border: 1.5px solid #fff; box-shadow: 0 2px 6px rgba(32,33,31,.28); }
+.pbx-marker-group { position: absolute; display: flex; gap: 4px; flex-wrap: wrap; max-width: 100%; }
+.pbx-echip, .pbx-edit-chip, .pbx-move-chip { pointer-events: auto; cursor: pointer; background: #27685f; color: #fff; font: 600 11px/1.2 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; padding: 4px 7px; border-radius: 6px; border: 1.5px solid #fff; box-shadow: 0 2px 6px rgba(32,33,31,.28); white-space: nowrap; }
 .pbx-echip:hover { background: #1f554e; }
+.pbx-edit-chip, .pbx-move-chip { background: #95603a; }
+.pbx-edit-chip:hover, .pbx-move-chip:hover { background: #77492b; }
+.pbx-echip:focus-visible, .pbx-edit-chip:focus-visible, .pbx-move-chip:focus-visible { outline: 2px solid #20211f; outline-offset: 2px; }
 </style>
 
 <!-- 注入 iframe 的桥接脚本(配置来自 window.PROTOBRIDGE_CFG) -->
@@ -206,9 +241,10 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   var PAGESEL = (!WHOLE && ACTIVE) ? (CONTAINER + '.' + ACTIVE) : CONTAINER;
   var ST = CFG.storage || {};
   var EKEY = ST.edits || 'proto.edits';
+  var MKEY = ST.moves || EKEY + '.moves';
   var CKEY = ST.comments || 'proto.anno.comments';
   var NKEY = ST.ecount || 'proto.anno.ecount';
-  var WL = (CFG.ui && CFG.ui.whitelist) || ['.pb-badge', '.pb-pop', '.pb-anno-fab', '.pbx-echip'];
+  var WL = ((CFG.ui && CFG.ui.whitelist) || ['.pb-badge', '.pb-pop', '.pb-anno-fab']).concat(['.pbx-echip', '.pbx-edit-chip', '.pbx-move-chip']);
   var mode = 'browse';
 
   function lsGet(k, d) { try { var v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
@@ -219,7 +255,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   function typing(t) { return !!(t.closest && t.closest('input,textarea,select,[contenteditable="true"]')); }
   function activeSec() { return document.querySelector(PAGESEL); }
   function pageRoot(id) {
-    if (WHOLE) return document.querySelector(CONTAINER);
+    if (WHOLE) return !id || id === curPage() ? document.querySelector(CONTAINER) : null;
     if (!id) return null;
     var byAttr = null;
     try { byAttr = document.querySelector('[' + IDATTR + '="' + String(id).replace(/"/g, '\\"') + '"]'); } catch (e) {}
@@ -242,15 +278,20 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   function isAuto() { return SWITCH === 'auto'; }
 
   function setMode(m) {
+    if (editing) finishEdit(true);
+    if (moveDrag) finishMoveDrag(false);
+    if (m !== 'move') clearMoveSelection();
     mode = m;
     document.body.classList.toggle('pbx-edit', m === 'edit');
     document.body.classList.toggle('pbx-anno', m === 'anno');
+    document.body.classList.toggle('pbx-move', m === 'move');
     positionChips();
     if (hoverEl) { hoverEl.classList.remove('pbx-hover'); hoverEl = null; }
   }
 
   /* ---------- 页面切换(内核默认切换器,switch=auto) ---------- */
   function showPage(id) {
+    clearMoveSelection();
     if (SINGLE) { var pid = id || curPage(); applyEdits(pid); positionChips(); post('pbx-page', { page: pid }); return true; }
     var secs = document.querySelectorAll(CONTAINER);
     var found = null;
@@ -287,12 +328,13 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     });
     return el;
   }
-  function findEl(pageId, rec) {
+  function findEl(pageId, rec, expectedText) {
     var s = pageRoot(pageId); if (!s) return null;
     var el = queryPath(s, rec.path);
-    if (el && textOf(el) === rec.from) return el;
+    if (el && (textOf(el) === rec.from || textOf(el) === rec.to)) return el;
     var all = s.querySelectorAll('*');
-    for (var i = 0; i < all.length; i++) if (textOf(all[i]) === rec.from) return all[i];
+    var expected = expectedText == null ? rec.from : expectedText;
+    for (var i = 0; i < all.length; i++) if (textOf(all[i]) === expected) return all[i];
     return el || null;
   }
   function setTextOnly(el, text) {
@@ -302,61 +344,248 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     }
     if (!done) el.insertBefore(document.createTextNode(text), el.firstChild);
   }
+  function pageEdits(pageId) {
+    var edits = [];
+    (lsGet(EKEY, {})[pageId] || []).forEach(function (rec) {
+      var hit = edits.filter(function (r) { return r.path === rec.path; })[0];
+      if (hit) { hit.to = rec.to; hit.ts = rec.ts; } else edits.push(Object.assign({}, rec));
+    });
+    return edits;
+  }
   function applyEdits(pageId) {
-    (lsGet(EKEY, {})[pageId] || []).forEach(function (r) {
+    pageEdits(pageId).forEach(function (r) {
       var el = findEl(pageId, r);
       if (el) { setTextOnly(el, r.to); el.classList.add('pbx-edited'); }
     });
+    applyMoves(pageId);
   }
   function saveEdit(pageId, el, from, to) {
     var all = lsGet(EKEY, {}); var recs = all[pageId] = all[pageId] || [];
     var path = buildPath(el), hit = null;
-    recs.forEach(function (r) { if (r.path === path) hit = r; });
-    if (hit) { hit.from = from; hit.to = to; hit.ts = new Date().toISOString(); }
+    recs.some(function (r) { if (r.path === path) { hit = r; return true; } return false; });
+    if (hit) { hit.to = to; hit.ts = new Date().toISOString(); }
     else recs.push({ path: path, from: from, to: to, ts: new Date().toISOString() });
-    lsSet(EKEY, all); el.classList.add('pbx-edited');
+    all[pageId] = recs.filter(function (r) { return r.from !== r.to && (r.path !== path || r === hit || !hit); });
+    if (!all[pageId].length) delete all[pageId];
+    lsSet(EKEY, all); el.classList.toggle('pbx-edited', !!(all[pageId] || []).some(function (r) { return r.path === path; })); positionChips();
   }
   function revertRec(pageId, rec) {
-    var el = findEl(pageId, rec); if (!el) return false;
+    var el = findEl(pageId, rec, rec.to); if (!el) return false;
     if (textOf(el) === rec.to) setTextOnly(el, rec.from);
     el.classList.remove('pbx-edited');
     return true;
   }
   function resetPage() {
     var pageId = curPage(); var all = lsGet(EKEY, {}); var recs = all[pageId] || [];
-    recs.forEach(function (r) { revertRec(pageId, r); });
-    delete all[pageId]; lsSet(EKEY, all);
-    return recs.length;
+    recs.slice().reverse().forEach(function (r) { revertRec(pageId, r); });
+    delete all[pageId]; lsSet(EKEY, all); positionChips();
+    return recs.length + resetMoves(pageId);
   }
   function resetAll() {
     var all = lsGet(EKEY, {}), n = 0;
-    Object.keys(all).forEach(function (pg) { (all[pg] || []).forEach(function (r) { if (revertRec(pg, r)) n++; }); });
-    lsSet(EKEY, {}); return n;
+    Object.keys(all).forEach(function (pg) { (all[pg] || []).slice().reverse().forEach(function (r) { revertRec(pg, r); n++; }); });
+    lsSet(EKEY, {}); positionChips(); return n + resetMoves();
   }
   function undoLast() {
+    if (moveDrag) finishMoveDrag(false);
     var all = lsGet(EKEY, {}), best = null, bestPg = null;
     Object.keys(all).forEach(function (pg) { (all[pg] || []).forEach(function (r) { if (!best || (r.ts || '') > (best.ts || '')) { best = r; bestPg = pg; } }); });
+    var move = false, moves = lsGet(MKEY, {});
+    Object.keys(moves).forEach(function (pg) { (moves[pg] || []).forEach(function (r) { if (!best || (r.ts || '') > (best.ts || '')) { best = r; bestPg = pg; move = true; } }); });
     if (!best) return null;
-    revertRec(bestPg, best);
-    all[bestPg] = (all[bestPg] || []).filter(function (r) { return r !== best; });
-    if (!all[bestPg].length) delete all[bestPg];
-    lsSet(EKEY, all);
+    if (move) { if (!resetMove(bestPg, best.path)) return null; } else resetElement(bestPg, best.path);
     return { page: bestPg, path: best.path, from: best.from };
   }
   function resetElement(pageId, path) {
     var all = lsGet(EKEY, {}); var recs = all[pageId] || [];
-    for (var i = 0; i < recs.length; i++) {
-      if (recs[i].path === path) {
-        var ok = revertRec(pageId, recs[i]); recs.splice(i, 1);
-        if (!recs.length) delete all[pageId];
-        lsSet(EKEY, all); return ok;
-      }
-    }
-    return false;
+    var matches = recs.filter(function (r) { return r.path === path; });
+    if (!matches.length) return false;
+    matches.slice().reverse().forEach(function (r) { revertRec(pageId, r); });
+    all[pageId] = recs.filter(function (r) { return r.path !== path; });
+    if (!all[pageId].length) delete all[pageId];
+    lsSet(EKEY, all); positionChips(); return true;
   }
   window.__PB = {
-    resetPage: resetPage, resetAll: resetAll, undoLast: undoLast, resetElement: resetElement, applyEdits: applyEdits
+    resetPage: resetPage, resetAll: resetAll, undoLast: undoLast, resetElement: resetElement, applyEdits: applyEdits,
+    selectMove: selectMove, setMove: setMove, resetMove: resetMove, applyMoves: applyMoves,
+    moveParent: moveParent, getMoveSelection: getMoveSelection, clearMoveSelection: clearMoveSelection, nudgeMove: nudgeMove, escapeMove: escapeMove
   };
+
+  /* ---------- 元素移动：保留布局结构，以原位置为偏移基准 ---------- */
+  var moveSelection = null, moveDrag = null, moveStyles = new WeakMap(), movedElements = new Map();
+  function moveElement(pageId, path) {
+    var root = pageRoot(pageId), el = root && queryPath(root, path);
+    return el && el !== root && buildPath(el) === path && !inUI(el) ? el : null;
+  }
+  function moveOffset(pageId, path) {
+    var rec = (lsGet(MKEY, {})[pageId] || []).filter(function (r) { return r.path === path; })[0];
+    return rec && rec.to && Number.isFinite(rec.to.x) && Number.isFinite(rec.to.y) ? rec.to : { x: 0, y: 0 };
+  }
+  function originalMoveStyle(el) {
+    var saved = moveStyles.get(el); if (saved) return saved;
+    var css = getComputedStyle(el), props = {};
+    ['translate', 'position', 'left', 'top', 'transition-property'].forEach(function (p) { props[p] = { value: el.style.getPropertyValue(p), priority: el.style.getPropertyPriority(p) }; });
+    // translate 不适用于普通 inline 文本；该类元素使用相对定位偏移。
+    var inline = css.display === 'inline' && !/^(IMG|INPUT|TEXTAREA|SELECT|IFRAME|VIDEO|CANVAS|SVG|OBJECT|EMBED)$/.test(el.tagName.toUpperCase());
+    var parts = [], token = '', depth = 0;
+    (css.translate === 'none' ? '' : css.translate).split('').forEach(function (ch) {
+      if (ch === '(') depth++; if (ch === ')') depth--;
+      if (/\s/.test(ch) && !depth) { if (token) parts.push(token); token = ''; } else token += ch;
+    });
+    if (token) parts.push(token);
+    saved = { props: props, inline: inline, position: css.position,
+      left: css.left === 'auto' ? (css.right === 'auto' ? '0px' : 'calc(0px - ' + css.right + ')') : css.left,
+      top: css.top === 'auto' ? (css.bottom === 'auto' ? '0px' : 'calc(0px - ' + css.bottom + ')') : css.top,
+      translate: [parts[0] || '0px', parts[1] || '0px', parts[2] || ''] };
+    moveStyles.set(el, saved); return saved;
+  }
+  function restoreMoveStyle(el) {
+    var saved = moveStyles.get(el); if (!saved) return;
+    (saved.inline ? ['position', 'left', 'top'] : ['translate']).forEach(function (p) {
+      var prop = saved.props[p];
+      if (prop.value) el.style.setProperty(p, prop.value, prop.priority); else el.style.removeProperty(p);
+    });
+    // 先以无过渡状态恢复位置，再恢复页面自己的过渡声明。
+    el.getBoundingClientRect();
+    var transition = saved.props['transition-property'];
+    if (transition.value) el.style.setProperty('transition-property', transition.value, transition.priority); else el.style.removeProperty('transition-property');
+    if (!el.style.length) el.removeAttribute('style');
+    movedElements.delete(el); moveStyles.delete(el);
+  }
+  function previewMove(el, x, y) {
+    if (!x && !y) { restoreMoveStyle(el); return; }
+    var saved = originalMoveStyle(el);
+    el.style.setProperty('transition-property', 'none', 'important');
+    if (saved.inline) {
+      if (saved.position === 'static') el.style.setProperty('position', 'relative', 'important');
+      el.style.setProperty('left', 'calc(' + (saved.position === 'static' ? '0px' : saved.left) + ' + ' + x + 'px)', 'important');
+      el.style.setProperty('top', 'calc(' + (saved.position === 'static' ? '0px' : saved.top) + ' + ' + y + 'px)', 'important');
+    } else {
+      el.style.setProperty('translate', 'calc(' + saved.translate[0] + ' + ' + x + 'px) calc(' + saved.translate[1] + ' + ' + y + 'px)' + (saved.translate[2] ? ' ' + saved.translate[2] : ''), 'important');
+    }
+  }
+  function applyMoves(pageId) {
+    var recs = lsGet(MKEY, {})[pageId] || [];
+    movedElements.forEach(function (info, el) { if (info.page === pageId && !recs.some(function (r) { return r.path === info.path; })) restoreMoveStyle(el); });
+    recs.forEach(function (r) {
+      var el = moveElement(pageId, r.path);
+      if (!el || !r.to || !Number.isFinite(r.to.x) || !Number.isFinite(r.to.y)) return;
+      previewMove(el, r.to.x, r.to.y); movedElements.set(el, { page: pageId, path: r.path });
+    });
+  }
+  function getMoveSelection() {
+    if (!moveSelection || !moveSelection.el.isConnected || moveSelection.page !== curPage()) return null;
+    var s = moveSelection, offset = moveDrag ? moveDrag.current : moveOffset(s.page, s.path);
+    return { page: s.page, path: s.path, label: elLabel(s.el), x: offset.x, y: offset.y, parent: s.el.parentElement !== pageRoot(s.page) };
+  }
+  function publishMoveSelection() { post('pbx-move-selected', { selection: getMoveSelection() }); }
+  function clearMoveSelection() {
+    if (moveDrag) finishMoveDrag(false);
+    if (moveSelection) moveSelection.el.classList.remove('pbx-move-selected');
+    moveSelection = null; publishMoveSelection();
+  }
+  function escapeMove() { if (moveDrag) finishMoveDrag(false); else clearMoveSelection(); }
+  function selectMove(pageId, path) {
+    var el = moveElement(pageId, path); if (!el || pageId !== curPage()) return false;
+    if (moveSelection && moveSelection.el !== el) moveSelection.el.classList.remove('pbx-move-selected');
+    moveSelection = { page: pageId, path: path, el: el }; el.classList.add('pbx-move-selected');
+    publishMoveSelection(); return true;
+  }
+  function moveParent() {
+    if (!moveSelection) return false;
+    var parentEl = moveSelection.el.parentElement;
+    return parentEl && parentEl !== pageRoot(moveSelection.page) ? selectMove(moveSelection.page, buildPath(parentEl)) : false;
+  }
+  function setMove(pageId, path, x, y) {
+    var el = moveElement(pageId, path);
+    if (!el || !Number.isFinite(x) || !Number.isFinite(y)) return false;
+    x = Math.round(x * 100) / 100; y = Math.round(y * 100) / 100;
+    if (!Number.isFinite(x) || !Number.isFinite(y)) return false;
+    var all = lsGet(MKEY, {}), recs = all[pageId] || [];
+    all[pageId] = recs.filter(function (r) { return r.path !== path; });
+    if (x || y) all[pageId].push({ path: path, label: elLabel(el), from: { x: 0, y: 0 }, to: { x: x, y: y }, ts: new Date().toISOString() });
+    if (!all[pageId].length) delete all[pageId];
+    if (!lsSet(MKEY, all)) { var old = moveOffset(pageId, path); previewMove(el, old.x, old.y); post('pbx-move-error', {}); return false; }
+    previewMove(el, x, y);
+    if (x || y) movedElements.set(el, { page: pageId, path: path });
+    positionChips(); publishMoveSelection(); post('pbx-move-saved', { page: pageId }); return true;
+  }
+  function resetMove(pageId, path) {
+    if (moveDrag && moveDrag.page === pageId && moveDrag.path === path) finishMoveDrag(false);
+    var all = lsGet(MKEY, {}), recs = all[pageId] || [];
+    if (!recs.some(function (r) { return r.path === path; })) return false;
+    all[pageId] = recs.filter(function (r) { return r.path !== path; });
+    if (!all[pageId].length) delete all[pageId];
+    if (!lsSet(MKEY, all)) { post('pbx-move-error', {}); return false; }
+    var el = moveElement(pageId, path); if (el) restoreMoveStyle(el);
+    positionChips(); publishMoveSelection(); return true;
+  }
+  function resetMoves(pageId) {
+    if (moveDrag && (pageId == null || moveDrag.page === pageId)) finishMoveDrag(false);
+    var all = lsGet(MKEY, {}), records = [];
+    Object.keys(all).forEach(function (pg) {
+      if (pageId != null && pageId !== pg) return;
+      (all[pg] || []).forEach(function (r) { records.push({ page: pg, path: r.path }); }); delete all[pg];
+    });
+    if (!records.length) return 0;
+    if (!lsSet(MKEY, all)) { post('pbx-move-error', {}); return 0; }
+    records.forEach(function (r) { var el = moveElement(r.page, r.path); if (el) restoreMoveStyle(el); });
+    positionChips(); publishMoveSelection(); return records.length;
+  }
+  function nudgeMove(key, fast) {
+    var s = getMoveSelection(), step = fast ? 10 : 1;
+    if (mode !== 'move' || !s || moveDrag || !/^Arrow(Left|Right|Up|Down)$/.test(key)) return false;
+    return setMove(s.page, s.path, s.x + (key === 'ArrowRight' ? step : key === 'ArrowLeft' ? -step : 0), s.y + (key === 'ArrowDown' ? step : key === 'ArrowUp' ? -step : 0));
+  }
+  // 通过实际位移测量父级变换，拖动方向在缩放/旋转容器中仍跟随指针。
+  function dragBasis(el, offset) {
+    var origin = el.getBoundingClientRect();
+    previewMove(el, offset.x + 1, offset.y); var rx = el.getBoundingClientRect();
+    previewMove(el, offset.x, offset.y + 1); var ry = el.getBoundingClientRect();
+    previewMove(el, offset.x, offset.y);
+    var a = rx.x - origin.x, b = rx.y - origin.y, c = ry.x - origin.x, d = ry.y - origin.y, det = a * d - b * c;
+    return Math.abs(det) > 0.000001 ? { a: a, b: b, c: c, d: d, det: det } : null;
+  }
+  function finishMoveDrag(save) {
+    if (!moveDrag) return;
+    var drag = moveDrag; moveDrag = null;
+    document.body.classList.remove('pbx-moving');
+    if (save && drag.moved) setMove(drag.page, drag.path, drag.current.x, drag.current.y);
+    else previewMove(drag.el, drag.offset.x, drag.offset.y);
+    try { if (drag.el.hasPointerCapture(drag.id)) drag.el.releasePointerCapture(drag.id); } catch (e) {}
+    positionChips(); publishMoveSelection();
+  }
+  document.addEventListener('pointerdown', function (e) {
+    if (mode !== 'move' || e.button !== 0 || !e.isPrimary || inUI(e.target)) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var root = activeSec(), el = e.target.closest && (e.target.closest('svg') || e.target);
+    if (!root || el === root || !root.contains(el)) { clearMoveSelection(); return; }
+    if (!e.altKey && moveSelection && moveSelection.el.contains(el)) el = moveSelection.el;
+    if (!selectMove(curPage(), buildPath(el))) return;
+    var offset = moveOffset(curPage(), buildPath(el)), basis = dragBasis(el, offset);
+    if (!basis) return;
+    moveDrag = { el: el, page: curPage(), path: buildPath(el), id: e.pointerId, x: e.clientX, y: e.clientY, offset: offset, current: offset, basis: basis, moved: false };
+    try { el.setPointerCapture(e.pointerId); } catch (x) {}
+  }, true);
+  document.addEventListener('pointermove', function (e) {
+    if (!moveDrag || e.pointerId !== moveDrag.id) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    var drag = moveDrag, dx = e.clientX - drag.x, dy = e.clientY - drag.y, m = drag.basis;
+    if (!drag.moved && Math.abs(dx) + Math.abs(dy) < 3) return;
+    drag.moved = true; document.body.classList.add('pbx-moving');
+    if (e.shiftKey) {
+      if (!drag.axis) drag.axis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+      if (drag.axis === 'x') dy = 0; else dx = 0;
+    } else drag.axis = null;
+    drag.current = { x: Math.round((drag.offset.x + (m.d * dx - m.c * dy) / m.det) * 100) / 100, y: Math.round((drag.offset.y + (m.a * dy - m.b * dx) / m.det) * 100) / 100 };
+    previewMove(drag.el, drag.current.x, drag.current.y); publishMoveSelection();
+  }, true);
+  document.addEventListener('pointerup', function (e) { if (moveDrag && e.pointerId === moveDrag.id) { e.preventDefault(); e.stopImmediatePropagation(); finishMoveDrag(true); } }, true);
+  document.addEventListener('pointercancel', function (e) { if (moveDrag && e.pointerId === moveDrag.id) finishMoveDrag(false); }, true);
+  document.addEventListener('lostpointercapture', function (e) { if (moveDrag && e.pointerId === moveDrag.id) finishMoveDrag(false); }, true);
+  document.addEventListener('dragstart', function (e) { if (mode === 'move' && !inUI(e.target)) e.preventDefault(); }, true);
+  document.addEventListener('click', function (e) { if (mode === 'move' && !inUI(e.target)) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
+  window.addEventListener('blur', function () { finishMoveDrag(false); });
 
   var editing = null;
   function editableFrom(t) {
@@ -416,7 +645,8 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 任意元素标注(拾取) ---------- */
   function elLabel(el) {
-    var cls = (typeof el.className === 'string' && el.className) ? '.' + el.className.trim().split(/\s+/)[0] : '';
+    var names = typeof el.className === 'string' ? el.className.trim().split(/\s+/).filter(function (name) { return name && !/^pbx-/.test(name); }) : [];
+    var cls = names.length ? '.' + names[0] : '';
     return el.tagName.toLowerCase() + cls + ' 「' + textOf(el).slice(0, 24) + '」';
   }
   var hoverEl = null;
@@ -442,41 +672,94 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       rect: { x: r.x, y: r.y, w: r.width, h: r.height }, cx: e.clientX, cy: e.clientY });
   }, true);
 
-  /* ---------- 元素意见徽章(紫) ---------- */
+  /* ---------- 原位置的意见 / 改动徽章 ---------- */
   var chipLayer = null;
   function positionChips() {
     if (chipLayer) { chipLayer.remove(); chipLayer = null; }
-    if (mode !== 'anno') return;
     var s = activeSec(); if (!s) return;
-    var comments = lsGet(CKEY, {});
-    var items = Object.keys(comments).filter(function (id) { return /-E\d+$/.test(id) && comments[id].page === curPage(); });
-    if (!items.length) return;
+    var pageId = curPage(), comments = lsGet(CKEY, {}), edits = pageEdits(pageId), moves = lsGet(MKEY, {})[pageId] || [];
+    var items = Object.keys(comments).filter(function (id) { return comments[id].page === pageId; });
+    if (!items.length && !edits.length && !moves.length) return;
     chipLayer = document.createElement('div'); chipLayer.id = 'pbx-chip-layer';
     document.body.appendChild(chipLayer);
+    var groups = [];
+    function addMarker(el, chip) {
+      if (!el || !el.getClientRects().length) return;
+      var group = groups.filter(function (g) { return g.el === el; })[0];
+      if (!group) {
+        var node = document.createElement('div'); node.className = 'pbx-marker-group';
+        chipLayer.appendChild(node); group = { el: el, node: node }; groups.push(group);
+      }
+      group.node.appendChild(chip);
+    }
     items.forEach(function (id) {
       var rec = comments[id];
-      var el = queryPath(s, rec.path || '');
-      if (!el || textOf(el).slice(0, 20) !== (rec.origText || '\0').slice(0, 20)) {
+      var el = rec.path ? queryPath(s, rec.path) : null;
+      if (!rec.path) {
+        var regions = s.querySelectorAll('[data-anno]');
+        for (var j = 0; j < regions.length; j++) if (regions[j].getAttribute('data-anno') === id) { el = regions[j]; break; }
+        if (mode === 'anno' && document.documentElement.classList.contains('pb-anno-on')) return;
+      }
+      if (!el && rec.origText) {
         var cand = s.querySelectorAll('*');
-        for (var i = 0; i < cand.length; i++) if (textOf(cand[i]).slice(0, 20) === (rec.origText || '').slice(0, 20)) { el = cand[i]; break; }
+        for (var i = 0; i < cand.length; i++) if (textOf(cand[i]).slice(0, 20) === rec.origText.slice(0, 20)) { el = cand[i]; break; }
       }
       if (!el) return;
-      var r = el.getBoundingClientRect();
-      var chip = document.createElement('div');
-      chip.className = 'pbx-echip'; chip.textContent = id.split('-')[1];
-      chip.title = rec.region + '\n' + (rec.comment || '');
-      chip.style.left = Math.max(2, r.right - 30) + 'px';
-      chip.style.top = Math.max(2, r.top - 22) + 'px';
+      var chip = document.createElement('button'); chip.type = 'button';
+      chip.className = 'pbx-echip'; chip.textContent = '意见 ' + id.split('-').slice(1).join('-');
+      chip.dataset.commentId = id;
+      chip.title = (rec.region || id) + '\n' + (rec.comment || '');
+      chip.setAttribute('aria-label', '查看意见 ' + id + '：' + (rec.comment || ''));
+      chip.addEventListener('mousedown', function (e) { e.preventDefault(); });
       chip.addEventListener('click', function (e) {
         e.stopPropagation();
+        finishEdit(true);
         var r2 = el.getBoundingClientRect();
         post('pbx-pick-edit', { id: id, page: rec.page, path: rec.path, label: rec.region, text: rec.origText,
           rect: { x: r2.x, y: r2.y, w: r2.width, h: r2.height } });
       });
-      chipLayer.appendChild(chip);
+      addMarker(el, chip);
+    });
+    edits.forEach(function (rec) {
+      var el = queryPath(s, rec.path); if (!el) return;
+      var chip = document.createElement('button'); chip.type = 'button';
+      chip.className = 'pbx-edit-chip'; chip.textContent = '改动';
+      chip.dataset.page = pageId; chip.dataset.path = rec.path;
+      chip.title = '原文：' + rec.from + '\n改后：' + rec.to;
+      chip.setAttribute('aria-label', '查看文字改动：' + rec.from + ' → ' + rec.to);
+      chip.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      chip.addEventListener('click', function (e) {
+        e.stopPropagation();
+        finishEdit(true);
+        var r = el.getBoundingClientRect();
+        post('pbx-edit-review', { page: pageId, path: rec.path, rect: { x: r.x, y: r.y, w: r.width, h: r.height } });
+      });
+      addMarker(el, chip);
+    });
+    moves.forEach(function (rec) {
+      var el = moveElement(pageId, rec.path); if (!el) return;
+      var chip = document.createElement('button'); chip.type = 'button'; chip.className = 'pbx-move-chip'; chip.textContent = '移动';
+      chip.dataset.page = pageId; chip.dataset.path = rec.path;
+      chip.title = '偏移 X: ' + rec.to.x + 'px / Y: ' + rec.to.y + 'px'; chip.setAttribute('aria-label', '查看元素移动：' + chip.title);
+      chip.addEventListener('mousedown', function (e) { e.preventDefault(); });
+      chip.addEventListener('click', function (e) { e.stopPropagation(); post('pbx-move-review', { page: pageId, path: rec.path }); });
+      addMarker(el, chip);
+    });
+    groups.forEach(function (g) {
+      var r = g.el.getBoundingClientRect();
+      var range = document.createRange(); range.selectNodeContents(g.el);
+      var textRect = range.getBoundingClientRect(); if (textRect.width && textRect.height) r = textRect;
+      var width = g.node.offsetWidth, height = g.node.offsetHeight, viewW = document.documentElement.clientWidth;
+      var x, y = r.top + Math.max(0, (Math.min(r.height, height * 2) - height) / 2);
+      if (r.right + width + 8 <= viewW) x = r.right + 6;
+      else if (r.left >= width + 8) x = r.left - width - 6;
+      else { x = Math.max(2, Math.min(r.left, viewW - width - 2)); y = Math.max(2, r.top - height - 3); }
+      g.node.style.left = x + window.scrollX + 'px';
+      g.node.style.top = y + window.scrollY + 'px';
     });
   }
   window.addEventListener('resize', positionChips, { passive: true });
+  window.addEventListener('scroll', positionChips, { passive: true, capture: true });
 
   /* ---------- 右键/中键拖动平移;右键轻点/双击=协作菜单 ---------- */
   function isTextInput(t) { return !!(t.closest && t.closest('input,textarea,[contenteditable="true"]')); }
@@ -537,7 +820,12 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     post('pbx-scroll', { dx: e.deltaX * mul, dy: e.deltaY * mul, shift: e.shiftKey });
   }, { passive: false });
   document.addEventListener('keydown', function (e) {
+    if (mode === 'move' && !typing(e.target)) {
+      if (e.key === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); escapeMove(); return; }
+      if (!e.ctrlKey && !e.metaKey && !e.altKey && nudgeMove(e.key, e.shiftKey)) { e.preventDefault(); e.stopImmediatePropagation(); return; }
+    }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !typing(e.target)) { e.preventDefault(); post('pbx-undo', {}); }
+    if (!typing(e.target) && !e.ctrlKey && !e.metaKey && !e.altKey && /^(e|a|m)$/i.test(e.key)) post('pbx-mode-key', { key: e.key.toLowerCase() });
     if (e.key === 'Escape') post('pbx-dismiss', {});
   });
   document.addEventListener('mousedown', function () { post('pbx-dismiss', {}); }, true);
@@ -550,6 +838,10 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     if (d.type === 'pbx-go-page' && isAuto()) showPage(d.page);
     if (d.type === 'pbx-page-shown') applyEdits(d.page);
     if (d.type === 'pbx-start-edit') { var el = queryPath(pageRoot(curPage()), d.path); if (el) beginEdit(el, true); }
+  });
+  window.addEventListener('storage', function (e) {
+    if (e.key === MKEY || e.key === null) { if (moveDrag) finishMoveDrag(false); applyMoves(curPage()); publishMoveSelection(); }
+    if (e.key === CKEY || e.key === EKEY || e.key === MKEY || e.key === null) positionChips();
   });
   window.addEventListener('message', function (e) {
     var d = e.data || {};
@@ -575,7 +867,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     source: { mode: 'single', file: 'proto.html', dir: 'pages/', urls: [], entry: '', index: '' },
     pages: { container: '.pg-sec', activeClass: 'act', idAttr: 'data-page', switch: 'auto', rootId: 'pg-{id}', list: [], overview: null, single: false, singlePerFile: false, defaultId: '' },
     viewport: { desktop: 1440, narrow: [{ match: '.is-mobile', width: 390 }] },
-    ui: { whitelist: ['.pb-badge', '.pb-pop', '.pb-anno-fab', '.pbx-echip'] },
+    ui: { whitelist: ['.pb-badge', '.pb-pop', '.pb-anno-fab', '.pbx-echip', '.pbx-edit-chip'] },
     tools: { anno: false },
     storage: { edits: 'proto.edits', comments: 'proto.anno.comments', ecount: 'proto.anno.ecount', mode: 'proto.studio.mode', annoMode: 'proto.anno.mode', page: 'proto.page', notify: 'proto.notify' },
   };
@@ -589,6 +881,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     return a;
   }
   var CFG = merge(merge({}, DEFAULTS), window.PROTO_CONFIG || {});
+  if (!CFG.storage.moves) CFG.storage.moves = CFG.storage.edits + '.moves';
   if (qs.get('title')) CFG.title = qs.get('title');
   if (qs.get('src')) CFG.source.entry = qs.get('src');
   var PC = CFG.pages, CONTAINER = PC.container, ACTIVE = PC.activeClass, IDATTR = PC.idAttr, ROOTID = PC.rootId;
@@ -624,6 +917,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   var fit = document.getElementById('fit');
   var stage = document.getElementById('stage');
   var win = null, doc = null, sameOrigin = true;
+  var stopPageObservers = null, pageLoading = false;
   var mode = 'browse';
   var resCache = {};
   var scale = 1, fitMode = true, contentW = CFG.viewport.desktop || 1440;
@@ -687,10 +981,12 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   }
 
   /* ---------- 注入(配置驱动 + 可选 anno) ---------- */
-  function injectNode(tag, text) { var n = doc.createElement(tag); n.textContent = text; doc.body.appendChild(n); return n; }
+  function injectNode(tag, text) { var n = doc.createElement(tag); n.setAttribute('data-pbx-runtime', ''); n.textContent = text; doc.body.appendChild(n); return n; }
   function injectAll() {
-    try { win = iframe.contentWindow; doc = iframe.contentDocument; } catch (e) { sameOrigin = false; win = null; doc = null; toast('无法访问方案页面(跨源?):只读浏览'); }
-    if (!sameOrigin || !doc || !win) { applyZoom(); return; }
+    if (stopPageObservers) stopPageObservers();
+    pageLoading = false;
+    try { win = iframe.contentWindow; doc = iframe.contentDocument; sameOrigin = !!doc; } catch (e) { sameOrigin = false; win = null; doc = null; toast('无法访问方案页面(跨源?):只读浏览'); }
+    if (!sameOrigin || !doc || !win) { clearMinimap(); applyZoom(); return; }
     try { if (win.location && win.location.pathname) SRC = win.location.pathname; } catch (e) {}   /* 页面内跳转后同步当前页 */
     updateCurrentPath();
     if (win.__PB_INJECTED) return;
@@ -698,24 +994,48 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     try { win.PROTOBRIDGE_CFG = CFG; } catch (e) {}
     injectNode('style', $('#bridge-css').textContent);
     injectNode('style', 'body.pbx-edit ' + PAGESEL + ' { cursor: text; } body.pbx-anno ' + PAGESEL + ' { cursor: crosshair; }');
-    var jobs = [];
+    var sourceDoc = doc, sourceWin = win, jobs = [];
     if (CFG.tools && CFG.tools.anno) {
       jobs = Promise.all([
         fetchRes('/tool-res/annotation-map.js').catch(function () { return 'window.PROTO_ANNO_MAP={pages:{}};'; }),
         fetchRes('/tool-res/anno.js'),
         fetchRes('/tool-res/anno.css'),
       ]).then(function (r) {
+        if (doc !== sourceDoc || pageLoading) return;
         try { injectNode('script', r[0]); injectNode('script', r[1]); injectNode('style', r[2]); }
         catch (e) { toast('标注组件注入失败:' + e.message); }
       }).catch(function () { toast('标注组件资源加载失败(需要本地服务)'); });
     }
     injectNode('script', $('#bridge-src').textContent);
     Promise.resolve(jobs).then(function () {
-      if (win.ResizeObserver) {
-        var lastH = 0;
-        new win.ResizeObserver(function () { var h = docH(); if (Math.abs(h - lastH) < 2) return; lastH = h; applyZoom(); }).observe(doc.body);
-      }
+      if (doc !== sourceDoc || pageLoading) return;
       syncPages(); syncSelect(); refreshCount(); applyZoom(); buildMinimap();
+      var timer = null, lastH = docH(), resizeObserver, mutationObserver;
+      function refresh() {
+        if (doc !== sourceDoc || pageLoading || timer) return;
+        timer = setTimeout(function () {
+          timer = null;
+          if (doc !== sourceDoc || pageLoading) return;
+          applyZoom(); lastH = docH(); buildMinimap();
+        }, 100);
+      }
+      if (sourceWin.ResizeObserver) {
+        resizeObserver = new sourceWin.ResizeObserver(function () { if (Math.abs(docH() - lastH) >= 2) refresh(); });
+        resizeObserver.observe(sourceDoc.body);
+      }
+      if (sourceWin.MutationObserver) {
+        mutationObserver = new sourceWin.MutationObserver(refresh);
+        mutationObserver.observe(sourceDoc.documentElement, { subtree: true, childList: true, attributes: true, characterData: true });
+      }
+      ['input', 'change', 'load'].forEach(function (name) { sourceDoc.addEventListener(name, refresh, true); });
+      if (sourceDoc.fonts) sourceDoc.fonts.ready.then(refresh);
+      stopPageObservers = function () {
+        clearTimeout(timer);
+        if (resizeObserver) resizeObserver.disconnect();
+        if (mutationObserver) mutationObserver.disconnect();
+        ['input', 'change', 'load'].forEach(function (name) { sourceDoc.removeEventListener(name, refresh, true); });
+        stopPageObservers = null;
+      };
     });
   }
   iframe.addEventListener('load', injectAll);
@@ -723,12 +1043,20 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   /* ---------- 缩放 ---------- */
   function stageW() { return stage.clientWidth; }
   function stageH() { return stage.clientHeight; }
-  function docH() { try { return Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight); } catch (e) { return 900; } }
+  function docH() {
+    try {
+      var root = doc.documentElement, body = doc.body;
+      var bottom = body.getBoundingClientRect().bottom + win.scrollY + (parseFloat(win.getComputedStyle(body).marginBottom) || 0);
+      return Math.max(1, Math.ceil(bottom), body.scrollHeight, root.scrollHeight > root.clientHeight ? root.scrollHeight : 0);
+    } catch (e) { return stageH(); }
+  }
   function applyZoom() {
     var sw = stageW();
     if (fitMode) scale = Math.min(1.6, Math.max(0.2, sw / contentW));
-    var dh = sameOrigin ? docH() : stageH();
     iframe.style.width = contentW + 'px';
+    // 以未缩放的稳定视口测量，避免上一页高度或适应宽度撑出底部空白。
+    iframe.style.height = Math.max(1, stageH()) + 'px';
+    var dh = sameOrigin ? docH() : stageH();
     iframe.style.height = dh + 'px';
     iframe.style.transform = 'scale(' + scale + ')';
     fit.style.width = (contentW * scale) + 'px';
@@ -761,7 +1089,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   $('#zoom-sel').addEventListener('change', function (e) { setZoom(e.target.value); });
   $('#zoom-in').addEventListener('click', function () { stepZoom(1.1); });
   $('#zoom-out').addEventListener('click', function () { stepZoom(1 / 1.1); });
-  window.addEventListener('resize', function () { applyZoom(); updateMinimapRect(); });
+  window.addEventListener('resize', function () { applyZoom(); buildMinimap(); if (win && win.__PB) paintMoveSelection(win.__PB.getMoveSelection()); });
 
   /* ---------- 切页 ---------- */
   function gotoPage(id) {
@@ -769,23 +1097,26 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var entry = pageList().filter(function (p) { return p.id === id; })[0];
     if (CFG.source.mode === 'pages' && entry && entry.file) {
       SRC = '/project/' + entry.file;
-      iframe.src = frameSrc(SRC);
+    } else if (CFG.source.mode === 'urls') {
+      var i = pageList().map(function (p) { return p.id; }).indexOf(id);
+      SRC = (CFG.source.urls || [])[i] || SRC;
+    } else {
+      if (!win) return;
+      if (PC.switch === 'hook') win.location.hash = '#' + id;     /* 方案稿自带路由 */
+      else win.postMessage({ type: 'pbx-go-page', page: id }, '*');/* 内核默认切换器 */
       return;
     }
-    if (CFG.source.mode === 'urls') {
-      var i = pageList().map(function (p) { return p.id; }).indexOf(id);
-      SRC = (CFG.source.urls || [])[i] || SRC; iframe.src = frameSrc(SRC); return;
-    }
-    if (!win) return;
-    if (PC.switch === 'hook') win.location.hash = '#' + id;     /* 方案稿自带路由 */
-    else win.postMessage({ type: 'pbx-go-page', page: id }, '*');/* 内核默认切换器 */
+    if (stopPageObservers) stopPageObservers();
+    pageLoading = true; clearMinimap();
+    iframe.src = frameSrc(SRC);
   }
   $('#page-sel').addEventListener('change', function (e) { gotoPage(e.target.value); });
 
   /* ---------- 模式 ---------- */
-  function paintMode() { document.querySelectorAll('#bar .seg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-x') === 'm-' + mode); }); }
+  function paintMode() { document.querySelectorAll('#bar .seg button').forEach(function (b) { var on = b.getAttribute('data-x') === 'm-' + mode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); }); }
   function setMode(m, skipRegion) {
     mode = m; lsSet(ST.mode, m); paintMode();
+    if (m !== 'move') $('#move-panel').hidden = true;
     if (win) {
       win.postMessage({ type: 'pbx-mode', mode: m }, '*');
       if (!skipRegion) { try { win.postMessage({ type: 'pb-anno-set', on: m === 'anno' }, '*'); } catch (e) {} }
@@ -797,6 +1128,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       var m = b.getAttribute('data-x').slice(2);
       setMode(mode === m && m !== 'browse' ? 'browse' : m);
       toast(m === 'edit' ? '编辑模式:点击方案里任意文字就地修改,Esc 还原'
+        : m === 'move' ? '移动模式:拖动调整位置，Shift 拖动锁定方向；Alt 点击选择子元素，面板可精确微调'
         : m === 'anno' ? '标注模式:点击方案里任意元素提意见;也可在浏览视图右键/双击元素'
         : '浏览模式:右键拖动平移 · 右键轻点/双击元素呼出协作菜单');
     });
@@ -806,6 +1138,8 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === 'e' || e.key === 'E') setMode(mode === 'edit' ? 'browse' : 'edit');
     if (e.key === 'a' || e.key === 'A') setMode(mode === 'anno' ? 'browse' : 'anno');
+    if (e.key === 'm' || e.key === 'M') setMode(mode === 'move' ? 'browse' : 'move');
+    if (mode === 'move' && win && win.__PB && win.__PB.nudgeMove(e.key, e.shiftKey)) { e.preventDefault(); return; }
     if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft') && win) {
       var list = pageList().map(function (p) { return p.id; });
       var i = Math.max(0, list.indexOf(currentPage()));
@@ -823,20 +1157,27 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   window.addEventListener('message', function (e) {
     if (win && e.source !== win) return;
     var d = e.data || {};
-    if (d.type === 'pbx-ready' || d.type === 'pbx-page-sync') {
+    if (pageLoading) return;
+    if (d.type === 'pbx-ready' || d.type === 'pbx-page-sync' || d.type === 'pbx-page') {
       syncSelect();
       if (win) win.postMessage({ type: 'pbx-mode', mode: mode }, '*');
       contentW = contentWidthOf(currentPage());
-      applyZoom(); stage.scrollTop = 0; stage.scrollLeft = 0; buildMinimap();
+      applyZoom(); stage.scrollTop = 0; stage.scrollLeft = 0; refreshCount(); buildMinimap();
     }
-    if (d.type === 'pbx-page') { syncSelect(); contentW = contentWidthOf(d.page); applyZoom(); refreshCount(); }
     if (d.type === 'pbx-scroll') { if (d.shift) stage.scrollLeft += d.dy || d.dx || 0; else { stage.scrollLeft += d.dx || 0; stage.scrollTop += d.dy || 0; } }
     if (d.type === 'pbx-pan-start') panBase = { sl: stage.scrollLeft, st: stage.scrollTop };
     if (d.type === 'pbx-pan' && panBase) { stage.scrollLeft = Math.max(0, panBase.sl - d.dx); stage.scrollTop = Math.max(0, panBase.st - d.dy); }
     if (d.type === 'pbx-pan-end') panBase = null;
-    if (d.type === 'pbx-edit-saved') { toast('已保存文字修改(随反馈包发回 Agent)'); refreshCount(); }
+    if (d.type === 'pbx-edit-saved') { toast('已保存文字修改(随反馈包发回 Agent)'); feedbackUpdated(); }
+    if (d.type === 'pbx-move-selected') paintMoveSelection(d.selection);
+    if (d.type === 'pbx-move-saved') { feedbackUpdated(); }
+    if (d.type === 'pbx-move-error') toast('移动未保存：本地草稿存储不可用');
+    if (d.type === 'pbx-move-review') { setMode('move'); if (win && win.__PB) win.__PB.selectMove(d.page, d.path); }
+    if (d.type === 'pbx-mode-key') { var next = { e: 'edit', a: 'anno', m: 'move' }[d.key]; if (next) setMode(mode === next ? 'browse' : next); }
+    if (d.type === 'pbx-anno-updated') { refreshCount(); if (win) win.postMessage({ type: 'pbx-anno-updated' }, '*'); }
     if (d.type === 'pbx-pick') openElForm(d, null);
     if (d.type === 'pbx-pick-edit') openElForm(d, d.id);
+    if (d.type === 'pbx-edit-review') openEditReview(d);
     if (d.type === 'pbx-context') openContext(d);
     if (d.type === 'pbx-dismiss') closePop();
     if (d.type === 'pbx-zoom') {
@@ -849,18 +1190,40 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   function iframePoint(cx, cy) { var r = iframe.getBoundingClientRect(); return { x: r.left + cx * scale, y: r.top + cy * scale }; }
 
+  function paintMoveSelection(s) {
+    var panel = $('#move-panel'); panel.hidden = !s || mode !== 'move';
+    if (!s) return;
+    panel.style.top = ($('#current-path').getBoundingClientRect().bottom + 12) + 'px';
+    panel.style.maxHeight = Math.max(0, window.innerHeight - parseFloat(panel.style.top) - 12) + 'px';
+    $('#move-target').textContent = s.label + ' · ' + s.path;
+    if (document.activeElement !== $('#move-x')) $('#move-x').value = s.x;
+    if (document.activeElement !== $('#move-y')) $('#move-y').value = s.y;
+    $('#move-parent').disabled = !s.parent;
+    $('#move-reset').disabled = !s.x && !s.y;
+  }
+  $('#move-form').addEventListener('submit', function (e) {
+    e.preventDefault(); var s = win && win.__PB && win.__PB.getMoveSelection();
+    if (s && win.__PB.setMove(s.page, s.path, $('#move-x').valueAsNumber, $('#move-y').valueAsNumber)) { paintMoveSelection(win.__PB.getMoveSelection()); feedbackUpdated(); }
+  });
+  $('#move-parent').addEventListener('click', function () { if (win && win.__PB) win.__PB.moveParent(); });
+  document.querySelectorAll('[data-move-key]').forEach(function (button) {
+    button.addEventListener('click', function (e) { if (win && win.__PB) win.__PB.nudgeMove(button.dataset.moveKey, e.shiftKey); });
+  });
+  $('#move-reset').addEventListener('click', function () { var s = win && win.__PB && win.__PB.getMoveSelection(); if (s) { win.__PB.resetMove(s.page, s.path); feedbackUpdated(); } });
+  $('#move-close').addEventListener('click', function () { if (win && win.__PB) win.__PB.clearMoveSelection(); $('#bar [data-x=m-move]').focus(); });
+
   /* ---------- 弹层 ---------- */
   var pop = null;
-  function closePop() { if (pop) { pop.remove(); pop = null; } document.removeEventListener('mousedown', onDocMDown, true); }
+  function closePop() { if (pop) { var review = pop.classList.contains('feedback-manager'); pop.remove(); pop = null; if (review) $('#count').focus(); } document.removeEventListener('mousedown', onDocMDown, true); }
   function onDocMDown(e) { if (pop && !pop.contains(e.target)) closePop(); }
-  function openPop(anchor, html, px) {
+  function openPop(anchor, html, px, className) {
     closePop();
-    pop = document.createElement('div'); pop.className = 'pop'; pop.innerHTML = html; document.body.appendChild(pop);
+    pop = document.createElement('div'); pop.className = 'pop' + (className ? ' ' + className : ''); pop.innerHTML = html; document.body.appendChild(pop);
     var r;
     if (px) r = { left: px.x, right: px.x, bottom: px.y };
-    else { var b = anchor.getBoundingClientRect(); r = { left: b.left, right: b.right, bottom: b.bottom }; }
+    else { var b = (anchor || $('#more')).getBoundingClientRect(); r = { left: b.left, right: b.right, bottom: b.bottom }; }
     pop.style.left = Math.max(8, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12)) + 'px';
-    pop.style.top = Math.min(r.bottom + 8, window.innerHeight - pop.offsetHeight - 10) + 'px';
+    pop.style.top = Math.max(10, Math.min(r.bottom + 8, window.innerHeight - pop.offsetHeight - 10)) + 'px';
     setTimeout(function () { document.addEventListener('mousedown', onDocMDown, true); }, 0);
     return pop;
   }
@@ -868,25 +1231,59 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
   /* ---------- 协作菜单 ---------- */
   function openContext(d) {
     var pt = iframePoint(d.cx, d.cy);
-    var hasEdit = elementHasEdit(d.page, d.path);
+    var hasEdit = elementHasEdit(d.page, d.path), hasMove = (lsGet(ST.moves, {})[d.page] || []).some(function (r) { return r.path === d.path; });
+    var changed = hasEdit || hasMove;
     var p = openPop(null,
       '<div class="ph"><span>协作 · ' + esc(d.label) + '</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
       '<button class="mi" data-act="edit">编辑文字</button>' +
+      '<button class="mi" data-act="move">移动元素</button>' +
       '<button class="mi" data-act="anno">添加意见</button>' +
-      '<button class="mi' + (hasEdit ? '' : ' dis') + '" data-act="revert">还原此元素' + (hasEdit ? '' : '(未改动)') + '</button>' +
+      '<button class="mi' + (changed ? '' : ' dis') + '" data-act="revert">还原此元素' + (changed ? '' : '(未改动)') + '</button>' +
       '<button class="mi" data-act="copy">复制元素路径</button>', pt);
     p.querySelector('[data-x=close]').addEventListener('click', closePop);
     p.addEventListener('click', function (e2) {
       var a = e2.target.getAttribute && e2.target.getAttribute('data-act');
-      if (!a || (a === 'revert' && !hasEdit)) return;
+      if (!a || (a === 'revert' && !changed)) return;
       closePop();
       if (a === 'edit') { setMode('edit'); if (win) win.postMessage({ type: 'pbx-start-edit', path: d.path }, '*'); toast('就地编辑中:改完点击别处保存,Esc 还原'); }
+      if (a === 'move') { setMode('move'); if (win && win.__PB) win.__PB.selectMove(d.page, d.path); }
       if (a === 'anno') openElForm(d, null);
-      if (a === 'revert') { try { var ok = win.__PB.resetElement(d.page, d.path); toast(ok ? '已还原该元素' : '还原失败:未找到匹配改动'); refreshCount(); } catch (e) { toast('还原失败'); } }
+      if (a === 'revert') { try { var ok = win.__PB.resetElement(d.page, d.path); ok = win.__PB.resetMove(d.page, d.path) || ok; toast(ok ? '已还原该元素' : '还原失败:未找到匹配改动'); feedbackUpdated(); } catch (e) { toast('还原失败'); } }
       if (a === 'copy') navigator.clipboard.writeText(d.path).then(function () { toast('元素路径已复制:' + d.path); }, function () { toast('复制失败(路径:' + d.path + ')'); });
     });
   }
   function elementHasEdit(pageId, path) { var recs = lsGet(ST.edits, {})[pageId] || []; return recs.some(function (r) { return r.path === path; }); }
+
+  function feedbackUpdated() {
+    refreshCount();
+    if (win) win.postMessage({ type: 'pbx-anno-updated' }, '*');
+    buildMinimap();
+  }
+  function undoLast() {
+    if (!win || !win.__PB) { toast('方案页未就绪'); return; }
+    var r = win.__PB.undoLast(); toast(r ? '已撤销:(' + r.page + ') ' + r.path : '没有可撤销的改动'); feedbackUpdated();
+  }
+
+  /* ---------- 点击原位置的改动徽章 ---------- */
+  function openEditReview(d) {
+    var recs = (lsGet(ST.edits, {})[d.page] || []).filter(function (r) { return r.path === d.path; });
+    if (!recs.length) { toast('这处改动已还原'); return; }
+    var rec = Object.assign({}, recs[recs.length - 1], { from: recs[0].from });
+    var pt = iframePoint(d.rect.x + 20, d.rect.y + 10);
+    var p = openPop(null,
+      '<div class="ph"><span>文字改动</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
+      '<div class="elinfo">目标元素 <code>' + esc(d.path) + '</code></div>' +
+      '<div class="review-diff"><span>原文</span><del>' + esc(rec.from) + '</del><span>改后</span><ins>' + esc(rec.to) + '</ins></div>' +
+      '<div class="foot"><button data-act="edit">继续编辑</button><button class="danger" data-act="restore-edit">还原这处改动</button></div>', pt, 'feedback-detail');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '文字改动');
+    p.querySelector('[data-x=close]').addEventListener('click', closePop);
+    p.querySelector('[data-act=edit]').addEventListener('click', function () { closePop(); setMode('edit'); if (win) win.postMessage({ type: 'pbx-start-edit', path: d.path }, '*'); });
+    p.querySelector('[data-act=restore-edit]').addEventListener('click', function () {
+      if (!win || !win.__PB) { toast('方案页未就绪'); return; }
+      win.__PB.resetElement(d.page, d.path); closePop(); feedbackUpdated(); toast('已还原这处文字改动');
+    });
+    p.querySelector('[data-x=close]').focus();
+  }
 
   /* ---------- 元素意见表单 ---------- */
   function newElId(pageId) { var n = lsGet(ST.ecount, {}); var i = (n[pageId] || 0) + 1; n[pageId] = i; lsSet(ST.ecount, n); return pageId.toUpperCase() + '-E' + i; }
@@ -895,8 +1292,8 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var id = existingId, c = existingId ? comments[existingId] || {} : {};
     var pt = iframePoint(d.cx != null ? d.cx : (d.rect.x + 20), d.cy != null ? d.cy : (d.rect.y + 10));
     var p = openPop(null,
-      '<div class="ph"><span><b style="color:#27685f">' + (id || '自动编号') + '</b> · 元素意见</span><button class="x" data-x="close">✕</button></div>' +
-      '<div class="elinfo">目标元素 <code>' + esc(d.path || '') + '</code><br>' + esc(d.label || '') + '</div>' +
+      '<div class="ph"><span><b style="color:#27685f">' + esc(id || '自动编号') + '</b> · ' + (id && !c.path ? '区域意见' : '元素意见') + '</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
+      '<div class="elinfo">' + (d.path ? '目标元素 <code>' + esc(d.path) + '</code><br>' : '') + esc(d.label || '') + (c.source ? '<br>源码 ' + esc(c.source) : '') + '</div>' +
       '<div class="row2"><div><label>类型</label><select data-f="type">' +
       ['修改', '新增', '删除', '疑问'].map(function (t) { return '<option' + (c.type === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') +
       '</select></div><div><label>优先级</label><select data-f="priority">' +
@@ -904,41 +1301,88 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       '</select></div></div>' +
       '<label>意见</label><textarea data-f="comment" placeholder="对这个元素希望怎么改…">' + esc(c.comment || '') + '</textarea>' +
       '<label>提出人</label><input data-f="author" value="' + esc(c.author || '') + '" placeholder="姓名/角色">' +
-      '<div class="foot">' + (id ? '<button class="danger" data-x="del">删除</button>' : '') + '<button class="ok" data-x="save">保存</button></div>', pt);
+      '<div class="foot">' + (id ? '<button class="danger" data-x="del">删除</button>' : '') + '<button class="ok" data-x="save">保存</button></div>', pt, 'feedback-detail');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '意见');
     p.querySelector('[data-x=close]').addEventListener('click', closePop);
     p.querySelector('[data-x=save]').addEventListener('click', function () {
       var g = function (f) { var n = p.querySelector('[data-f="' + f + '"]'); return n ? n.value.trim() : ''; };
       if (!g('comment')) { toast('请先填写意见内容'); return; }
       var cs = lsGet(ST.comments, {});
       var rid = id || newElId(d.page || 'p00');
-      cs[rid] = { type: g('type'), priority: g('priority'), comment: g('comment'), author: g('author'), region: d.label || '', page: d.page || 'p00', path: d.path || '', origText: (d.text || '').slice(0, 60), updatedAt: new Date().toISOString() };
-      lsSet(ST.comments, cs); closePop(); refreshCount();
-      if (win) win.postMessage({ type: 'pbx-anno-updated' }, '*');
+      while (!id && cs[rid]) rid = newElId(d.page || 'p00');
+      cs[rid] = Object.assign({}, cs[rid] || {}, { type: g('type'), priority: g('priority'), comment: g('comment'), author: g('author'), region: d.label || '', page: d.page || 'p00', updatedAt: new Date().toISOString() });
+      if (!id || c.path) { cs[rid].path = d.path || ''; cs[rid].origText = (d.text || '').slice(0, 60); }
+      lsSet(ST.comments, cs); closePop(); feedbackUpdated();
       toast('已记录 ' + rid + '(点「发送反馈」交回 Agent)');
     });
     if (id) p.querySelector('[data-x=del]').addEventListener('click', function () {
-      var cs = lsGet(ST.comments, {}); delete cs[id]; lsSet(ST.comments, cs); closePop(); refreshCount();
-      if (win) win.postMessage({ type: 'pbx-anno-updated' }, '*'); toast('已删除元素意见 ' + id);
+      var cs = lsGet(ST.comments, {}); delete cs[id]; lsSet(ST.comments, cs); closePop(); feedbackUpdated(); toast('已删除意见 ' + id);
     });
+    p.querySelector('[data-f=comment]').focus();
   }
 
   /* ---------- 快速还原 ---------- */
-  function feedbackCount() {
-    var comments = lsGet(ST.comments, {}), edits = lsGet(ST.edits, {}), n = 0;
-    Object.keys(edits).forEach(function (k) { n += (edits[k] || []).length; });
-    return { c: Object.keys(comments).length, e: n };
+  function feedbackCount(pageId) {
+    var comments = lsGet(ST.comments, {}), edits = lsGet(ST.edits, {}), moves = lsGet(ST.moves, {}), n = 0, m = 0;
+    Object.keys(edits).forEach(function (k) { if (pageId == null || k === pageId) n += (edits[k] || []).length; });
+    Object.keys(moves).forEach(function (k) { if (pageId == null || k === pageId) m += (moves[k] || []).length; });
+    return { c: Object.keys(comments).filter(function (id) { return pageId == null || comments[id].page === pageId; }).length, e: n + m, t: n, m: m };
   }
   function refreshCount() {
     var n = feedbackCount();
     $('#count').innerHTML = '意见 <b class="' + (n.c ? 'c-more' : '') + '">' + n.c + '</b> / 改动 <b class="' + (n.e ? 'e-more' : '') + '">' + n.e + '</b>';
+    $('#count').setAttribute('aria-label', '管理意见 ' + n.c + ' 条、改动 ' + n.e + ' 处');
     var bdg = $('#undo-bdg'); bdg.textContent = n.e; bdg.classList.toggle('show', n.e > 0);
   }
   setInterval(refreshCount, 1200);
+  window.addEventListener('storage', function (e) { if (e.key === ST.comments || e.key === ST.edits || e.key === ST.moves || e.key === null) refreshCount(); });
+
+  /* ---------- 本页 / 全部清理，详情直接从原位置徽章打开 ---------- */
+  function openFeedback(scope) {
+    scope = scope || 'all';
+    var n = feedbackCount(scope === 'page' ? currentPage() : null);
+    var p = openPop($('#count'),
+      '<div class="ph"><span id="feedback-title">管理意见 / 改动</span><button class="x" data-x="close" title="关闭">✕</button></div>' +
+      '<div class="sum">点击页面上的「意见」「改动」或「移动」徽章，可查看详情并还原。</div>' +
+      '<label>清理范围<select data-f="review-scope"><option value="all"' + (scope === 'all' ? ' selected' : '') + '>全部页面</option><option value="page"' + (scope === 'page' ? ' selected' : '') + '>当前页面</option></select></label>' +
+      '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.t + '</b> 处 · 元素移动 <b>' + n.m + '</b> 处<br><span>清理本地意见和预览改动；已发送的反馈包会保留。</span></div>' +
+      '<div class="foot"><button class="danger" data-act="clear-comments"' + (n.c ? '' : ' disabled') + '>清空意见</button><button class="danger" data-act="restore-edits"' + (n.e ? '' : ' disabled') + '>还原改动</button></div>', null, 'feedback-manager');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-labelledby', 'feedback-title');
+    p.querySelector('[data-x=close]').addEventListener('click', closePop);
+    p.querySelector('[data-f=review-scope]').addEventListener('change', function (e) { openFeedback(e.target.value); pop.querySelector('[data-f=review-scope]').focus(); });
+    p.querySelector('[data-act=clear-comments]').addEventListener('click', function () { confirmFeedbackClear('comments', scope); });
+    p.querySelector('[data-act=restore-edits]').addEventListener('click', function () { confirmFeedbackClear('edits', scope); });
+    p.querySelector('[data-x=close]').focus();
+  }
+  function confirmFeedbackClear(kind, scope) {
+    var pageId = scope === 'page' ? currentPage() : null, n = feedbackCount(pageId);
+    var label = kind === 'comments' ? '清空意见' : '还原改动';
+    var p = openPop($('#count'),
+      '<div class="ph">确认' + label + '</div><div class="sum">将' + (kind === 'comments' ? '删除' : '还原') + (scope === 'page' ? '当前页面' : '全部页面') + '的 <b>' + (kind === 'comments' ? n.c : n.e) + '</b> ' + (kind === 'comments' ? '条意见' : '处文字或移动改动') + '。</div>' +
+      '<div class="foot"><button data-act="cancel-clear">取消</button><button class="danger" data-act="confirm-clear">确认' + label + '</button></div>', null, 'feedback-manager');
+    p.setAttribute('role', 'dialog'); p.setAttribute('aria-label', '确认' + label);
+    p.querySelector('[data-act=cancel-clear]').addEventListener('click', function () { openFeedback(scope); });
+    p.querySelector('[data-act=confirm-clear]').addEventListener('click', function () {
+      if (kind === 'comments') {
+        var cs = lsGet(ST.comments, {});
+        Object.keys(cs).forEach(function (id) { if (pageId == null || cs[id].page === pageId) delete cs[id]; });
+        lsSet(ST.comments, cs);
+      } else if (win && win.__PB) {
+        if (pageId == null) win.__PB.resetAll(); else win.__PB.resetPage();
+      } else {
+        var ed = lsGet(ST.edits, {}); if (pageId == null) ed = {}; else delete ed[pageId]; lsSet(ST.edits, ed);
+        var mv = lsGet(ST.moves, {}); if (pageId == null) mv = {}; else delete mv[pageId]; lsSet(ST.moves, mv);
+      }
+      feedbackUpdated(); openFeedback(scope); toast('已' + label);
+    });
+    p.querySelector('[data-act=cancel-clear]').focus();
+  }
+  $('#count').addEventListener('click', function () { openFeedback(); });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { closePop(); return; }
+    if (e.key === 'Escape') { if (mode === 'move' && win && win.__PB) win.__PB.escapeMove(); closePop(); return; }
     if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !(e.target.closest && e.target.closest('input,textarea,[contenteditable="true"]'))) {
       e.preventDefault();
-      if (win && win.__PB) { var r = win.__PB.undoLast(); toast(r ? '已撤销:(' + r.page + ') ' + r.path : '没有可撤销的改动'); refreshCount(); }
+      undoLast();
     }
   });
 
@@ -954,11 +1398,13 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
 
   /* ---------- 发送反馈 ---------- */
   function collectBundle() {
-    var comments = lsGet(ST.comments, {}), edits = lsGet(ST.edits, {});
+    var comments = lsGet(ST.comments, {}), edits = lsGet(ST.edits, {}), moves = lsGet(ST.moves, {});
     var cs = Object.keys(comments).sort().map(function (id) { return Object.assign({ id: id }, comments[id]); });
     var ed = [];
     Object.keys(edits).forEach(function (pg) { (edits[pg] || []).forEach(function (r) { ed.push(Object.assign({ page: pg }, r)); }); });
-    return { v: 2, app: CFG.title, source: SRC, notify: isNotifyOn(), build: (win && win.PROTO_BUILD) || '', generatedAt: new Date().toISOString(), summary: { comments: cs.length, edits: ed.length }, comments: cs, edits: ed };
+    var mv = [];
+    Object.keys(moves).forEach(function (pg) { (moves[pg] || []).forEach(function (r) { mv.push(Object.assign({ page: pg }, r)); }); });
+    return { v: 2, app: CFG.title, source: SRC, notify: isNotifyOn(), build: (win && win.PROTO_BUILD) || '', generatedAt: new Date().toISOString(), summary: { comments: cs.length, edits: ed.length, moves: mv.length }, comments: cs, edits: ed, moves: mv };
   }
   function downloadText(name, text, mime) {
     var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: mime })); a.download = name; a.click();
@@ -970,7 +1416,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     if (!pendingBundle && !n.c && !n.e) { toast('还没有任何意见或改动:右键/双击元素即可添加意见或编辑'); return; }
     var p = openPop(btn,
       '<div class="ph">发送反馈给 Agent</div>' +
-      '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.e + '</b> 处<br>' +
+      '<div class="sum">意见 <b>' + n.c + '</b> 条 · 文字改动 <b>' + n.t + '</b> 处 · 元素移动 <b>' + n.m + '</b> 处<br>' +
       '<span>' + (pendingBundle ? '重试上次反馈通知，不重复保存；当前新改动可在成功后另行发送' : (isNotifyOn() && window.AgentHtmlCollabTransport.isBound() ? '保存后通知本页面所属对话' : '保存反馈，需手动让 agent「处理反馈」')) + '</span></div>' +
       '<div class="foot"><button data-x="c">取消</button><button class="ok" data-x="ok">确认发送</button></div>');
     p.querySelector('[data-x=c]').addEventListener('click', closePop);
@@ -1051,6 +1497,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     }
     var p = openPop($('#more'),
       '<div class="ph">操作</div>' +
+      '<button class="mi" data-act="feedback-review">管理意见 / 改动</button>' +
       restoreMenu(n) +
       '<div class="mtitle">反馈</div>' +
       '<button class="mi" data-act="export-json">导出反馈包(JSON)</button>' +
@@ -1062,6 +1509,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
       var a = e2.target.getAttribute && e2.target.getAttribute('data-act');
       if (!a) return;
       closePop();
+      if (a === 'feedback-review') openFeedback();
       if (a === 'export-json') { downloadText('proto-feedback-' + new Date().toISOString().slice(0, 10) + '.json', JSON.stringify(collectBundle(), null, 2), 'application/json'); toast('反馈包已下载'); }
       if (a === 'import') fileInput.click();
       if (a === 'notify-toggle') toggleNotify();
@@ -1080,7 +1528,7 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
           if (a === 'undo-last') { var r = win.__PB.undoLast(); toast(r ? '已撤销:' + r.path : '没有可撤销的改动'); }
           if (a === 'undo-page') { var n2 = win.__PB.resetPage(); toast(n2 ? '已还原本页 ' + n2 + ' 处改动' : '本页没有改动'); }
           if (a === 'undo-all') { var n3 = win.__PB.resetAll(); toast(n3 ? '已还原全部 ' + n3 + ' 处改动' : '没有改动'); }
-          refreshCount();
+          feedbackUpdated();
         } catch (e) { toast('还原失败'); }
       }
     });
@@ -1092,69 +1540,130 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     var fr = new FileReader();
     fr.onload = function () {
       try {
-        var j = JSON.parse(fr.result), nc = 0, ne = 0;
+        var j = JSON.parse(fr.result), nc = 0, ne = 0, nm = 0;
+        if (j.moves != null && (!Array.isArray(j.moves) || j.moves.some(function (r) {
+          return !r || typeof r.page !== 'string' || !r.page || typeof r.path !== 'string' || !/^[\w-]+(?::nth-of-type\(\d+\))?(>[\w-]+(?::nth-of-type\(\d+\))?)*$/.test(r.path) || !r.from || r.from.x !== 0 || r.from.y !== 0 || !r.to || !Number.isFinite(r.to.x) || !Number.isFinite(r.to.y);
+        }))) throw new Error('Invalid moves');
         if (j.comments) { var cs = lsGet(ST.comments, {}); j.comments.forEach(function (c) { if (c.id && !cs[c.id]) { cs[c.id] = c; nc++; } }); lsSet(ST.comments, cs); }
-        if (j.edits) { var ed = lsGet(ST.edits, {}); j.edits.forEach(function (r) { if (r.page) { ed[r.page] = ed[r.page] || []; ed[r.page].push(r); ne++; } }); lsSet(ST.edits, ed); }
-        if (win) { win.__PB && win.__PB.applyEdits(currentPage()); win.postMessage({ type: 'pbx-anno-updated' }, '*'); }
-        refreshCount(); toast('导入完成:意见 +' + nc + ' 改动 +' + ne);
+        if (j.edits) {
+          var ed = lsGet(ST.edits, {});
+          j.edits.forEach(function (r) {
+            if (!r.page) return;
+            var recs = ed[r.page] || [], hit = recs.filter(function (old) { return old.path === r.path; })[0];
+            if (hit) { hit.to = r.to; hit.ts = r.ts; } else { recs.push(r); ne++; }
+            ed[r.page] = recs.filter(function (old) { return old.from !== old.to && (old.path !== r.path || old === (hit || r)); });
+            if (!ed[r.page].length) delete ed[r.page];
+          });
+          lsSet(ST.edits, ed);
+        }
+        if (j.moves) {
+          var mv = lsGet(ST.moves, {});
+          j.moves.forEach(function (r) {
+            var recs = mv[r.page] || [], hit = recs.some(function (old) { return old.path === r.path; });
+            recs = recs.filter(function (old) { return old.path !== r.path; });
+            if (r.to.x || r.to.y) { recs.push(r); if (!hit) nm++; }
+            if (recs.length) mv[r.page] = recs; else delete mv[r.page];
+          });
+          lsSet(ST.moves, mv);
+        }
+        if (win) win.__PB && win.__PB.applyEdits(currentPage());
+        if (win && win.__PB) paintMoveSelection(win.__PB.getMoveSelection());
+        feedbackUpdated(); toast('导入完成:意见 +' + nc + ' 改动 +' + ne + ' 移动 +' + nm);
       } catch (e) { toast('导入失败:文件不是有效反馈包'); }
     };
     fr.readAsText(f);
   });
 
   /* ---------- 小地图 ---------- */
-  var mmapScale = 0.1, mmStyled = false;
-  function prefixSel(sel) { var scope = '#mmap-thumb .pbx-mm-clone'; sel = sel.trim(); if (/^(html|body|:root)$/i.test(sel)) return scope; if (/^body\./i.test(sel)) return scope + sel.replace(/^body/i, ''); return scope + ' ' + sel; }
-  function importProtoStyles() {
-    if (mmStyled) return; mmStyled = true;
-    function walk(rules, media, out) {
-      for (var i = 0; i < rules.length; i++) {
-        var r = rules[i];
-        if (r.type === 1) out += (media ? '@media ' + media + '{' : '') + r.selectorText.split(',').map(prefixSel).join(',') + '{' + r.style.cssText + '}' + (media ? '}' : '') + '\n';
-        else if (r.type === 4) out = walk(r.cssRules, r.conditionText, out);
-        else if (r.type === 5 || r.type === 7) out += r.cssText + '\n';
-      }
-      return out;
-    }
-    var css = '';
-    [].slice.call(doc.styleSheets).forEach(function (sheet) { try { css = walk(sheet.cssRules, null, css); } catch (e) {} });
-    $('#mm-styles').textContent = css;
+  var mmapScale = 0.1, mmapLeft = 0, mmapW = 0, mmapH = 0;
+  function clearMinimap() {
+    $('#mmap-thumb').replaceChildren();
+    $('#mmap-body').style.height = '0px';
+    mmapW = mmapH = 0; updateMinimapRect();
   }
   function buildMinimap() {
     var thumb = $('#mmap-thumb'), body = $('#mmap-body');
-    if (!sameOrigin || !doc) return;
-    var act = activeRoot(); if (!act) return;
-    importProtoStyles();
-    var pageH = Math.max(doc.documentElement.scrollHeight, act.scrollHeight);
-    mmapScale = 178 / contentW;
-    var th = Math.max(48, Math.min(window.innerHeight * 0.3, pageH * mmapScale));
-    body.style.height = th + 'px';
-    var clone = act.cloneNode(true);
-    clone.className = act.className + ' pbx-mm-clone';
-    var rootStyles = win.getComputedStyle(doc.documentElement);
-    for (var si = 0; si < rootStyles.length; si++) { var key = rootStyles[si]; if (key.indexOf('--') === 0) clone.style.setProperty(key, rootStyles.getPropertyValue(key)); }
-    clone.querySelectorAll(WLJOIN() + ',#pb-badge-layer,#pbx-chip-layer').forEach(function (n) { n.remove(); });
-    clone.style.width = contentW + 'px';
-    thumb.innerHTML = ''; thumb.style.width = contentW + 'px'; thumb.style.height = pageH + 'px';
+    if (pageLoading || !sameOrigin || !doc || !activeRoot()) { clearMinimap(); return; }
+    var pageH = docH(), viewportH = iframe.clientHeight || pageH;
+    var mapWidth = body.clientWidth || 178;
+    mmapScale = Math.min(mapWidth / contentW, Math.max(48, window.innerHeight * 0.3) / pageH);
+    mmapW = contentW * mmapScale; mmapH = pageH * mmapScale; mmapLeft = (mapWidth - mmapW) / 2;
+    body.style.height = mmapH + 'px';
+    thumb.style.left = mmapLeft + 'px';
+    thumb.style.width = contentW + 'px'; thumb.style.height = pageH + 'px';
     thumb.style.transform = 'scale(' + mmapScale + ')';
-    thumb.appendChild(clone);
+
+    var snapshot = doc.documentElement.cloneNode(true);
+    var styles = snapshot.querySelectorAll('style');
+    doc.querySelectorAll('style').forEach(function (style, i) {
+      try { styles[i].textContent = Array.prototype.map.call(style.sheet.cssRules, function (rule) { return rule.cssText; }).join('\n'); } catch (e) {}
+    });
+    var controls = snapshot.querySelectorAll('input,textarea,option');
+    doc.querySelectorAll('input,textarea,option').forEach(function (control, i) {
+      var clone = controls[i];
+      if (control.tagName === 'TEXTAREA') clone.textContent = control.value;
+      else if (control.tagName === 'OPTION') clone.toggleAttribute('selected', control.selected);
+      else {
+        if (control.type !== 'file') clone.setAttribute('value', control.value);
+        clone.toggleAttribute('checked', control.checked);
+      }
+    });
+    var canvases = snapshot.querySelectorAll('canvas');
+    doc.querySelectorAll('canvas').forEach(function (canvas, i) {
+      try {
+        var img = doc.createElement('img'); img.src = canvas.toDataURL();
+        Array.prototype.forEach.call(canvas.attributes, function (attr) { if (attr.name !== 'width' && attr.name !== 'height') img.setAttribute(attr.name, attr.value); });
+        var css = win.getComputedStyle(canvas);
+        for (var ci = 0; ci < css.length; ci++) img.style.setProperty(css[ci], css.getPropertyValue(css[ci]));
+        canvases[i].replaceWith(img);
+      } catch (e) {}
+    });
+    snapshot.querySelectorAll((CFG.ui.whitelist || []).join(',') + ',script,[data-pbx-runtime],#pb-badge-layer,#pbx-chip-layer,base,meta[http-equiv="refresh"]').forEach(function (n) { n.remove(); });
+    snapshot.querySelectorAll('*').forEach(function (n) {
+      ['pbx-edit', 'pbx-anno', 'pbx-move', 'pbx-moving', 'pbx-move-selected', 'pbx-panning', 'pbx-hover', 'pbx-editing', 'pbx-edited', 'pb-anno-on'].forEach(function (name) { n.classList.remove(name); });
+      n.removeAttribute('autofocus');
+      Array.prototype.slice.call(n.attributes).forEach(function (attr) { if (/^on/i.test(attr.name)) n.removeAttribute(attr.name); });
+    });
+    snapshot.classList.remove('pb-anno-on');
+    var base = doc.createElement('base'); base.href = doc.baseURI;
+    var head = snapshot.querySelector('head'); head.insertBefore(base, head.firstChild);
+    if (doc.adoptedStyleSheets) doc.adoptedStyleSheets.forEach(function (sheet) {
+      try { var style = doc.createElement('style'); style.textContent = Array.prototype.map.call(sheet.cssRules, function (rule) { return rule.cssText; }).join('\n'); head.appendChild(style); } catch (e) {}
+    });
+    var preview = thumb.querySelector('iframe[data-minimap]');
+    if (!preview) {
+      preview = document.createElement('iframe'); preview.setAttribute('data-minimap', '');
+      preview.setAttribute('sandbox', 'allow-same-origin'); preview.setAttribute('aria-hidden', 'true'); preview.tabIndex = -1;
+      preview.title = '方案缩略图'; preview.style.cssText = 'display:block;border:0;pointer-events:none;';
+      preview.addEventListener('load', function () {
+        var loadedDoc = preview.contentDocument;
+        Promise.resolve(loadedDoc && loadedDoc.fonts ? loadedDoc.fonts.ready : null).then(function () {
+          if (!preview.isConnected || preview.contentDocument !== loadedDoc || pageLoading) return;
+          preview.style.visibility = 'visible'; preview.setAttribute('data-ready', '');
+        });
+      });
+      thumb.appendChild(preview);
+    }
+    preview.style.width = contentW + 'px'; preview.style.height = viewportH + 'px';
+    var html = '<!doctype html>' + snapshot.outerHTML;
+    if (preview.srcdoc !== html) { preview.style.visibility = 'hidden'; preview.removeAttribute('data-ready'); preview.srcdoc = html; }
     updateMinimapRect();
   }
-  function WLJOIN() { return (CFG.ui.whitelist || []).join(','); }
   function updateMinimapRect() {
     if (!win) return;
     var vp = $('#mmap-vp');
-    var vw = stageW() / scale, vh = stageH() / scale;
-    vp.style.left = Math.max(0, (stage.scrollLeft - fit.offsetLeft) / scale * mmapScale) + 'px';
-    vp.style.top = Math.max(0, (stage.scrollTop - fit.offsetTop) / scale * mmapScale) + 'px';
-    vp.style.width = Math.max(8, vw * mmapScale) + 'px';
-    vp.style.height = Math.max(6, vh * mmapScale) + 'px';
+    var width = Math.min(mmapW, Math.max(8, stageW() / scale * mmapScale));
+    var height = Math.min(mmapH, Math.max(6, stageH() / scale * mmapScale));
+    vp.style.left = mmapLeft + Math.max(0, Math.min(mmapW - width, (stage.scrollLeft - fit.offsetLeft) / scale * mmapScale)) + 'px';
+    vp.style.top = Math.max(0, Math.min(mmapH - height, stage.scrollTop / scale * mmapScale)) + 'px';
+    vp.style.width = width + 'px'; vp.style.height = height + 'px';
   }
   (function () {
     var body = $('#mmap-body'), dragging = false;
     function jump(e) {
       var r = body.getBoundingClientRect();
-      var x = (e.clientX - r.left) / mmapScale, y = (e.clientY - r.top) / mmapScale;
+      var x = Math.max(0, Math.min(mmapW, e.clientX - r.left - mmapLeft)) / mmapScale;
+      var y = Math.max(0, Math.min(mmapH, e.clientY - r.top)) / mmapScale;
       stage.scrollLeft = Math.max(0, x * scale + fit.offsetLeft - stageW() / 2);
       stage.scrollTop = Math.max(0, y * scale + fit.offsetTop - stageH() / 2);
     }
@@ -1163,7 +1672,11 @@ body.pbx-panning, body.pbx-panning * { cursor: grabbing !important; user-select:
     document.addEventListener('mouseup', function () { dragging = false; });
   })();
   stage.addEventListener('scroll', updateMinimapRect, { passive: true });
-  $('#mmap-fold').addEventListener('click', function () { var m = $('#mmap'); m.classList.toggle('fold'); this.textContent = m.classList.contains('fold') ? '▸' : '▾'; });
+  $('#mmap-fold').addEventListener('click', function () {
+    var m = $('#mmap'); m.classList.toggle('fold');
+    this.textContent = m.classList.contains('fold') ? '▸' : '▾';
+    if (!m.classList.contains('fold')) buildMinimap();
+  });
 
   /* ---------- 启动 ---------- */
   mode = qs.get('anno') === '1' ? 'anno' : (lsGet(ST.mode, 'browse'));

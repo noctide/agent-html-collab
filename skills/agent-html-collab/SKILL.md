@@ -1,6 +1,6 @@
 ---
 name: agent-html-collab
-description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 / 标注提意见 / 反馈回灌源码)。当用户提到「原型协同」「方案稿标注」「处理反馈」「agent-html-collab」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
+description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 / 移动元素 / 标注提意见 / 反馈回灌源码)。当用户提到「原型协同」「方案稿标注」「处理反馈」「agent-html-collab」「给原型提意见」,或者需要在 HTML 原型上收集反馈并让 agent 改源码时使用。
 ---
 
 # Agent HTML Collab 操作手册(agent 进阶)
@@ -12,7 +12,7 @@ description: 为任意 HTML 原型项目接入"人机协同闭环"(就地改字 
 
 - DSH：安装本仓库的 DSH bundle 后，在所属对话点击“打开原型协同”。Host 自动取得页面所属会话和项目。不要用全局绑定或最近会话。
 - OpenCode V2：安装本包后，在所属会话执行 `/agent-html-collab`，将返回的本地网页链接展示给用户。用户发送反馈后，插件向绑定会话排队投递，无需 `wait_feedback` 或扫盘轮询；收到后按反馈文件处理并报告结果。结束时执行 `/agent-html-collab-close`。当前不是原生侧栏，实际桌面 GUI 和用户模型尚待验证。
-- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中。确认页面加载后，先明确告诉用户：“页面已打开，请在右侧原型中选择‘编辑’改字或‘标注’提意见，再点击‘发送反馈’并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。”随后调用一次 `wait_feedback`，bindingId 使用 open_studio 返回值。
+- ZCode：使用本插件的 `open_studio` MCP 工具，projectRoot 取当前项目的绝对路径。用客户端的 Browser 工具将返回的 URL 打开在内置浏览器中。确认页面加载后，先明确告诉用户：“页面已打开，请在右侧原型中选择‘编辑’改字、‘移动’调整元素位置或‘标注’提意见，再点击‘发送反馈’并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。”随后调用一次 `wait_feedback`，bindingId 使用 open_studio 返回值。
 - ZCode 用户点击发送后，反馈通过等待工具的返回值进入当前对话。先报告收到反馈，再按反馈文件处理、备份、核对。完成后询问是否继续收集，得到肯定答复再等待；不要默认收到一次就无限续等。
 - 超时返回 timedOut 时默认结束本轮并告诉用户：“本轮等待已结束，尚未收到反馈。准备好后在聊天里说‘继续收集反馈’，我重新等待后你再发送。”仅在用户明确要求持续收集时自动续等，不反复输出无变化的超时提示。对话结束、等待工具取消或超时时，不能从空闲状态主动唤醒；页面保留反馈并提示重新等待后重试通知。不要把 MCP 服务放到后台后声称已自动通知。
 - 结束协作时调用 close_studio。只在没有这些客户端接口时使用下文手动 CLI。
@@ -52,7 +52,7 @@ agent-html-collab/
    - `tools.anno`:是否需要区域标注模块;`annoMap` 指向 `annotation-map.js`。
    - `server.port/feedbackDir/wakeOnFeedback`。
    - `apply`:回灌用(适配器路径、`map`)。
-   - `storage`(可选):localStorage 键名前缀,默认 `proto.*`。
+   - `storage`(可选):各项 localStorage 键名；服务默认按项目根目录哈希隔离。`moves` 默认由最终 `storage.edits + ".moves"` 派生，也可显式覆盖 `storage.moves`；旧 `proto.*` 草稿不自动导入。
 2. 方案稿只要满足:`页面根`能被 `pages.container` 选中、当前页带 `pages.activeClass`、页 id 写在 `pages.idAttr`。其余结构随意。
    - 页面清单优先取 `pages.list`;也可让方案稿暴露 `window.PROTO_PAGES` 作为回退。
 3. 起服务:`node <agent-html-collab>/studio/serve.mjs --root . --config proto.config.json`。
@@ -66,7 +66,7 @@ agent-html-collab/
 |---|---|---|
 | `single` | 单文件含全部页(每页一个根容器) | 桥接按"活动容器"取页;`switch:auto` 用内核切换器,项目自带路由则 `switch:hook` 并让方案稿广播 `pbx-page` |
 | `pages` | 每页一个 html,`src` 直接换 iframe | 切页 = 换 iframe 地址,每次 load 重新注入;页清单靠 `pages.list` 或 `source.dir` 扫描文件名 |
-| `urls` | 任意在线页面(只读标注) | **跨源**无法注入 bridge,改字/拾取不可用;仅浏览与整页查看。`sameOrigin=false` 时 studio 会提示 |
+| `urls` | 任意在线页面 | **跨源**无法注入 bridge,改字/移动/拾取不可用;仅浏览与整页查看。`sameOrigin=false` 时 studio 会提示 |
 
 - `single` 的坑:多页同 DOM 时必须把 anno/编辑限定在活动容器,否则徽章跨页堆叠(内核已处理)。
 - `pages` 的坑:每次换 iframe 都要重新注入;`src` 带 `?t=` 防缓存。
@@ -85,11 +85,16 @@ agent-html-collab/
 export function plans({ feedback, config, projectRoot }) {
   // edits:    [{ record, file, from, to }]   file 相对 projectRoot
   // comments: [{ comment, file, line }]      定位提示(人工处理)
-  return { edits: [...], comments: [...] };
+  // moves:    [{ record, file, line }]       可选;元素布局任务
+  return { edits: [...], comments: [...], moves: [...] };
 }
 ```
 
 样例见 `examples/demo/apply.mjs`。仅**精确命中**会自动写回;模糊/跨标签命中只定位、列入需人工清单。
+
+反馈的可选 `moves` 数组包含 `{page,path,label,from:{x:0,y:0},to:{x,y},ts}`。坐标是相对原始布局的 CSS 像素位移，正 X 向右、正 Y 向下，与预览缩放无关；它不表示 DOM 重新挂载。Studio 的“移动”（`M`）支持拖动、方向键 1px/Shift 10px、数值 X/Y、选中父元素、撤销和还原。旧适配器不返回 moves 时，内核仍按页面映射把移动列入报告。
+
+处理 moves 时根据 `page` 与 `path` 定位元素，再核对布局容器、已有样式和响应式规则，以最小必要源码改动实现用户的布局意图。内核只生成移动报告，不自动写 CSS；不要把预览偏移机械转成 `transform`/`position` 覆盖。`--apply` 会归档原包，报告中待处理的 comments/moves 仍需完成并核对页面。
 
 ## 4. 扩展/维护 verify
 
@@ -116,4 +121,4 @@ export function plans({ feedback, config, projectRoot }) {
 
 ## 6. 边界(明确不做)
 
-多用户协同、云服务、修改方案稿视觉呈现。内核负责“落盘 + 本地 HTTP + 约定”；ZCode 适配层提供会话隔离 stdio MCP，通过正在等待的工具返回反馈。
+多用户协同、云服务、自动将移动偏移改写成源码 CSS。内核负责“页面预览 + 移动草稿 + 落盘 + 本地 HTTP + 约定”，Agent 核对后实现布局；ZCode 适配层提供会话隔离 stdio MCP，通过正在等待的工具返回反馈。

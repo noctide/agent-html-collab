@@ -69,7 +69,7 @@ try {
   t(await page.evaluate(() => document.getElementById('brand-title').textContent) === 'Agent HTML Collab · 人机协同', '装载:工具品牌不被项目标题覆盖');
   t(await page.$$eval('#page-sel option', a => a.length) === 1, '装载:单文档页清单 1 项');
   t(await page.$eval('#page-sel', s => s.value) === 'page', '装载:当前页 = defaultId');
-  t(await page.evaluate(() => getComputedStyle(document.getElementById('mmap')).display !== 'none' && document.querySelector('#mmap-thumb #s-title')?.textContent === document.querySelector('#proto').contentDocument.querySelector('#s-title').textContent), '装载:单文档小地图显示整页内容');
+  t(await page.evaluate(() => getComputedStyle(document.getElementById('mmap')).display !== 'none' && document.querySelector('#mmap-thumb iframe[data-minimap]')?.contentDocument?.querySelector('#s-title')?.textContent === document.querySelector('#proto').contentDocument.querySelector('#s-title').textContent), '装载:单文档小地图显示整页内容');
 
   async function setMode(m) {
     const on = await page.$eval('#bar [data-x=m-' + m + ']', el => el.classList.contains('on'));
@@ -93,7 +93,7 @@ try {
   await frame.evaluate(() => { const ae = document.activeElement; if (ae && ae.blur) ae.blur(); });
   await sleep(250);
   t((await txt('#s-title')).includes('改版'), '编辑:就地改字生效', await txt('#s-title'));
-  t(await page.evaluate(() => 'page' in JSON.parse(localStorage.getItem('proto.edits') || '{}')), '编辑:改动记录在 defaultId 下');
+  t(await page.evaluate(() => 'page' in JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.edits) || '{}')), '编辑:改动记录在 defaultId 下');
 
   await setMode('anno');
   await sleep(400);
@@ -103,7 +103,7 @@ try {
   await page.type('.pop [data-f=comment]', '措辞再正式一点');
   await page.click('.pop [data-x=save]');
   await sleep(300);
-  t(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem('proto.anno.comments') || '{}')).length) >= 1, '标注:元素意见入库');
+  t(await page.evaluate(() => Object.keys(JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.comments) || '{}')).length) >= 1, '标注:元素意见入库');
 
   await page.click('#send');
   await page.click('.pop [data-x=ok]');

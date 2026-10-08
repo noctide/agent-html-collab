@@ -4,7 +4,7 @@
 
 ## 当前状态
 
-仓库提供通用核心与 DSH、ZCode 适配。DSH 已按本机安装代码接入页面 scoped Slot 和 sessionController.prompt（内部 followup）；ZCode 采用会话隔离的 stdio MCP 等待工具。真实客户端 GUI 尚待安装联动验证。见 [客户端接入](client-adapters.md)。
+仓库提供通用核心与 DSH、ZCode 适配。DSH 已按本机安装代码接入页面 scoped Slot 和 sessionController.prompt（内部 followup），并完成真实 GUI 单会话反馈联调；ZCode 采用会话隔离的 stdio MCP 等待工具，真实 GUI 尚待验证。Studio 服务默认按项目隔离浏览器草稿。DSH 的多会话生命周期和取消竞态尚未逐项 GUI 验收。见 [客户端接入](client-adapters.md)。
 以下是其他客户端实现适配时的通用契约。
 
 ## 客户端接入
@@ -23,7 +23,8 @@ const bridge = createPageBridge({
   },
   enqueue: async ({ sessionId, feedbackId, text }) => {
     // 客户端真实的会话投递 API：应验证会话归属、排队投递。
-    // 用 feedbackId 持久去重，解决“已接受消息但响应丢失”的重试。
+    // 使用稳定的 feedbackId 去重“已接受消息但响应丢失”的重试。
+    // 重启后能否去重取决于客户端 API；不保证崩溃后恰好执行一次。
     await enqueueSessionMessage(sessionId, text, feedbackId);
   },
 });
@@ -45,7 +46,9 @@ V1 入口保留的 `ctx.protobridge.registerPageBridge(factory)` 是本项目约
 - 无 Host：本地 `/api/feedback` 返回 `delivery: 'manual'`，页面提示手动处理。
 - 两个页面分别打开同一 HTML，可以分别绑定不同对话，不共享全局目标。
 
-内存去重覆盖当前页面生命周期；跨重启去重由 Host 回调负责。cookie 不用于确定目标会话。
+内存去重覆盖当前页面生命周期；跨页面重试相同 feedbackId 和内容时，DSH 仅忽略临时绑定字段 `routing.bindingId` 和 `routing.pageId`，复用已保存的反馈文件，保留首次保存的 routing 元数据。投递目标始终取当前有效的页面绑定，不能从反馈文件中的旧 routing 恢复会话归属。相同 feedbackId 携带不同业务内容或其他 routing 元数据应被拒绝。
+
+跨重启的保存和投递去重由 Host 回调及客户端 API 负责。DSH 使用稳定 requestId，但不能据此保证崩溃后消息恰好执行一次。cookie 不用于确定目标会话。
 
 ## 从 v0.1 迁移
 

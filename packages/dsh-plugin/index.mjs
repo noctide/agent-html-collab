@@ -2,6 +2,7 @@ import { spawn } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 import { createPageBridge } from '../host-bridge/index.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
@@ -29,14 +30,14 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
   const stop = (id) => {
     const page = pages.get(id);
     if (!page) return;
-    page.bridge.dispose(); page.child.kill(); pages.delete(id);
+    page.controller.abort(); page.bridge.dispose(); page.child.kill(); pages.delete(id);
   };
 
   const open = async (sessionId, pageId) => {
     const agent = ctx.agents.get(sessionId);
     if (!agent?.session?.header?.cwd) throw new Error('所属会话未加载或没有项目目录，请先打开该对话');
     const projectRoot = resolve(agent.session.header.cwd);
-    let closed = false;
+    const controller = new AbortController();
     const bridge = createPageBridge({ owner: { sessionId, pageId, projectRoot },
       saveFeedback: async ({ projectRoot, bundle }) => {
         const config = await readFile(join(projectRoot, 'proto.config.json'), 'utf8').then(JSON.parse).catch(() => ({}));
@@ -45,13 +46,24 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
         const file = join(dir, 'feedback-' + bundle.feedbackId + '.json');
         const text = JSON.stringify(bundle, null, 2);
         try { await writeFile(file, text, { flag: 'wx' }); }
-        catch (error) { if (error.code !== 'EEXIST' || await readFile(file, 'utf8') !== text) throw error; }
+        catch (error) {
+          if (error.code !== 'EEXIST') throw error;
+          const saved = JSON.parse(await readFile(file, 'utf8'));
+          const content = { ...bundle, routing: { ...bundle.routing } };
+          // Page ownership can change on retry; preserve the first saved routing.
+          for (const feedback of [saved, content]) if (feedback.routing) {
+            delete feedback.routing.bindingId; delete feedback.routing.pageId;
+          }
+          if (!isDeepStrictEqual(saved, content)) throw new Error('相同反馈 ID 的内容不能变化');
+        }
         return file;
       },
       enqueue: async ({ sessionId, feedbackId, text }) => {
-        if (closed || ctx.agents.get(sessionId) !== agent) throw new Error('页面所属会话已失效');
+        if (controller.signal.aborted || ctx.agents.get(sessionId) !== agent) {
+          stop(bridge.binding.bindingId); throw new Error('页面所属会话已失效');
+        }
         const result = await ctx.sessionController.prompt({ sessionId, requestId: 'agent-html-collab-' + feedbackId,
-          content: [{ type: 'text', text }], mode: 'followup' }, new AbortController().signal);
+          content: [{ type: 'text', text }], mode: 'followup' }, controller.signal);
         if (result?.accepted !== true) throw new Error('客户端未接受反馈通知');
       },
     });
@@ -60,9 +72,9 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
     const child = spawn(nodeExecutable, [join(ROOT, 'studio/serve.mjs'), '--root', projectRoot, '--port', '0', '--stay-alive', '--base-path', base], {
       env: { ...process.env, ELECTRON_RUN_AS_NODE: '1', PROTOBRIDGE_WAKE: '0' }, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true,
     });
-    const page = { bridge, child, base, port: null, sessionId, agent };
+    const page = { bridge, child, controller, base, port: null, sessionId, agent };
     pages.set(id, page);
-    child.once('exit', () => { closed = true; bridge.dispose(); pages.delete(id); });
+    child.once('exit', () => { controller.abort(); bridge.dispose(); pages.delete(id); });
     try {
       page.port = await new Promise((done, fail) => {
         let log = '';
@@ -72,7 +84,9 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
         child.once('exit', () => { clearTimeout(timeout); fail(new Error('原型服务提前退出')); });
         child.stderr.on('data', chunk => { log += String(chunk).slice(0, 1000); });
       });
-      return { bindingId: id, url: base + '/studio', runtimeRevision: 'notify-signal-v1' };
+      if (controller.signal.aborted || pages.get(id) !== page || ctx.agents.get(sessionId) !== agent)
+        throw new Error('页面所属会话已失效');
+      return { bindingId: id, url: base + '/studio', runtimeRevision: 'project-storage-v1' };
     } catch (error) { stop(id); throw error; }
   };
 
@@ -94,10 +108,13 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
       const url = new URL(req.url, 'http://localhost');
       const id = url.pathname.split('/')[3];
       const page = pages.get(id);
-      if (!page || !page.port || ctx.agents.get(page.sessionId) !== page.agent) return send(res, 410, { error: '页面绑定已失效' });
+      if (!page) return send(res, 410, { error: '页面绑定已失效' });
       const tail = url.pathname.slice(page.base.length);
+      if (req.method === 'POST' && tail === '/close') { stop(id); return send(res, 200, { closed: true }); }
+      if (!page.port || ctx.agents.get(page.sessionId) !== page.agent) {
+        stop(id); return send(res, 410, { error: '页面绑定已失效' });
+      }
       if (req.method === 'POST') {
-        if (tail === '/close') { stop(id); return send(res, 200, { closed: true }); }
         if (tail !== '/feedback') return send(res, 404, { error: 'Not found' });
         return send(res, 200, await page.bridge.pageApi.submitFeedback(await readBody(req)));
       }
@@ -112,6 +129,10 @@ export function apply(ctx, { nodeExecutable = process.execPath, fetchLocal = fet
       } else res.end(Buffer.from(await upstream.arrayBuffer()));
     } catch (error) { send(res, 400, { error: error.message }); }
   } }), 'agent-html-collab: bound page routes');
+
+  if (typeof ctx.on === 'function') ctx.effect(() => ctx.on('session/disposed', session => {
+    for (const [id, page] of pages) if (page.agent.session === session) stop(id);
+  }), 'agent-html-collab: session cleanup');
 
   ctx.effect(() => () => { for (const id of [...pages.keys()]) stop(id); }, 'agent-html-collab: page cleanup');
 }

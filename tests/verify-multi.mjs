@@ -98,7 +98,7 @@ try {
   /* ---------- 编辑 A ---------- */
   await editSel('#a-title', '改版A');
   t((await txt('#a-title')).includes('改版A'), '编辑:改 a.html 生效', await txt('#a-title'));
-  t(await page.evaluate(() => 'a' in JSON.parse(localStorage.getItem('proto.edits') || '{}')), '编辑:改动记在页 a 下');
+  t(await page.evaluate(() => 'a' in JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.edits) || '{}')), '编辑:改动记在页 a 下');
 
   /* ---------- 切页 A → B ---------- */
   await setMode('browse');
@@ -111,7 +111,7 @@ try {
   /* ---------- 编辑 B ---------- */
   await editSel('#b-title', '改版B');
   t((await txt('#b-title')).includes('改版B'), '编辑:改 b.html 生效', await txt('#b-title'));
-  t(await page.evaluate(() => 'b' in JSON.parse(localStorage.getItem('proto.edits') || '{}')), '编辑:改动记在页 b 下');
+  t(await page.evaluate(() => 'b' in JSON.parse(localStorage.getItem(window.PROTO_CONFIG.storage.edits) || '{}')), '编辑:改动记在页 b 下');
 
   /* ---------- 发送反馈 → 落盘 ---------- */
   await page.click('#send');

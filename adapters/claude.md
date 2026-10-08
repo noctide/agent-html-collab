@@ -11,6 +11,6 @@ Claude 系(Claude Code / Skills)使用开放 Agent Skills 格式,直接复用内
 Claude 项目指令文件等价于 AGENTS.md,把 `AGENTS-SNIPPET.md` 追加进 `CLAUDE.md` 即可。
 
 ## 说明
-Claude 无 ZCode 的"退出唤醒",走 AGENTS.md §4 的扫盘约定:`feedback/*.json` → `studio/apply.mjs` → 刷核对。
+当前 Claude 适配使用通用手动反馈文件流程。用户发送反馈后，agent 按 AGENTS.md §4 读取 `feedback/*.json`，运行 `studio/apply.mjs` 生成报告，确认回灌后提示刷新核对。该适配没有专用会话投递接口，不依赖进程退出通知。
 
 其余细节见内核 `skills/agent-html-collab/SKILL.md`。

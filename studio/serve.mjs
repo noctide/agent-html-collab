@@ -14,7 +14,7 @@ import { parseArgs } from './cli-args.mjs';
 //   - 唤醒解耦:默认落盘后继续运行并打印提示;仅当环境变量 PROTOBRIDGE_WAKE=1
 //     或 config.server.wakeOnFeedback=true 时才"落盘即退出"(兼容 ZCode 旧行为)。
 import http from 'node:http';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFileSync, existsSync, writeFileSync, mkdirSync, statSync } from 'node:fs';
 import { join, dirname, resolve, extname, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -60,7 +60,7 @@ const DEFAULTS = {
   source: { mode: 'single', file: 'proto.html', dir: 'pages/', urls: [], index: '' },
   pages: { container: '.pg-sec', activeClass: 'act', idAttr: 'data-page', switch: 'auto', rootId: 'pg-{id}', single: false, singlePerFile: false, list: [] },
   viewport: { desktop: 1440, narrow: [{ match: '.is-mobile', width: 390 }] },
-  ui: { whitelist: ['.pb-badge', '.pb-pop', '.pb-anno-fab', '.pbx-echip'] },
+  ui: { whitelist: ['.pb-badge', '.pb-pop', '.pb-anno-fab', '.pbx-echip', '.pbx-move-chip'] },
   tools: { anno: false },
   server: { port: 8123, feedbackDir: 'feedback/', wakeOnFeedback: false },
 };
@@ -74,6 +74,16 @@ const CFG = deepMerge(deepMerge(structuredClone(DEFAULTS), FILE_CFG), {
 });
 if (ARGS.source) CFG.source = Object.assign({ mode: 'single' }, CFG.source, { file: ARGS.source });
 if (CFG.server.port == null) CFG.server.port = 8123;
+
+// Same-origin embedded pages share localStorage; draft keys belong to the project.
+const storageRoot = process.platform === 'win32' ? PROJECT_ROOT.toLowerCase() : PROJECT_ROOT;
+const storagePrefix = 'proto.project.' + createHash('sha256').update(storageRoot).digest('hex') + '.';
+CFG.storage = { ...CFG.storage };
+for (const key of ['edits', 'comments', 'ecount', 'mode', 'annoMode', 'page', 'notify']) {
+  if (typeof CFG.storage[key] !== 'string' || !CFG.storage[key]) CFG.storage[key] = storagePrefix + key;
+}
+// Derive movement drafts from edits so legacy custom namespaces remain isolated.
+if (typeof CFG.storage.moves !== 'string' || !CFG.storage.moves) CFG.storage.moves = CFG.storage.edits + '.moves';
 
 function deepMerge(base, extra) {
   if (!extra) return base;
@@ -232,7 +242,8 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const j = JSON.parse(body);
-        if (!j || typeof j !== 'object' || (!Array.isArray(j.comments) && !Array.isArray(j.edits))) throw new Error('结构不符');
+        if (!j || typeof j !== 'object' || (!Array.isArray(j.comments) && !Array.isArray(j.edits) && !Array.isArray(j.moves)) ||
+            (j.moves !== undefined && !Array.isArray(j.moves))) throw new Error('结构不符');
         j.v = j.v || 2;
         j.app = j.app || CFG.title;
         mkdirSync(FEEDBACK_DIR, { recursive: true });   // 目录可能被外部清理,写入前确保存在
@@ -246,7 +257,7 @@ const server = http.createServer((req, res) => {
         const file = join(FEEDBACK_DIR, 'feedback-' + stamp + '.json');
         writeFileSync(file, JSON.stringify(j, null, 2));
         const notify = j.notify !== false;
-        console.log('[feedback] 已保存 ' + file + '  意见 ' + (j.comments || []).length + ' 条 / 改动 ' + (j.edits || []).length + ' 处' + (notify ? '' : '  (协同通知关闭)'));
+        console.log('[feedback] 已保存 ' + file + '  意见 ' + (j.comments || []).length + ' 条 / 改字 ' + (j.edits || []).length + ' 处 / 移动 ' + (j.moves || []).length + ' 处' + (notify ? '' : '  (协同通知关闭)'));
         send(200, MIME['.json'], JSON.stringify({ ok: true, saved: true, file, delivery: 'manual' }));
         const wake = process.env.PROTOBRIDGE_WAKE === '1' && !CFG.server.stayAlive;
         if (wake || CFG.server.wakeOnFeedback) {

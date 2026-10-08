@@ -37,6 +37,36 @@ test('two page owners remain isolated; forged routing is ignored', async () => {
   assert.equal(saves[0].bundle.routing.pageId, 'page-a');
 });
 
+test('optional movement feedback survives saving and notifies using actual record counts', async () => {
+  const saves = [], messages = [];
+  const bridge = createPageBridge({ owner,
+    saveFeedback: async value => { saves.push(value); return '/feedback/moves.json'; },
+    enqueue: async value => { messages.push(value); } });
+  const moves = [{ page: 'p1', path: 'main>p', label: 'Introduction',
+    from: { x: 0, y: 0 }, to: { x: 24, y: -12 }, ts: '2026-10-07T00:00:00Z' }];
+  const bundle = { ...feedback('feedback_moves_0001'), comments: [{ id: 'p1-E1', comment: 'Align with heading' }],
+    edits: [{ page: 'p1', path: 'main>h1', from: 'Before', to: 'After' }], moves,
+    summary: { comments: 99, edits: 99, moves: 99 } };
+  assert.equal((await bridge.pageApi.submitFeedback(bundle)).delivery, 'queued');
+  assert.deepEqual(saves[0].bundle.moves, moves);
+  assert.deepEqual(saves[0].bundle.comments, bundle.comments);
+  assert.deepEqual(saves[0].bundle.edits, bundle.edits);
+  assert.match(messages[0].text, /意见 1 条 \/ 改字 1 处 \/ 元素移动 1 处/);
+  assert.match(messages[0].text, /包路径:\/feedback\/moves\.json/);
+});
+
+test('non-array movement feedback is rejected before saving or notifying', async () => {
+  let saves = 0, messages = 0;
+  const bridge = createPageBridge({ owner,
+    saveFeedback: async () => { saves++; return '/feedback/invalid.json'; },
+    enqueue: async () => { messages++; } });
+  for (const moves of [{}, null, 'invalid', 1]) {
+    await assert.rejects(bridge.pageApi.submitFeedback({ ...feedback(), moves }), /反馈结构不符/);
+  }
+  assert.equal(saves, 0);
+  assert.equal(messages, 0);
+});
+
 test('concurrent sends deduplicate; failed delivery retries without saving again', async () => {
   let saves = 0, attempts = 0;
   const bridge = createPageBridge({ owner,

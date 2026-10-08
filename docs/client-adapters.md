@@ -6,9 +6,11 @@
 
 使用插件管理器的本地包安装入口选择本包目录或 TGZ。根 package.json 提供 `dsh.bundle.patch`、Host export 和浏览器 client export。
 
-在所属对话的输入区点击“打开原型协同”，插件通过会话 scoped Slot 的 `sessionId` 创建独立侧栏页面。Host 使用 `agents.get(sessionId).session.header.cwd` 确定项目，不让原型网页选择会话或项目。
+在所属对话顶部点击常驻的“原型协同”按钮。入口注册在 `conversation.header.leading`；插件通过会话 scoped Slot 的 `sessionId` 创建独立侧栏页面。Host 使用 `agents.get(sessionId).session.header.cwd` 确定项目，不让原型网页选择会话或项目。尚未创建对话时，按钮会提示先打开已有对话或发送第一条消息。
 
-Host 路由通过 `connection.admit(req)` 验证客户端认证，提交同时检查 Origin。页面关闭后绑定失效。保存成功后调用 `sessionController.prompt`，requestId 用 feedbackId 去重；当前安装版本的控制器内部调用 `agent.followup()`。
+Host 路由通过 `connection.admit(req)` 验证客户端认证，提交同时检查 Origin。页面关闭后绑定失效。保存成功后调用 `sessionController.prompt`，requestId 使用 feedbackId，重复投递由控制器去重；当前安装版本的控制器内部调用 `agent.followup()`。这不保证客户端崩溃或重启后的消息恰好执行一次。
+
+关闭页面会使传给控制器的 AbortSignal 失效，但 rc.2 的 `prompt` 仅在入口检查取消状态；已经开始接收或已经接受的消息不能保证撤回。此边界已核对本机控制器源码，并有模拟原生入口行为的回归测试；取消竞态尚未通过真实 GUI 验收。
 
 源码证据来自用户安装的 0.2.0-rc.2：
 
@@ -17,7 +19,9 @@ Host 路由通过 `connection.admit(req)` 验证客户端认证，提交同时�
 - `@deepseek-ai/dsh-client-connection/lib/index.js`：webServer 与 connection.admit 的认证入口。
 - `@deepseek-ai/dsh-api-session-controller/lib/index.js`：prompt、requestId 去重、followup。
 
-已验证 HTTP/Host 协议集成和页面隔离；还需要在真实 DSH GUI 安装后确认按钮呈现、插件激活和完整用户交互。不会修改客户端安装包或 app.asar。
+已验证 HTTP/Host 协议集成和页面隔离。2026-10-06 已在真实 DSH GUI 完成单会话联调：安装更新并重启、顶部按钮打开内嵌 Studio、编辑标题、反馈 JSON 落盘、原会话收到通知并回复、关闭和重新打开标签页。多会话切换、删除会话和取消竞态仍由协议回归测试覆盖，尚未逐项 GUI 验收。详见 [DSH 验证记录](dsh-validation-notes.md)。未修改客户端安装包或 app.asar。
+
+首次联调确认旧默认 `proto.*` localStorage 键在 DSH 同源内嵌页之间共享，可能混入其他项目的意见和改动。现在由 Studio Host 按可信项目根目录生成稳定默认键，隔离意见、文字改动、编号、模式和通知状态。显式配置的存储键保留；旧共享草稿不自动迁移或删除。该行为通过配置回归和同源内嵌页浏览器回归验证，具体范围见 [DSH 验证记录](dsh-validation-notes.md)。
 
 ## ZCode（3.14.4）
 

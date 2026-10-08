@@ -2,7 +2,7 @@
   "name": "agent-html-collab",
   "version": "0.3.0",
   "type": "module",
-  "description": "通用 HTML 原型人机协同插件:就地改字 / 标注提意见 / 反馈回灌任意编码 agent",
+  "description": "通用 HTML 原型人机协同插件:就地改字 / 移动元素 / 标注提意见 / 反馈回灌任意编码 agent",
   "bin": {
     "agent-html-collab": "bin/agent-html-collab.mjs"
   },
@@ -16,6 +16,7 @@
     "AGENTS-SNIPPET.md",
     "SPEC.md",
     "README.md",
+    "README.en.md",
     "docs",
     "CHANGELOG.md",
     ".zcode-plugin",
@@ -29,8 +30,10 @@
     "verify": "node tests/verify-generic.mjs",
     "verify:single": "node tests/verify-single.mjs",
     "verify:multi": "node tests/verify-multi.mjs",
+    "verify:move": "node tests/verify-move.mjs",
     "verify:opencode": "node tests/verify-opencode-v2.mjs",
-    "test": "node --test tests/host-bridge.test.mjs tests/dsh-plugin.test.mjs tests/zcode-plugin.test.mjs tests/opencode-plugin.test.mjs tests/apply.test.mjs"
+    "verify:storage": "node tests/verify-storage.mjs",
+    "test": "node --test tests/host-bridge.test.mjs tests/dsh-plugin.test.mjs tests/zcode-plugin.test.mjs tests/opencode-plugin.test.mjs tests/apply.test.mjs tests/storage.test.mjs"
   },
   "repository": {
     "type": "git",

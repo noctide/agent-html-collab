@@ -9,6 +9,7 @@
 //     export function plans({ feedback, config, projectRoot }) => {
 //       edits:    [{ record, file, from, to }]   // file 相对 projectRoot
 //       comments: [{ comment, file, line }]      // 定位提示(不自动改)
+//       moves:    [{ record, file, line }]       // 可选;位移只定位,需 Agent 核对布局
 //     }
 //   没有适配器时,内核用 config(source/pages.list/apply.map)自行定位。
 // 默认只出报告,不改源码;加 --apply 才写回并备份、归包到 feedback/done/。
@@ -79,7 +80,8 @@ function genericPlans({ feedback, config, projectRoot }) {
     const file = locatePageFile(config, projectRoot, comment.page);
     return { comment, file, line: null };
   });
-  return { edits, comments };
+  const moves = (feedback.moves || []).map((record) => ({ record, file: locatePageFile(config, projectRoot, record?.page), line: null }));
+  return { edits, comments, moves };
 }
 
 async function adapterPlans(config, projectRoot, ctx) {
@@ -116,11 +118,14 @@ export async function applyFeedback({ feedback, config, projectRoot, apply = fal
   const ctx = { feedback, config, projectRoot };
   config.__path = config.__path || join(projectRoot, 'proto.config.json');
   const plans = (await adapterPlans(config, projectRoot, ctx)) || genericPlans(ctx);
+  // 旧适配器只返回 edits/comments 时,位移仍按通用页面映射进入报告。
+  if (!plans.moves) plans.moves = (feedback.moves || []).map((record) => ({ record, file: locatePageFile(config, projectRoot, record?.page), line: null }));
 
   /* 备份:所有被 plan 引用的文件 */
   const touched = new Set();
   plans.edits.forEach(e => e.file && touched.add(e.file));
   plans.comments.forEach(c => c.file && touched.add(c.file));
+  plans.moves.forEach(m => m.file && touched.add(m.file));
   let backupDir = null;
   if (apply && touched.size) {
     backupDir = join(backupRoot, stamp);
@@ -153,6 +158,16 @@ export async function applyFeedback({ feedback, config, projectRoot, apply = fal
     applied.push({ record, file: plan.file, line, exact: true });
   }
 
+  /* 位移只定位:DOM 路径不足以确定源码的布局规则,不可盲目覆盖 transform/position。 */
+  const moves = plans.moves.map(({ record, file, line }) => {
+    let reason = '需 Agent 核对布局后回灌;不自动改写 CSS';
+    if (typeof record?.path !== 'string' || !record.path.trim() || ![record.from?.x, record.from?.y, record.to?.x, record.to?.y].every(Number.isFinite)) reason = '位移记录缺少元素路径或有效坐标';
+    else if (record.from.x !== 0 || record.from.y !== 0) reason = '位移起点须为原始布局 (0, 0)';
+    else if (!file) reason = '页面未映射到源码文件';
+    else if (!existsSync(resolve(projectRoot, file)) || !statSync(resolve(projectRoot, file)).isFile()) reason = '源文件不存在: ' + file;
+    return { record, file, line, reason };
+  });
+
   /* 报告 */
   const lines = ['# 反馈回灌报告', '', '反馈包: ' + basename(feedback.__file || 'feedback.json') + '  生成: ' + (feedback.generatedAt || '?'), '',
     '| # | 页 | 原文 | 改后 | 定位 |', '|---|---|---|---|---|'];
@@ -169,6 +184,17 @@ export async function applyFeedback({ feedback, config, projectRoot, apply = fal
     const loc = file ? file + (line ? ':' + line : '') : '—';
     lines.push('| ' + (comment.id || '') + ' | ' + (comment.page || '') + ' | ' + norm(comment.region).slice(0, 24) + ' | ' + (comment.type || '') + ' | ' + (comment.priority || '') + ' | ' + norm(comment.comment).slice(0, 60) + ' | ' + (comment.author || '') + ' | ' + loc + ' |');
   });
+  if (moves.length) {
+    const cell = (value) => norm(value).replace(/\|/g, '\\|');
+    const point = (value) => value && Number.isFinite(value.x) && Number.isFinite(value.y) ? '(' + value.x + ', ' + value.y + ') px' : '无效坐标';
+    lines.push('', '## 元素位移(moves,需 Agent 核对布局后回灌)', '',
+      '坐标是相对元素原始布局的 CSS 像素位移,不改变 DOM 层级。核对已有布局与样式后再回灌。', '',
+      '| # | 页 | 元素路径 | 元素 | 原位移 | 改后位移 | 定位 | 处理 |', '|---|---|---|---|---|---|---|---|');
+    moves.forEach(({ record, file, line, reason }, i) => {
+      const loc = file ? file + (line ? ':' + line : '') : '—';
+      lines.push('| ' + [i + 1, record?.page || '', record?.path || '', record?.label || '', point(record?.from), point(record?.to), loc, reason].map(cell).join(' | ') + ' |');
+    });
+  }
   mkdirSync(dirname(reportPath), { recursive: true });
   writeFileSync(reportPath, lines.join('\n') + '\n');
 
@@ -181,7 +207,7 @@ export async function applyFeedback({ feedback, config, projectRoot, apply = fal
     try { renameSync(feedback.__file, movedTo); } catch (e) { movedTo = null; }
   }
 
-  return { applied, skipped, comments: plans.comments, backupDir, reportPath, movedTo };
+  return { applied, skipped, comments: plans.comments, moves, backupDir, reportPath, movedTo };
 }
 
 /* ============================================================
@@ -197,9 +223,9 @@ async function main() {
   feedback.__file = target;
   const apply = !!ARGS.apply;
   const r = await applyFeedback({ feedback, config, projectRoot, apply });
-  console.log('[apply] 意见 ' + r.comments.length + ' 条 / 改动 ' + (feedback.edits || []).length + ' 处;自动命中 ' + r.applied.length + ',需人工 ' + r.skipped.length);
+  console.log('[apply] 意见 ' + r.comments.length + ' 条 / 改字 ' + (feedback.edits || []).length + ' 处 / 位移 ' + r.moves.length + ' 处;文字自动命中 ' + r.applied.length + ',文字需人工 ' + r.skipped.length + ',位移需人工 ' + r.moves.length);
   console.log('[apply] 报告 → ' + rel(projectRoot, r.reportPath));
-  if (apply) console.log('[apply] 已写回源码' + (r.movedTo ? ',反馈包已移入 ' + rel(projectRoot, r.movedTo) : '') + ';请刷新 studio 核对');
+  if (apply) console.log('[apply] 已写回 ' + r.applied.length + ' 处文字;意见与位移请按报告处理' + (r.movedTo ? ',反馈包已移入 ' + rel(projectRoot, r.movedTo) : '') + ';请刷新 studio 核对');
   else console.log('[apply] 预览模式(未改源码);确认后加 --apply 执行');
 }
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {

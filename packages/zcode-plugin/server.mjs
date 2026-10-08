@@ -49,7 +49,7 @@ async function invoke(name, args, requestId) {
     const page = await post('/agent-html-collab/open', { sessionId: ownerId, pageId: randomUUID() });
     page.projectRoot = projectRoot;
     pages.set(page.bindingId, page);
-    return { ...page, url: base + page.url, deliveryMode: 'waiting-tool', instruction: 'Open this URL inside the client browser. Before waiting, tell the user: 页面已打开，请在右侧原型中选择“编辑”改字或“标注”提意见，再点击“发送反馈”并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。 Then call wait_feedback once. Do not start an automatic waiting loop unless the user explicitly requested continuous collection.' };
+    return { ...page, url: base + page.url, deliveryMode: 'waiting-tool', instruction: 'Open this URL inside the client browser. Before waiting, tell the user: 页面已打开，请在右侧原型中选择“编辑”改字、“移动”（M）调整元素位置或“标注”提意见，再点击“发送反馈”并确认。我会等待这一轮反馈；无需在聊天里重复粘贴。 Then call wait_feedback once. Do not start an automatic waiting loop unless the user explicitly requested continuous collection.' };
   }
   const page = pages.get(args.bindingId);
   if (!page) throw new Error('Unknown or closed page binding');
