@@ -66,8 +66,13 @@ try {
   check(Object.keys(await stored('edits')).length === 0, 'typing remains uncommitted until completion');
   await page.click('#move-cancel'); await browse();
   check(await frame().$eval('#title', el => el.textContent === 'Page a' && !el.hasAttribute('contenteditable')), 'cancel restores original text and editable attribute');
-  await context('#title', 'edit'); await text('Updated title'); await page.keyboard.press('Enter'); await browse();
-  check((await stored('edits')).a[0].to === 'Updated title', 'Enter commits only the selected text and returns to browse');
+  await context('#title', 'edit'); await text('Updated title');
+  await page.click('#move-x'); await page.keyboard.down('Control'); await page.keyboard.press('a'); await page.keyboard.up('Control'); await page.keyboard.press('Backspace');
+  await page.click('#move-apply');
+  check(await page.$eval('#toast', el => el.textContent.includes('请输入有效') && !document.querySelector('#move-panel').hidden), 'Done explains invalid movement input instead of silently failing native form validation');
+  await page.click('#move-x'); await page.keyboard.type('0');
+  await page.click('#move-apply'); await browse();
+  check((await stored('edits')).a[0].to === 'Updated title', 'Done button commits only the selected text and returns to browse');
   const existingText = JSON.stringify(await stored('edits'));
   await context('#title', 'edit'); await text('Temporary second edit'); await page.keyboard.press('Escape'); await browse();
   check(JSON.stringify(await stored('edits')) === existingText && await frame().$eval('#title', el => el.textContent === 'Updated title'), 'cancel of a repeated edit preserves the earlier draft');
