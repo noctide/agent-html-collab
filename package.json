@@ -1,6 +1,6 @@
 {
   "name": "agent-html-collab",
-  "version": "0.3.0",
+  "version": "0.3.1-preview.1",
   "type": "module",
   "description": "HTML 原型编辑与反馈插件:就地改字 / 移动元素 / 标注提意见 / 反馈回灌任意编码 agent",
   "bin": {
@@ -10,6 +10,7 @@
     "bin",
     "packages",
     "studio",
+    "assets",
     "skills",
     "adapters",
     "examples",
