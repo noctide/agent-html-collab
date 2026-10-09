@@ -99,8 +99,8 @@ try {
   await page.click('#move-cancel'); await browse(); moved = await coordinates('#card'); near(moved.x, original.x); near(moved.y, original.y);
   check(moved.style === original.style, 'move cancel restores original inline style and creates no record');
   await context('#card', 'move'); await numeric(30, 12); await page.click('#move-apply'); await browse();
-  const cardMove = () => (storedMoves.a || []).find(record => record.path === 'main>div:nth-of-type(1)');
   let storedMoves = await stored('moves');
+  const cardMove = () => (storedMoves.a || []).find(record => record.path === 'main>div:nth-of-type(1)');
   check(cardMove().to.x === 30 && cardMove().to.y === 12, 'Done commits numeric offsets and returns to browse');
   const existingMove = JSON.stringify(await stored('moves'));
   await context('#card', 'move'); await page.click('[data-move-key=ArrowRight]'); await page.click('[data-move-key=ArrowDown]'); await page.keyboard.press('Escape'); await browse();
