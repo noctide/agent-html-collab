@@ -1,3 +1,5 @@
+![Agent HTML Collab preview: a restrained hero using the real Studio toolbar](assets/readme-hero-preview.png)
+
 # Agent HTML Collab
 
 ### Show your ideas on the page. Refine the HTML with your agent.
@@ -31,7 +33,7 @@ Automatic notification means feedback was delivered, not that the model finished
 Requires Node.js 18 or later. Run this in your HTML project directory:
 
 ```bash
-npx github:noctide/agent-html-collab serve --root .
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 serve --root .
 ```
 
 Open the local Studio URL printed in the terminal. Edit, move, or annotate, then send feedback. Standalone mode saves feedback but does not automatically wake a conversation.
@@ -42,10 +44,10 @@ Ask your agent to read the feedback, or use the text apply tool:
 
 ```bash
 # Preview the report without changing HTML
-npx github:noctide/agent-html-collab apply latest --root .
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 apply latest --root .
 
 # After reviewing, apply text changes and back up the source
-npx github:noctide/agent-html-collab apply latest --root . --apply
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 apply latest --root . --apply
 ```
 
 The agent handles comments and element movement individually. The automatic apply tool writes only exact text matches and lists element paths and offsets in the report so the agent can review the layout before editing source. Movement previews retain the DOM hierarchy; selecting a parent changes which element moves. After `--apply` archives a bundle, its reported comments and moves still require agent processing.
@@ -88,8 +90,17 @@ npm run verify:move
 
 The current code passes 32 unit tests, 44 local-interaction checks, 45 movement checks, 41 general browser checks, 17 single-document checks, 18 multi-file checks, and 16 draft-isolation checks. Browser tests require local Chrome/Edge. Use `npm run verify:context` for local interactions, `npm run verify:move` for movement, and `npm run verify:storage` for draft isolation. See the [validation notes](research/opencode-v2-validation-notes.md) for separate OpenCode verification steps and limitations.
 
-## Upgrade from ProtoBridge
+## Migration and compatibility from ProtoBridge
 
-Run `node bin/agent-html-collab.mjs install-plugin --force` in the local repository, then fully restart OpenCode. The installer migrates old plugin registrations and preserves unrelated plugin configuration. New commands are `/agent-html-collab` and `/agent-html-collab-close`.
+Agent HTML Collab is the renamed continuation of ProtoBridge. Existing HTML prototypes need no framework changes; existing `proto.config.json`, feedback directories, and older feedback bundles remain usable. The `moves` field in new bundles is optional, so old bundles need no conversion. `PROTOBRIDGE_HOST`, `PROTOBRIDGE_WAKE`, and the V1 `ctx.protobridge` contract remain supported as compatibility formats.
 
-Existing `proto.config.json` and feedback files remain usable. Feedback bundles add an optional `moves` array; older bundles require no changes. Browser drafts are scoped to each project by default; explicit storage keys are preserved. Movement drafts default to `storage.edits + ".moves"`, with an optional explicit `storage.moves` key. Legacy shared `proto.*` drafts are retained without assigning them to the current project. After confirming which project they belong to, migrate them through JSON export/import. `PROTOBRIDGE_HOST`, `PROTOBRIDGE_WAKE`, and the custom V1 `ctx.protobridge` contract are retained for compatibility.
+OpenCode users can install the GitHub preview and replace the old plugin:
+
+```bash
+npm install -g github:noctide/agent-html-collab#v0.3.1-preview.1
+agent-html-collab install-plugin --force
+```
+
+The installer migrates this plugin's old registration to `agent-html-collab` and preserves unrelated plugin configuration. It deletes the old directory only when its `package.json` name is exactly `protobridge-opencode-plugin`. Fully restart OpenCode, then use `/agent-html-collab` and `/agent-html-collab-close`.
+
+Browser drafts are now scoped by project root by default, while explicitly configured storage keys remain in use. Legacy shared `proto.*` drafts are neither assigned to a project nor deleted automatically; after confirming ownership, migrate them through JSON export/import. For other clients, follow the [client integration guide](docs/client-adapters.md). The install command above is for the OpenCode plugin only.

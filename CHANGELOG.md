@@ -1,3 +1,9 @@
+# v0.3.1-preview.1
+
+- Clarify ProtoBridge migration and compatibility steps for OpenCode and standalone projects.
+- Add a restrained README hero image based on the real Studio toolbar and publish the pinned preview install commands.
+- Correct stale ZCode manifest references and verification counts.
+
 # v0.3.0
 
 - 默认草稿按可信项目根目录隔离，保留显式存储键；旧共享草稿不自动导入或删除。

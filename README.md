@@ -1,4 +1,4 @@
-<img width="1872" height="1080" alt="image" src="https://github.com/user-attachments/assets/4f70567a-d5dc-4bb4-b25a-ed7781932edc" />
+![Agent HTML Collab：基于真实 Studio 工具栏的 0.3.1 预览版宣传图](assets/readme-hero-preview.png)
 
 # Agent HTML Collab
 
@@ -34,7 +34,7 @@ Agent HTML Collab 是一个面向人与编码 agent 的 HTML 原型编辑与反�
 需要 Node.js 18 或更高版本。在自己的 HTML 项目目录运行：
 
 ```bash
-npx github:noctide/agent-html-collab serve --root .
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 serve --root .
 ```
 
 打开终端显示的本地 Studio 地址，编辑、移动或标注后点击“发送反馈”。独立网页模式会保存反馈，不会自动唤醒会话。
@@ -45,10 +45,10 @@ npx github:noctide/agent-html-collab serve --root .
 
 ```bash
 # 先查看报告，不修改 HTML
-npx github:noctide/agent-html-collab apply latest --root .
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 apply latest --root .
 
 # 核对报告后执行文字改动，备份源码
-npx github:noctide/agent-html-collab apply latest --root . --apply
+npx github:noctide/agent-html-collab#v0.3.1-preview.1 apply latest --root . --apply
 ```
 
 标注意见和元素移动由 agent 逐条处理；自动回灌工具只写回精确匹配的文字改动，并在报告中列出移动路径和偏移，供 agent 核对布局后修改源码。移动预览不改变 DOM 层级，选择父元素是改为移动该父元素。`--apply` 归档反馈包后，报告中的意见和移动仍需 agent 处理。
@@ -91,8 +91,17 @@ npm run verify:move
 
 当前 32 项单元测试、44 项局部操作检查、45 项移动回归、41 项通用页面检查、17 项单文档检查、18 项多文件检查和 16 项草稿隔离检查通过。浏览器测试需要本机 Chrome/Edge；局部操作回归使用 `npm run verify:context`，移动回归使用 `npm run verify:move`，草稿隔离使用 `npm run verify:storage`。OpenCode 独立验证方法及限制见 [验证记录](research/opencode-v2-validation-notes.md)。
 
-## 从 ProtoBridge 升级
+## 从 ProtoBridge 迁移与兼容
 
-在本地仓库运行 `node bin/agent-html-collab.mjs install-plugin --force`，然后完整重启 OpenCode。安装器会迁移旧插件登记并保留其他插件配置。新命令为 `/agent-html-collab` 和 `/agent-html-collab-close`。
+Agent HTML Collab 是 ProtoBridge 的后续更名版本。现有 HTML 原型无需改框架；已有 `proto.config.json`、反馈目录和旧版反馈包继续可用。新反馈包的 `moves` 字段是可选项，旧包无需转换。`PROTOBRIDGE_HOST`、`PROTOBRIDGE_WAKE` 与 V1 `ctx.protobridge` 契约仍作为兼容格式保留。
 
-已有 `proto.config.json` 和反馈文件继续使用。反馈包新增可选 `moves` 数组，旧包无需改写。浏览器草稿默认按项目隔离，显式配置的存储键保留；移动草稿默认使用 `storage.edits + ".moves"`，也可显式配置 `storage.moves`。旧共享 `proto.*` 草稿不删除，也不自动归入当前项目，可确认所属项目后通过 JSON 导出/导入迁移。`PROTOBRIDGE_HOST`、`PROTOBRIDGE_WAKE` 与 V1 的 `ctx.protobridge` 自定义契约作为兼容格式保留。
+OpenCode 用户可从 GitHub 安装预览版并覆盖旧插件：
+
+```bash
+npm install -g github:noctide/agent-html-collab#v0.3.1-preview.1
+agent-html-collab install-plugin --force
+```
+
+安装器会把本插件旧登记迁移到 `agent-html-collab`，保留其他插件配置；它只会在旧目录的 `package.json` 名称确认为 `protobridge-opencode-plugin` 时删除该旧目录。然后完整重启 OpenCode，使用 `/agent-html-collab` 和 `/agent-html-collab-close`。
+
+浏览器草稿现在默认按项目根目录隔离，显式配置的存储键继续保留。旧共享 `proto.*` 草稿不会自动分配到某个项目，也不会被删除；确认归属后可通过 JSON 导出/导入迁移。其他客户端请按 [客户端接入说明](docs/client-adapters.md) 配置；此安装命令仅用于 OpenCode 插件。
