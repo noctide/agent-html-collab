@@ -22,7 +22,7 @@
 
 ```
 ┌─ ③ 适配层(各家一薄条,可选,丢了不影响使用)
-│    adapters/zcode.md · opencode.md · claude.md
+│    adapters/opencode.md · claude.md · zcode.md（stdio MCP 说明）
 ├─ ② 约定层(跨 agent 的真正载体,进仓库、开放格式)
 │    AGENTS.md 约定段(AGENTS-SNIPPET.md)
 │    skills/agent-html-collab/SKILL.md(开放 Agent Skills 格式)
@@ -202,7 +202,7 @@ verify 断言扩展、常见故障。原则:skill 承载"agent 怎么操作",不
 
 | 文件 | 内容 |
 |---|---|
-| `adapters/zcode.md` | ZCode 斜杠命令:`/agent-html-collab init` / `/agent-html-collab feedback` |
+| `adapters/zcode.md` | ZCode stdio MCP 接入说明及可选手动命令 |
 | `adapters/opencode.md` | OpenCode command 同内容 |
 | `adapters/claude.md` | Claude 系 skill 链接/复制说明 |
 | `packages/opencode-plugin/` | OpenCode V2 插件：反馈保存后排队投递到页面所属会话；`agent-html-collab install-plugin` 安装 |
@@ -226,7 +226,7 @@ agent-html-collab/
 ├─ examples/demo/                  # 纯通用示例(3 页 + 标注 + apply 适配器样例)
 ├─ AGENTS-SNIPPET.md               # ② 提供给项目 AGENTS.md 追加的现成段落
 ├─ skills/agent-html-collab/SKILL.md    # ② 开放格式 skill
-├─ adapters/                       # ③ zcode.md / opencode.md / claude.md
+├─ adapters/                       # ③ OpenCode / Claude / ZCode 接入说明
 └─ tests/verify-generic.mjs        # 通用冒烟(用 examples/demo,不依赖任何具体项目)
 ```
 
@@ -240,7 +240,7 @@ agent-html-collab/
   - 不带 config 时行为稳定。
 - **阶段 2 · 第二项目实测**:任选一个真实 HTML 原型走完整闭环,只改 config + 适配器、不碰内核源码;
   - 验收:只改 config 即接入,发现配置表达不了的就回补内核。
-- **阶段 3 · 打包分发**:ZCode 本地测试市场插件(plugin.json + skills + assets);OpenCode/Claude 适配条;
+- **阶段 3 · 打包分发**:ZCode 原生插件清单尚未纳入当前仓库；OpenCode/Claude 适配条;
   可选 `npx agent-html-collab` 化(把 serve.mjs 挂 bin);
   - 验收:三个 harness 各自从零安装 → 发现/触发 skill → 完成一次反馈闭环。
 

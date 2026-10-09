@@ -59,7 +59,7 @@ npx github:noctide/agent-html-collab apply latest --root . --apply
 |---|---|---|
 | DeepSeek Harness | 从所属会话打开原型协同右侧面板，反馈回到该会话 | 按 0.2.0-rc.2 接口适配；此前版本完成真实单会话联调，当前更新通过 Host 与嵌入页面回归，GUI 更新验收待完成 |
 | OpenCode V2 | 安装一次插件，在会话执行 `/agent-html-collab`，打开网页链接 | 2.0.22 隔离后端与浏览器流程通过；使用本地模拟模型，非原生侧栏 |
-| ZCode | 会话隔离 MCP 打开页面，单轮 `wait_feedback` 接收反馈 | stdio MCP 测试通过；正式安装版的原生页面接口兼容性尚未确认 |
+| ZCode | 仓库提供 stdio MCP server 与技能说明 | 协议测试通过；仓库未包含 ZCode 原生插件清单，正式安装版联动尚未验证 |
 | 其他 agent | 独立 Studio 配合项目约定，手动交接反馈文件 | 不承诺客户端自动通知 |
 
 OpenCode 安装：
@@ -89,7 +89,7 @@ npm run verify:multi
 npm run verify:move
 ```
 
-当前 32 项单元测试、42 项局部操作检查、45 项移动回归、41 项通用页面检查、17 项单文档检查、18 项多文件检查和 15 项草稿隔离检查通过。浏览器测试需要本机 Chrome/Edge；局部操作回归使用 `npm run verify:context`，移动回归使用 `npm run verify:move`，草稿隔离使用 `npm run verify:storage`。OpenCode 独立验证方法及限制见 [验证记录](research/opencode-v2-validation-notes.md)。
+当前 32 项单元测试、44 项局部操作检查、45 项移动回归、41 项通用页面检查、17 项单文档检查、18 项多文件检查和 16 项草稿隔离检查通过。浏览器测试需要本机 Chrome/Edge；局部操作回归使用 `npm run verify:context`，移动回归使用 `npm run verify:move`，草稿隔离使用 `npm run verify:storage`。OpenCode 独立验证方法及限制见 [验证记录](research/opencode-v2-validation-notes.md)。
 
 ## 从 ProtoBridge 升级
 

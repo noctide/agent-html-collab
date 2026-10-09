@@ -19,7 +19,6 @@
     "README.en.md",
     "docs",
     "CHANGELOG.md",
-    ".zcode-plugin",
     ".mcp.json",
     "marketplace.json"
   ],

@@ -1,10 +1,10 @@
 # ZCode 适配
 
-优先安装根 `.zcode-plugin/plugin.json` 声明的本地插件，使用会话隔离的 stdio MCP。agent 调用 `open_studio(projectRoot)`，通过客户端 Browser 工具在内置浏览器打开返回 URL，再调用一次 `wait_feedback(bindingId)` 收集这一轮反馈。
+仓库提供 stdio MCP server 与技能说明，但当前不含 ZCode 原生插件清单，因此不能按 ZCode 插件市场扩展安装。客户端能发现并启动仓库 `.mcp.json` 中的 server 时，agent 可调用 `open_studio(projectRoot)`，再按客户端能力打开返回 URL 并调用一次 `wait_feedback(bindingId)` 收集这一轮反馈；真实安装版联动尚待 GUI 验证。
 
 发送反馈时必须有正在等待的工具调用；等待超时、取消或结束后，反馈仍保存，但通知失败。用户要求继续收集时重新等待，再从页面重试。收到反馈后先处理并报告结果，只有用户明确要求持续收集时才自动续等。结束时调用 `close_studio`。此入口不能从空闲会话主动唤醒模型，也不使用落盘后退出进程来通知。
 
-详见 [客户端接入](../docs/client-adapters.md)；真实 ZCode 插件安装与内置浏览器联动尚待 GUI 验证。
+详见 [客户端接入](../docs/client-adapters.md)。
 
 ## 手动命令(可选)
 
