@@ -56,7 +56,7 @@ The agent handles comments and element movement individually. The automatic appl
 |---|---|---|
 | DeepSeek Harness | Open the collaboration pane from the owning conversation; return feedback to that conversation | Adapted to 0.2.0-rc.2 APIs; a prior version completed a real single-conversation GUI round trip; current changes pass Host and embedded-page regressions, with updated GUI acceptance pending |
 | OpenCode V2 | Install once, run `/agent-html-collab` in a conversation, and open the web link | 2.0.22 isolated backend and browser flow passed with a local model fixture; no native sidebar |
-| ZCode | Open a session-isolated MCP page and receive one round through `wait_feedback` | stdio MCP tests passed; native-page API compatibility with the installed release remains unconfirmed |
+| ZCode | The repository provides a stdio MCP server and skill instructions | Protocol tests passed; the repository has no native ZCode plugin manifest, and installed-client integration is unverified |
 | Other agents | Standalone Studio and project instructions with a manual feedback-file handoff | No automatic client notification promised |
 
 Install for OpenCode:
@@ -86,7 +86,7 @@ npm run verify:multi
 npm run verify:move
 ```
 
-The current code passes 32 unit tests, 45 movement checks, 41 general browser checks, 17 single-document checks, 18 multi-file checks, and 15 draft-isolation checks. Browser tests require local Chrome/Edge. Use `npm run verify:move` for movement and `npm run verify:storage` for draft isolation. See the [validation notes](research/opencode-v2-validation-notes.md) for separate OpenCode verification steps and limitations.
+The current code passes 32 unit tests, 44 local-interaction checks, 45 movement checks, 41 general browser checks, 17 single-document checks, 18 multi-file checks, and 16 draft-isolation checks. Browser tests require local Chrome/Edge. Use `npm run verify:context` for local interactions, `npm run verify:move` for movement, and `npm run verify:storage` for draft isolation. See the [validation notes](research/opencode-v2-validation-notes.md) for separate OpenCode verification steps and limitations.
 
 ## Upgrade from ProtoBridge
 

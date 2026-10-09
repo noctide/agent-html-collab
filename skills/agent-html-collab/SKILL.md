@@ -35,7 +35,7 @@ agent-html-collab/
 ├─ tests/verify-generic.mjs / verify-single.mjs / verify-multi.mjs
 ├─ AGENTS-SNIPPET.md   追加到项目 AGENTS.md 的段落
 ├─ packages/opencode-plugin/  OpenCode 插件(全局装一次,③):agent-html-collab install-plugin
-└─ adapters/           zcode.md / opencode.md / claude.md 薄条
+└─ adapters/           OpenCode / Claude / ZCode 接入说明
 ```
 
 ## 1. 给新项目接入(只改 config,不碰内核源码)

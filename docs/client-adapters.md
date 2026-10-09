@@ -25,7 +25,7 @@ Host 路由通过 `connection.admit(req)` 验证客户端认证，提交同时�
 
 ## ZCode（3.14.4）
 
-根 `.zcode-plugin/plugin.json` 提供 Skills 和 stdio MCP；在 ZCode 插件市场添加本地目录后安装。MCP 配置声明 `isolation: session`、660 秒调用超时；使用已经存在的 Node，无额外运行时依赖。
+仓库包含 stdio MCP server（`packages/zcode-plugin/server.mjs`）、`.mcp.json` 和技能说明；stdio 协议测试通过。仓库当前没有 ZCode 原生插件清单，不能据此声称可从 ZCode 插件市场安装。真实 ZCode 安装版的 MCP 发现、会话隔离与内置浏览器联动尚待 GUI 验证。
 
 agent 调用 open_studio(projectRoot)，通过自身 Browser 工具在内置浏览器打开返回 URL。页面加载后先告诉用户在哪里编辑、如何发送，以及正在等待这一轮反馈，再调用一次 wait_feedback(bindingId)。
 用户发送后，反馈作为该工具调用的返回值交回原对话。每个 MCP 进程、每个页面拥有独立随机绑定，反馈不会发到最近对话。
@@ -47,5 +47,5 @@ agent 调用 open_studio(projectRoot)，通过自身 Browser 工具在内置浏�
 
 ## Releases
 
-同一个 TGZ/ZIP 包包含两个客户端入口。DSH 使用 bundle manifest；ZCode 使用 .zcode-plugin manifest。无需每个 HTML 复制一包。
+当前包提供 DSH bundle manifest；同时包含 stdio MCP server 配置，但不包含 ZCode 原生插件 manifest。原型 HTML 无需携带插件。
 当前草稿 Release 保留为待 GUI 验证状态。
